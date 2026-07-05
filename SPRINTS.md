@@ -177,3 +177,19 @@ Entregaveis:
 - Atividade `BOOK_REVIEWED` no feed.
 - UI com selecao de estrelas, resenha e lista de avaliacoes na pagina de
   capitulos, mais a media no banner do feed.
+
+## Fase 7 - Historico do clube
+
+Objetivo: guardar a memoria das leituras encerradas.
+
+Status: implementada e validada localmente.
+
+Entregaveis:
+
+- Endpoint `GET /api/books/history` com os livros finalizados do clube.
+- Cada livro traz mes/ano, capa, media, notas e resenhas individuais.
+- Comentarios por capitulo arquivados (com reacoes), sem anti-spoiler,
+  pois o livro ja foi encerrado.
+- Estatisticas simples: capitulos, comentarios e avaliacoes.
+- Pagina "Livros lidos" (`/history`) com cards expansiveis por livro.
+- Seed cria um livro finalizado de exemplo para o historico.

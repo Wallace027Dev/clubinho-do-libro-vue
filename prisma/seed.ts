@@ -105,6 +105,10 @@ async function main() {
     })
   }
 
+  // Livro finalizado (memoria de leitura) para popular o historico (Fase 7).
+  // So cria se ainda nao houver nenhum livro finalizado.
+  await seedFinishedBook(club.id)
+
   console.log('\nSeed concluido.\n')
   console.log('Livro atual:', clubBook.book.title)
   console.log('Capitulos  :', CHAPTERS.length)
@@ -114,6 +118,112 @@ async function main() {
   }
   console.log('\nAdmin: acesse /login/admin e use o valor de ADMIN_PASSWORD do .env.local.')
   console.log('')
+}
+
+async function seedFinishedBook(clubId: string) {
+  const existingFinished = await prisma.clubBook.findFirst({
+    where: { clubId, status: 'FINISHED' }
+  })
+
+  if (existingFinished) {
+    return
+  }
+
+  const ana = await prisma.user.findUnique({ where: { login: 'ana' } })
+  const bruno = await prisma.user.findUnique({ where: { login: 'bruno' } })
+
+  if (!ana || !bruno) {
+    return
+  }
+
+  const finishedAt = new Date('2026-05-28T20:00:00.000Z')
+  const book = await prisma.book.create({
+    data: { title: 'A Biblioteca da Meia-Noite', author: 'Matt Haig' }
+  })
+
+  const clubBook = await prisma.clubBook.create({
+    data: {
+      clubId,
+      bookId: book.id,
+      status: 'FINISHED',
+      selectedAt: new Date('2026-05-01T20:00:00.000Z'),
+      finishedAt,
+      selectedByUserId: ana.id,
+      finishedByUserId: ana.id
+    }
+  })
+
+  const chapters = [
+    { number: 1, title: 'A biblioteca' },
+    { number: 2, title: 'As vidas possiveis' },
+    { number: 3, title: 'O livro dos arrependimentos' }
+  ]
+
+  const createdChapters = []
+  for (const chapter of chapters) {
+    createdChapters.push(
+      await prisma.chapter.create({
+        data: { clubBookId: clubBook.id, number: chapter.number, title: chapter.title }
+      })
+    )
+  }
+
+  // Ambos concluiram todos os capitulos.
+  for (const user of [ana, bruno]) {
+    for (const chapter of createdChapters) {
+      await prisma.chapterProgress.create({
+        data: {
+          chapterId: chapter.id,
+          userId: user.id,
+          status: 'FINISHED',
+          startedAt: new Date('2026-05-10T20:00:00.000Z'),
+          finishedAt: new Date('2026-05-20T20:00:00.000Z')
+        }
+      })
+    }
+  }
+
+  // Comentarios arquivados no primeiro capitulo.
+  const anaComment = await prisma.chapterComment.create({
+    data: {
+      chapterId: createdChapters[0].id,
+      userId: ana.id,
+      body: 'A ideia da biblioteca infinita me pegou logo de cara.'
+    }
+  })
+  await prisma.chapterComment.create({
+    data: {
+      chapterId: createdChapters[0].id,
+      userId: bruno.id,
+      body: 'Comeco lento, mas fui fisgado no capitulo 1 mesmo.'
+    }
+  })
+
+  // Uma reacao ao comentario da Ana.
+  await prisma.chapterCommentReaction.create({
+    data: { commentId: anaComment.id, userId: bruno.id, type: 'GOSTEI' }
+  })
+
+  // Avaliacoes finais.
+  await prisma.bookReview.create({
+    data: { clubBookId: clubBook.id, userId: ana.id, rating: 5, review: 'Chorei no final. Melhor leitura do ano.' }
+  })
+  await prisma.bookReview.create({
+    data: { clubBookId: clubBook.id, userId: bruno.id, rating: 4, review: 'Muito bom, so achei o meio arrastado.' }
+  })
+
+  await prisma.activity.create({
+    data: {
+      clubId,
+      actorId: ana.id,
+      type: 'BOOK_FINISHED',
+      message: `${book.title} foi finalizado pelo clube.`,
+      metadata: { bookId: book.id },
+      createdAt: finishedAt
+    }
+  })
+
+  console.log('Historico    : 1 livro finalizado (A Biblioteca da Meia-Noite)')
 }
 
 main()

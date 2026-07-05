@@ -159,6 +159,26 @@ Regras:
 - A resenha (texto) segue o anti-spoiler: so aparece para quem terminou o
   livro.
 
+## Fase 7 - Historico do clube
+
+Objetivos:
+
+- Listar os livros ja finalizados pelo clube.
+- Para cada livro: mes/ano, capa, media, notas e resenhas individuais.
+- Mostrar os comentarios por capitulo arquivados (memoria da leitura).
+- Estatisticas simples por livro.
+
+Regras:
+
+- Considera apenas `ClubBook` com status `FINISHED`.
+- Livro finalizado nao aplica anti-spoiler: resenhas e comentarios ficam
+  visiveis para os membros.
+
+Endpoint:
+
+- `GET /api/books/history` agrega livros finalizados, reviews (via helper
+  compartilhado com a Fase 6) e comentarios por capitulo.
+
 Variaveis obrigatorias:
 
 - `DATABASE_URL`

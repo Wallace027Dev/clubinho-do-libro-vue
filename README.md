@@ -15,6 +15,10 @@ anti-spoiler.
 - **Comentarios anti-spoiler**: o comentario de um capitulo so aparece para
   quem ja concluiu aquele capitulo.
 - **Reacoes** aos comentarios (5 tipos), uma por membro, com troca.
+- **Nota e resenha final**: apos concluir todos os capitulos, o membro avalia
+  o livro (1-5) com resenha opcional; o clube ve a media e as notas de todos.
+- **Historico do clube** ("Livros lidos"): livros finalizados com media,
+  resenhas e comentarios por capitulo arquivados.
 
 No feed, apenas as atividades de **comentario** abrem um modal (mostrando o
 comentario e permitindo reagir, se voce ja concluiu o capitulo). A pagina de
@@ -134,6 +138,6 @@ src/
 | 4 - Comentarios anti-spoiler | Implementada |
 | 5 - Reacoes aos comentarios | Implementada |
 | 6 - Nota e resenha final do livro | Implementada |
-| 7 - Historico do clube | Planejada |
+| 7 - Historico do clube | Implementada |
 
 Detalhes em [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) e [SPRINTS.md](SPRINTS.md).

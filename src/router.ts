@@ -4,6 +4,7 @@ import AdminLoginView from './views/AdminLoginView.vue'
 import AdminView from './views/AdminView.vue'
 import ChaptersView from './views/ChaptersView.vue'
 import FeedView from './views/FeedView.vue'
+import HistoryView from './views/HistoryView.vue'
 import LoginView from './views/LoginView.vue'
 import ProfileView from './views/ProfileView.vue'
 
@@ -12,6 +13,7 @@ export const router = createRouter({
   routes: [
     { path: '/', component: FeedView, meta: { requiresAuth: true } },
     { path: '/chapters', component: ChaptersView, meta: { requiresAuth: true } },
+    { path: '/history', component: HistoryView, meta: { requiresAuth: true } },
     { path: '/login', component: LoginView },
     { path: '/login/admin', component: AdminLoginView },
     { path: '/admin/login', redirect: '/login/admin' },

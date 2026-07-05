@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiRequest } from '../services/apiClient'
-import type { AuthUser, Chapter, ClubState } from '../types/platform'
+import type { AuthUser, Chapter, ClubState, FinishedBook } from '../types/platform'
 
 interface UsersResponse {
   users: AuthUser[]
@@ -17,9 +17,14 @@ interface ChaptersResponse {
   chapters: Chapter[]
 }
 
+interface HistoryResponse {
+  books: FinishedBook[]
+}
+
 export const usePlatformStore = defineStore('platform', () => {
   const clubState = ref<ClubState>({ currentBook: null, activities: [] })
   const members = ref<AuthUser[]>([])
+  const history = ref<FinishedBook[]>([])
   const isLoading = ref(false)
 
   async function loadHome() {
@@ -86,11 +91,24 @@ export const usePlatformStore = defineStore('platform', () => {
     await loadHome()
   }
 
+  async function loadHistory() {
+    isLoading.value = true
+
+    try {
+      const response = await apiRequest<HistoryResponse>('/api/books/history')
+      history.value = response.books
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     clubState,
     members,
+    history,
     isLoading,
     loadHome,
+    loadHistory,
     loadMembers,
     createMember,
     selectCurrentBook,

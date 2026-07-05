@@ -20,6 +20,7 @@ async function handleLogout() {
     <nav v-if="authStore.isAuthenticated" class="app-nav glass-panel" aria-label="Navegacao principal">
       <RouterLink to="/">Feed</RouterLink>
       <RouterLink to="/chapters">Capitulos</RouterLink>
+      <RouterLink to="/history">Livros lidos</RouterLink>
       <RouterLink to="/profile">Perfil</RouterLink>
       <RouterLink v-if="authStore.isAdmin" to="/admin">Admin</RouterLink>
       <button type="button" @click="handleLogout">Sair</button>

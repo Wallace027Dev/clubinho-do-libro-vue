@@ -97,3 +97,44 @@ export interface ClubState {
   currentBook: CurrentBook | null
   activities: Activity[]
 }
+
+export interface ArchivedComment {
+  id: string
+  body: string
+  createdAt: string
+  user: {
+    id: string
+    login: string
+    displayName: string | null
+    avatarUrl?: string | null
+  }
+  reactions: Partial<Record<ChapterCommentReactionType, number>>
+  reactionTotal: number
+}
+
+export interface ArchivedChapter {
+  id: string
+  number: number
+  title: string
+  comments: ArchivedComment[]
+}
+
+export interface FinishedBook {
+  id: string
+  selectedAt: string
+  finishedAt: string | null
+  book: {
+    id: string
+    title: string
+    author?: string | null
+    coverUrl?: string | null
+  }
+  reviews: BookReview[]
+  reviewSummary: ReviewSummary
+  chapters: ArchivedChapter[]
+  stats: {
+    chapters: number
+    comments: number
+    reviewers: number
+  }
+}
