@@ -1,0 +1,22 @@
+# Dependencias
+node_modules
+
+# Build
+dist
+.vite
+
+# Variaveis de ambiente (segredos) - mas mantem o registro .env.example
+.env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dev-server*.log
+
+# Vercel
+.vercel
+.vercel-cli

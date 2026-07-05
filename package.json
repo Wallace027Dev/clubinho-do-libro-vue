@@ -1,0 +1,43 @@
+{
+  "name": "clubinho-do-libro",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:web": "vite",
+    "dev:api": "dotenv -e .env.local -- tsx watch scripts/dev-api.ts",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check:api": "tsc -p tsconfig.api.json",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:generate": "dotenv -e .env.local -- prisma generate",
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",
+    "db:studio": "dotenv -e .env.local -- prisma studio",
+    "setup": "docker compose up -d --wait && npm run db:push && npm run db:seed"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.3",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^10.0.3",
+    "dotenv-cli": "^11.0.0",
+    "express": "^5.2.1",
+    "prisma": "^6.19.3",
+    "tsx": "^4.23.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.6",
+    "vite-plugin-pwa": "^1.0.2",
+    "vue-tsc": "^3.0.4"
+  }
+}
