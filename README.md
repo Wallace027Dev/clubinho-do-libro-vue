@@ -133,7 +133,7 @@ src/
 | 3 - Feed de atividades | Implementada |
 | 4 - Comentarios anti-spoiler | Implementada |
 | 5 - Reacoes aos comentarios | Implementada |
-| 6 - Nota e resenha final do livro | Planejada |
+| 6 - Nota e resenha final do livro | Implementada |
 | 7 - Historico do clube | Planejada |
 
 Detalhes em [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) e [SPRINTS.md](SPRINTS.md).

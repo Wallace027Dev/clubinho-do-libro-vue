@@ -59,6 +59,24 @@ export interface ChapterComment {
   }>
 }
 
+export interface BookReview {
+  id: string
+  rating: number
+  review: string | null
+  createdAt: string
+  user: {
+    id: string
+    login: string
+    displayName: string | null
+    avatarUrl?: string | null
+  }
+}
+
+export interface ReviewSummary {
+  average: number | null
+  count: number
+}
+
 export interface CurrentBook {
   id: string
   status: 'CURRENT' | 'FINISHED'
@@ -71,6 +89,8 @@ export interface CurrentBook {
     coverUrl?: string | null
   }
   chapters: Chapter[]
+  reviews?: BookReview[]
+  reviewSummary?: ReviewSummary
 }
 
 export interface ClubState {

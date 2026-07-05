@@ -22,6 +22,7 @@ enum ActivityType {
   PROFILE_UPDATED
   BOOK_SELECTED
   BOOK_FINISHED
+  BOOK_REVIEWED
   CHAPTER_STARTED
   CHAPTER_FINISHED
   CHAPTER_COMMENTED
@@ -56,6 +57,7 @@ model User {
   chapterProgress ChapterProgress[]
   chapterComments ChapterComment[]
   chapterCommentReactions ChapterCommentReaction[]
+  bookReviews BookReview[]
 }
 
 model Club {
@@ -92,9 +94,26 @@ model ClubBook {
   selectedBy User? @relation("SelectedBooks", fields: [selectedByUserId], references: [id])
   finishedBy User? @relation("FinishedBooks", fields: [finishedByUserId], references: [id])
   chapters   Chapter[]
+  reviews    BookReview[]
 
   @@index([clubId, status])
   @@index([bookId])
+}
+
+model BookReview {
+  id         String   @id @default(uuid())
+  clubBookId String
+  userId     String
+  rating     Int
+  review     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  clubBook ClubBook @relation(fields: [clubBookId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([clubBookId, userId])
+  @@index([clubBookId])
 }
 
 model Chapter {

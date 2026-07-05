@@ -2,6 +2,7 @@ import { requireAdmin, requireSession } from '../_lib/auth'
 import { getDefaultClub } from '../_lib/club'
 import { assertMethod, readBody, sendJson } from '../_lib/http'
 import { prisma } from '../_lib/prisma'
+import { getClubBookReviews, userFinishedAllChapters } from '../_lib/reviews'
 
 interface SelectBookBody {
   title?: string
@@ -53,7 +54,25 @@ export default async function handler(req: any, res: any) {
       }
     })
 
-    sendJson(res, 200, { currentBook, activities })
+    let currentBookWithReviews = null
+
+    if (currentBook) {
+      const { reviews, reviewSummary } = await getClubBookReviews(currentBook.id)
+
+      // Anti-spoiler: a resenha (texto) so aparece para quem terminou o livro.
+      // Nota e media continuam visiveis para todos.
+      const viewerFinished = session.userId
+        ? await userFinishedAllChapters(currentBook.id, session.userId)
+        : false
+
+      const safeReviews = viewerFinished
+        ? reviews
+        : reviews.map((review) => ({ ...review, review: null }))
+
+      currentBookWithReviews = { ...currentBook, reviews: safeReviews, reviewSummary }
+    }
+
+    sendJson(res, 200, { currentBook: currentBookWithReviews, activities })
     return
   }
 

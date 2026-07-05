@@ -39,6 +39,9 @@ function closeActivity() {
       <h2 v-else>Nenhum livro em andamento</h2>
       <p v-if="currentBook">
         Em leitura desde {{ new Date(currentBook.selectedAt).toLocaleDateString('pt-BR') }}.
+        <span v-if="currentBook.reviewSummary?.average != null">
+          · Nota do clube {{ currentBook.reviewSummary.average.toFixed(1).replace('.', ',') }}/5
+        </span>
       </p>
       <p v-else>Quando o administrador aceitar um sorteio, o livro aparece aqui.</p>
     </div>

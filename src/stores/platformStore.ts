@@ -78,6 +78,14 @@ export const usePlatformStore = defineStore('platform', () => {
     await loadHome()
   }
 
+  async function submitReview(rating: number, review: string) {
+    await apiRequest('/api/books/review', {
+      method: 'POST',
+      body: JSON.stringify({ rating, review })
+    })
+    await loadHome()
+  }
+
   return {
     clubState,
     members,
@@ -89,6 +97,7 @@ export const usePlatformStore = defineStore('platform', () => {
     createChapter,
     startChapter,
     finishChapter,
-    finishCurrentBook
+    finishCurrentBook,
+    submitReview
   }
 })

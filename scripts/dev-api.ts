@@ -23,6 +23,7 @@ import adminUsers from '../api/admin/users'
 import adminChapters from '../api/admin/chapters'
 import adminFinishBook from '../api/admin/current-book/finish'
 import booksCurrent from '../api/books/current'
+import booksReview from '../api/books/review'
 import profile from '../api/profile'
 import chapterStart from '../api/chapters/[chapterId]/start'
 import chapterFinish from '../api/chapters/[chapterId]/finish'
@@ -73,8 +74,9 @@ app.all('/api/admin/users', wrap(adminUsers))
 app.all('/api/admin/chapters', wrap(adminChapters))
 app.all('/api/admin/current-book/finish', wrap(adminFinishBook))
 
-// Livro atual e perfil
+// Livro atual, avaliacao e perfil
 app.all('/api/books/current', wrap(booksCurrent))
+app.all('/api/books/review', wrap(booksReview))
 app.all('/api/profile', wrap(profile))
 
 // Capitulos (rotas dinamicas)

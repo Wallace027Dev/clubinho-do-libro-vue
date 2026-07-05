@@ -139,6 +139,26 @@ Regra anti-spoiler:
 Comentario do capitulo N so e legivel para usuario que concluiu o capitulo N.
 ```
 
+## Fase 6 - Nota e resenha final do livro
+
+Objetivos:
+
+- Membro finaliza a leitura dando nota (1 a 5) e resenha opcional.
+- Cada membro mantem uma avaliacao por livro (upsert).
+- So pode avaliar quem concluiu todos os capitulos do livro.
+- Livro mostra media do clube, notas individuais e resenhas.
+
+Entidade adicionada:
+
+- `BookReview` (pertence a um `ClubBook` e a um `User`).
+
+Regras:
+
+- Avaliacao exige todos os capitulos do `ClubBook` com status `FINISHED`.
+- Nota e media sao visiveis para todos os membros.
+- A resenha (texto) segue o anti-spoiler: so aparece para quem terminou o
+  livro.
+
 Variaveis obrigatorias:
 
 - `DATABASE_URL`

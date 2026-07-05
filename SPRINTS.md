@@ -158,3 +158,22 @@ Pendencias para validar em producao:
 - Rodar `npm run db:push` apos configurar Supabase.
 - Testar com dois membros em progressos diferentes.
 - Confirmar que comentarios bloqueiam corretamente para quem nao concluiu.
+
+## Fase 6 - Nota e resenha final do livro
+
+Objetivo: permitir que cada membro finalize a leitura com nota e resenha e
+que o clube veja a media e as avaliacoes individuais.
+
+Status: implementada e validada localmente.
+
+Entregaveis:
+
+- Modelo `BookReview` (nota 1-5 e resenha opcional, uma por membro/livro).
+- Endpoint `POST /api/books/review` com upsert (criar/editar avaliacao).
+- Avaliacao liberada apenas apos concluir todos os capitulos do livro.
+- Media do clube e notas individuais no `GET /api/books/current`.
+- Resenha (texto) protegida por anti-spoiler: so aparece para quem terminou
+  o livro; nota e media ficam visiveis para todos.
+- Atividade `BOOK_REVIEWED` no feed.
+- UI com selecao de estrelas, resenha e lista de avaliacoes na pagina de
+  capitulos, mais a media no banner do feed.

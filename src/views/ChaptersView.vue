@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import BookReview from '../components/BookReview.vue'
 import ChapterComments from '../components/ChapterComments.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Chapter } from '../types/platform'
@@ -92,4 +93,6 @@ function getStatusLabel(chapter: Chapter) {
       <p>O admin ainda nao cadastrou capitulos para este livro.</p>
     </div>
   </section>
+
+  <BookReview v-if="currentBook" />
 </template>
