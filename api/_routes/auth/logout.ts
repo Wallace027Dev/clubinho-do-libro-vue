@@ -1,5 +1,5 @@
-import { clearSessionCookie } from '../_lib/auth'
-import { assertMethod, sendJson } from '../_lib/http'
+import { clearSessionCookie } from '../../_lib/auth.js'
+import { assertMethod, sendJson } from '../../_lib/http.js'
 
 export default function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {

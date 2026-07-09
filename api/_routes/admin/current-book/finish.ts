@@ -1,7 +1,7 @@
-import { requireAdmin } from '../../_lib/auth'
-import { getDefaultClub } from '../../_lib/club'
-import { assertMethod, sendJson } from '../../_lib/http'
-import { prisma } from '../../_lib/prisma'
+import { requireAdmin } from '../../../_lib/auth.js'
+import { getDefaultClub } from '../../../_lib/club.js'
+import { assertMethod, sendJson } from '../../../_lib/http.js'
+import { prisma } from '../../../_lib/prisma.js'
 
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {

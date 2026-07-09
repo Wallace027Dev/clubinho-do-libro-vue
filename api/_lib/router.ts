@@ -1,0 +1,91 @@
+/**
+ * Roteador unico das rotas de /api.
+ *
+ * O plano Hobby da Vercel limita o deploy a 12 serverless functions, entao
+ * todas as rotas sao servidas por uma unica funcao (api/index.ts) — um
+ * rewrite no vercel.json manda todo /api/* para ela — que delega para os
+ * handlers em api/_routes/ (pastas com prefixo _ nao viram funcoes na
+ * Vercel).
+ *
+ * O dev-server local (scripts/dev-api.ts) usa este mesmo roteador, entao o
+ * comportamento e identico nos dois ambientes.
+ */
+import authLogin from '../_routes/auth/login.js'
+import authLogout from '../_routes/auth/logout.js'
+import authMe from '../_routes/auth/me.js'
+import adminLogin from '../_routes/admin/login.js'
+import adminUsers from '../_routes/admin/users.js'
+import adminChapters from '../_routes/admin/chapters.js'
+import adminFinishBook from '../_routes/admin/current-book/finish.js'
+import booksCurrent from '../_routes/books/current.js'
+import booksReview from '../_routes/books/review.js'
+import booksHistory from '../_routes/books/history.js'
+import profile from '../_routes/profile.js'
+import chapterStart from '../_routes/chapters/[chapterId]/start.js'
+import chapterFinish from '../_routes/chapters/[chapterId]/finish.js'
+import chapterComments from '../_routes/chapters/[chapterId]/comments.js'
+import commentReaction from '../_routes/comments/[commentId]/reaction.js'
+
+export type VercelHandler = (req: any, res: any) => unknown | Promise<unknown>
+
+interface Route {
+  pattern: string[]
+  handler: VercelHandler
+}
+
+// Segmentos entre colchetes ([chapterId]) casam com qualquer valor e viram
+// parametros, como nas rotas de arquivo da Vercel.
+const routes: Route[] = [
+  ['auth/login', authLogin],
+  ['auth/logout', authLogout],
+  ['auth/me', authMe],
+  ['admin/login', adminLogin],
+  ['admin/users', adminUsers],
+  ['admin/chapters', adminChapters],
+  ['admin/current-book/finish', adminFinishBook],
+  ['books/current', booksCurrent],
+  ['books/review', booksReview],
+  ['books/history', booksHistory],
+  ['profile', profile],
+  ['chapters/[chapterId]/start', chapterStart],
+  ['chapters/[chapterId]/finish', chapterFinish],
+  ['chapters/[chapterId]/comments', chapterComments],
+  ['comments/[commentId]/reaction', commentReaction]
+].map(([pattern, handler]) => ({
+  pattern: (pattern as string).split('/'),
+  handler: handler as VercelHandler
+}))
+
+export interface RouteMatch {
+  handler: VercelHandler
+  params: Record<string, string>
+}
+
+/** Recebe os segmentos do path apos /api (ex.: ['auth', 'login']). */
+export function matchRoute(segments: string[]): RouteMatch | null {
+  for (const route of routes) {
+    if (route.pattern.length !== segments.length) {
+      continue
+    }
+
+    const params: Record<string, string> = {}
+    let matched = true
+
+    for (let i = 0; i < route.pattern.length; i++) {
+      const part = route.pattern[i]
+
+      if (part.startsWith('[')) {
+        params[part.slice(1, -1)] = decodeURIComponent(segments[i])
+      } else if (part !== segments[i]) {
+        matched = false
+        break
+      }
+    }
+
+    if (matched) {
+      return { handler: route.handler, params }
+    }
+  }
+
+  return null
+}

@@ -1,8 +1,8 @@
 import { ChapterCommentReactionType } from '@prisma/client'
-import { requireSession } from '../../_lib/auth'
-import { userCanReadComment } from '../../_lib/chapterAccess'
-import { assertMethod, readBody, sendJson } from '../../_lib/http'
-import { prisma } from '../../_lib/prisma'
+import { requireSession } from '../../../_lib/auth.js'
+import { userCanReadComment } from '../../../_lib/chapterAccess.js'
+import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
+import { prisma } from '../../../_lib/prisma.js'
 
 interface ReactionBody {
   type?: ChapterCommentReactionType

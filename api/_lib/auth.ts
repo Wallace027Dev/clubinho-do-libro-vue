@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
-import { getRequiredEnv } from './http'
+import { getRequiredEnv } from './http.js'
 
 export type SessionRole = 'ADMIN' | 'MEMBER'
 

@@ -1,8 +1,8 @@
-import { requireAdmin } from '../_lib/auth'
-import { getDefaultClub } from '../_lib/club'
-import { assertMethod, readBody, sendJson } from '../_lib/http'
-import { hashPassword } from '../_lib/passwords'
-import { prisma } from '../_lib/prisma'
+import { requireAdmin } from '../../_lib/auth.js'
+import { getDefaultClub } from '../../_lib/club.js'
+import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
+import { hashPassword } from '../../_lib/passwords.js'
+import { prisma } from '../../_lib/prisma.js'
 
 interface CreateUserBody {
   login?: string

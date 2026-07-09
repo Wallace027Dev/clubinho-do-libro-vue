@@ -1,8 +1,8 @@
-import { requireSession } from '../_lib/auth'
-import { getDefaultClub } from '../_lib/club'
-import { assertMethod, sendJson } from '../_lib/http'
-import { prisma } from '../_lib/prisma'
-import { getClubBookReviews } from '../_lib/reviews'
+import { requireSession } from '../../_lib/auth.js'
+import { getDefaultClub } from '../../_lib/club.js'
+import { assertMethod, sendJson } from '../../_lib/http.js'
+import { prisma } from '../../_lib/prisma.js'
+import { getClubBookReviews } from '../../_lib/reviews.js'
 
 /**
  * Historico do clube (Fase 7): livros ja finalizados com a memoria da leitura.

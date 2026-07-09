@@ -108,8 +108,14 @@ local.
 ### Estrutura
 
 ```text
-api/                Funcoes serverless (auth, admin, livro, capitulos, comentarios, reacoes)
-  _lib/             Auth, anti-spoiler, prisma, senhas, helpers HTTP
+api/
+  index.ts          Unica serverless function: recebe todo /api/* (rewrite no
+                    vercel.json) e delega ao roteador. Uma so funcao por causa
+                    do limite de 12 do plano Hobby da Vercel.
+  _lib/             Auth, anti-spoiler, prisma, senhas, helpers HTTP e o
+                    roteador de rotas (router.ts)
+  _routes/          Handlers de cada rota (auth, admin, livro, capitulos,
+                    comentarios, reacoes) — nao viram funcoes na Vercel
 prisma/             schema.prisma e seed.ts
 scripts/dev-api.ts  Dev-server local que serve as funcoes /api
 src/
@@ -122,11 +128,27 @@ src/
 
 ## Deploy
 
-1. Crie um projeto no Supabase e pegue a `DATABASE_URL`.
-2. Configure `DATABASE_URL`, `ADMIN_PASSWORD` e `SESSION_SECRET` na Vercel.
-3. Rode `npm run db:push` apontando para o banco de producao.
-4. Faca deploy na Vercel (o front e as funcoes `/api` sao publicados juntos).
-5. Cadastre o primeiro membro pelo painel admin.
+1. Crie um projeto no Supabase e copie as **duas** connection strings:
+   a do **transaction pooler** (porta 6543) e a **direta** (porta 5432).
+   Os formatos estao comentados no `.env.example`.
+2. Na Vercel, importe o repositorio e configure as variaveis:
+   - `DATABASE_URL`: a URL do **pooler**, com `?pgbouncer=true` (serverless
+     abre muitas conexoes; a URL direta esgota o banco).
+   - `ADMIN_PASSWORD` e `SESSION_SECRET`.
+3. Aplique o schema no banco de producao usando a URL **direta**, da sua
+   maquina:
+
+   ```bash
+   DATABASE_URL="postgresql://postgres:<senha>@db.<ref>.supabase.co:5432/postgres" npx prisma db push
+   ```
+
+   **Nao rode o seed em producao** — ele cria contas de teste com senha
+   fraca (`ana`/`bruno`, senha `123456`).
+4. Faca o deploy (o front e as funcoes `/api` sao publicados juntos).
+   O `vercel.json` ja redireciona as rotas do Vue Router para o
+   `index.html`, e o `postinstall` gera o Prisma Client no build.
+5. Acesse `/login/admin` com a `ADMIN_PASSWORD` (o admin nao precisa de
+   usuario no banco) e cadastre os membros, o livro atual e os capitulos.
 
 ## Status das fases
 

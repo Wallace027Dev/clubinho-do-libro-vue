@@ -1,5 +1,5 @@
-import { createSession, setSessionCookie } from '../_lib/auth'
-import { assertMethod, getRequiredEnv, readBody, sendJson } from '../_lib/http'
+import { createSession, setSessionCookie } from '../../_lib/auth.js'
+import { assertMethod, getRequiredEnv, readBody, sendJson } from '../../_lib/http.js'
 
 interface AdminLoginBody {
   password?: string

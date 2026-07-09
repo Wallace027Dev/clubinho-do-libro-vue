@@ -1,5 +1,5 @@
-import { getDefaultClub } from './club'
-import { prisma } from './prisma'
+import { getDefaultClub } from './club.js'
+import { prisma } from './prisma.js'
 
 export async function getFinishedChapterForUser(chapterId: string, userId: string) {
   const club = await getDefaultClub()

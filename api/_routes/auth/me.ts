@@ -1,6 +1,6 @@
-import { readSession } from '../_lib/auth'
-import { assertMethod, sendJson } from '../_lib/http'
-import { prisma } from '../_lib/prisma'
+import { readSession } from '../../_lib/auth.js'
+import { assertMethod, sendJson } from '../../_lib/http.js'
+import { prisma } from '../../_lib/prisma.js'
 
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['GET'])) {

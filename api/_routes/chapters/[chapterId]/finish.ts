@@ -1,7 +1,7 @@
-import { requireSession } from '../../_lib/auth'
-import { getDefaultClub } from '../../_lib/club'
-import { assertMethod, sendJson } from '../../_lib/http'
-import { prisma } from '../../_lib/prisma'
+import { requireSession } from '../../../_lib/auth.js'
+import { getDefaultClub } from '../../../_lib/club.js'
+import { assertMethod, sendJson } from '../../../_lib/http.js'
+import { prisma } from '../../../_lib/prisma.js'
 
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {
@@ -31,35 +31,36 @@ export default async function handler(req: any, res: any) {
   }
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
-  const existingProgress = await prisma.chapterProgress.findUnique({
+  const now = new Date()
+  const progress = await prisma.chapterProgress.upsert({
     where: {
       chapterId_userId: {
         chapterId: chapter.id,
         userId: session.userId
       }
+    },
+    update: {
+      status: 'FINISHED',
+      finishedAt: now
+    },
+    create: {
+      chapterId: chapter.id,
+      userId: session.userId,
+      status: 'FINISHED',
+      startedAt: now,
+      finishedAt: now
     }
   })
-  const progress =
-    existingProgress ??
-    (await prisma.chapterProgress.create({
-      data: {
-        chapterId: chapter.id,
-        userId: session.userId,
-        status: 'STARTED'
-      }
-    }))
 
-  if (!existingProgress) {
-    await prisma.activity.create({
-      data: {
-        clubId: club.id,
-        actorId: session.userId,
-        type: 'CHAPTER_STARTED',
-        message: `${user?.displayName || user?.login || 'Um membro'} iniciou o capitulo ${chapter.number}.`,
-        metadata: { chapterId: chapter.id, chapterNumber: chapter.number }
-      }
-    })
-  }
+  await prisma.activity.create({
+    data: {
+      clubId: club.id,
+      actorId: session.userId,
+      type: 'CHAPTER_FINISHED',
+      message: `${user?.displayName || user?.login || 'Um membro'} terminou o capitulo ${chapter.number}.`,
+      metadata: { chapterId: chapter.id, chapterNumber: chapter.number }
+    }
+  })
 
   sendJson(res, 200, { progress })
 }

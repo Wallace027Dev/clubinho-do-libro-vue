@@ -1,8 +1,8 @@
-import { requireSession } from '../_lib/auth'
-import { getDefaultClub } from '../_lib/club'
-import { assertMethod, readBody, sendJson } from '../_lib/http'
-import { prisma } from '../_lib/prisma'
-import { userFinishedAllChapters } from '../_lib/reviews'
+import { requireSession } from '../../_lib/auth.js'
+import { getDefaultClub } from '../../_lib/club.js'
+import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
+import { prisma } from '../../_lib/prisma.js'
+import { userFinishedAllChapters } from '../../_lib/reviews.js'
 
 interface ReviewBody {
   rating?: number

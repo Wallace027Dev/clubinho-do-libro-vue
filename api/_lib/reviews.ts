@@ -1,4 +1,4 @@
-import { prisma } from './prisma'
+import { prisma } from './prisma.js'
 
 /**
  * Carrega as avaliacoes de um ClubBook com o resumo (media e total).

@@ -1,7 +1,7 @@
-import { createSession, setSessionCookie } from '../_lib/auth'
-import { assertMethod, readBody, sendJson } from '../_lib/http'
-import { verifyPassword } from '../_lib/passwords'
-import { prisma } from '../_lib/prisma'
+import { createSession, setSessionCookie } from '../../_lib/auth.js'
+import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
+import { verifyPassword } from '../../_lib/passwords.js'
+import { prisma } from '../../_lib/prisma.js'
 
 interface LoginBody {
   login?: string
