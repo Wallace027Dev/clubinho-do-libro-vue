@@ -258,4 +258,17 @@ Status: backlog, anotado em 2026-07-10. Itens ainda nao priorizados.
 - Redesenhar as telas seguindo o wireframe de baixa fidelidade como
   referencia de estrutura, aplicando o design system atual (liquid
   glass, paleta oliva/bege) com estetica moderna.
-- Pendencia: anexar/linkar o wireframe de referencia ao repositorio.
+- Wireframes de referencia salvos em `docs/wireframes/` (ver o README
+  da pasta para o mapeamento de cada tela para o clube).
+
+Decisoes tomadas em 2026-07-10:
+
+- Navegacao inferior com 5 abas e botao central destacado:
+  Feed, Capitulos, Home (livro atual, botao central), Livros lidos,
+  Perfil. A Home passa a ser a pagina do livro atual; o feed vira aba.
+- Atividade do feed abre pagina de detalhe (como no wireframe 03), nao
+  mais modal.
+- Feed ganha busca textual e filtro por tipo de atividade.
+- Ordem de aplicacao: 1) componentes base (BaseButton com variantes,
+  toast de feedback, estados de loading — itens 8.1/8.5 + wireframe 06),
+  2) navegacao inferior + feed, 3) pagina de detalhe, 4) demais telas.
