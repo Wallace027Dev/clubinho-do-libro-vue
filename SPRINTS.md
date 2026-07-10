@@ -288,3 +288,43 @@ Decisoes da tela de Capitulos (etapa 4, alinhadas em 2026-07-10):
   `POST /api/chapters/:id/reopen`): volta para "em leitura" com aviso;
   o comentario continua salvo, o feed preserva o historico e nenhuma
   atividade nova e gerada.
+
+### 8.9 Itens extras entregues na fase 8
+
+- Troca de senha pelo membro (exige a atual) e redefinicao pelo admin.
+- Soft delete de membro (desativar/reativar) preservando o historico.
+- Edicao/exclusao de capitulos pelo admin (excluir so sem uso).
+- Estatisticas pessoais no perfil.
+- Nota fracionada no livro (1,0-5,0) com estrelas proporcionais.
+- Icones lucide no lugar de emojis na interface; fundo com degrade
+  radial animado corrigido.
+
+## Fase 9 - Avaliacao por capitulo (heatmap)
+
+Objetivo: medir a satisfacao do clube capitulo a capitulo, no estilo
+"mapa de calor" (referencia Mistborn), alinhado a paleta do produto.
+
+Status: implementada e em producao (2026-07-10).
+
+Decisoes alinhadas:
+
+- Nota do capitulo (1,0-5,0, fracionada) dada no detalhe do capitulo
+  apos conclui-lo; opcional na hora, editavel depois.
+- Avaliar o livro exige nota em todos os capitulos (gate na API e aviso
+  no card de avaliacao). Comentario continua opcional.
+- Anti-spoiler estendido: em livro atual, a media de um capitulo so
+  aparece para quem o concluiu (tile com cadeado); em livro finalizado,
+  tudo e publico.
+- Satisfacao = media/5 (ex.: 4,5 = 90%). Faixas: 4,5-5,0 Incrivel ·
+  4,0-4,4 Otimo · 3,0-3,9 Mediano · 2,0-2,9 Ruim · < 2,0 Pessimo.
+- Pagina em `/books/:id/ratings`, acessivel pelo card de avaliacao
+  (livro atual) e pelo detalhe de cada livro em Lidos.
+
+Entregaveis:
+
+- Modelo `ChapterRating` (uma nota por membro/capitulo, upsert).
+- `POST /api/chapters/:id/rating` e `GET /api/books/:id/ratings`.
+- UI: controle de nota no detalhe do capitulo; heatmap com tiles
+  coloridos por faixa, legenda e satisfacao geral do livro.
+- Prologo/epilogo sem numeracao na interface (numero 0 para ordenar o
+  prologo; tiles "P"/"E" no heatmap).

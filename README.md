@@ -15,20 +15,34 @@ anti-spoiler.
 - **Comentarios anti-spoiler**: o comentario de um capitulo so aparece para
   quem ja concluiu aquele capitulo.
 - **Reacoes** aos comentarios (5 tipos), uma por membro, com troca.
-- **Nota e resenha final**: apos concluir todos os capitulos, o membro avalia
-  o livro (1-5) com resenha opcional; o clube ve a media e as notas de todos.
+- **Nota por capitulo**: apos concluir um capitulo, o membro da uma nota
+  fracionada (1,0 a 5,0); a pagina de avaliacao do livro
+  (`/books/:id/ratings`) mostra um heatmap com a media e a satisfacao (%)
+  de cada capitulo, com faixas de cor.
+- **Nota e resenha final**: apos concluir e dar nota a todos os capitulos,
+  o membro avalia o livro (nota fracionada 1,0-5,0) com resenha opcional;
+  o clube ve a media e as notas de todos (estrelas com preenchimento
+  proporcional).
+- **Prologo/Epilogo**: capitulos avulsos cadastrados com numero so para
+  ordenacao (0 = prologo) e exibidos sem numeracao.
 - **Historico do clube** ("Livros lidos"): livros finalizados com media,
   resenhas e comentarios por capitulo arquivados.
+- **Gestao pelo admin**: membros (criar, desativar/reativar preservando o
+  historico, redefinir senha), livro atual (com descricao) e capitulos
+  (editar sempre; excluir so sem uso).
+- **Conta do membro**: troca de senha (exige a atual), apelido e foto de
+  perfil por upload da galeria (comprimida no cliente).
 
-No feed, apenas as atividades de **comentario** abrem um modal (mostrando o
-comentario e permitindo reagir, se voce ja concluiu o capitulo). A pagina de
-**Capitulos** mostra somente o seu progresso e o seu comentario; os
-comentarios dos outros aparecem no feed.
+Navegacao mobile com tab bar inferior (Feed, Capitulos, Inicio, Lidos,
+Perfil). No feed (com busca e filtro por tipo), as atividades de
+**comentario** abrem uma pagina de detalhe para ler e reagir — respeitando
+o anti-spoiler. A pagina de **Capitulos** mostra o seu progresso; cada
+capitulo abre um detalhe com acoes, nota e o seu comentario.
 
 ## Stack
 
 - Vue 3 + TypeScript + Vite (PWA via `vite-plugin-pwa`)
-- Pinia (estado) e Vue Router
+- Pinia (estado), Vue Router e icones `lucide-vue-next`
 - Funcoes serverless no formato Vercel (`/api`)
 - Autenticacao por sessao JWT (`jose`) em cookie HttpOnly, senhas com `bcryptjs`
 - Prisma + Postgres (Supabase em producao; Postgres via Docker em dev)
@@ -119,11 +133,15 @@ api/
 prisma/             schema.prisma e seed.ts
 scripts/dev-api.ts  Dev-server local que serve as funcoes /api
 src/
-  views/            Feed (home), Capitulos, Login, Perfil, Admin
-  components/        Modal de atividade, comentarios do capitulo, sorteador legado
-  stores/           Pinia (auth, plataforma, sorteador)
+  views/            Home (livro atual), Feed, Capitulos + detalhe, Avaliacao
+                    do livro (/review), Heatmap (/books/:id/ratings), Detalhe
+                    de atividade, Livros lidos + detalhe, Perfil, Admin, Logins
+  components/       BookReview e sorteador legado
+    ui/             BaseButton, AppToast, AppTabBar, StarRating
+  stores/           Pinia (auth, plataforma, ui/toasts, sorteador)
   services/         Cliente HTTP e persistencia
   types/            Tipos de dominio
+  utils/            Rotulos de capitulo (prologo/epilogo sem numeracao)
 ```
 
 ## Deploy
@@ -161,5 +179,7 @@ src/
 | 5 - Reacoes aos comentarios | Implementada |
 | 6 - Nota e resenha final do livro | Implementada |
 | 7 - Historico do clube | Implementada |
+| 8 - Redesign UX/UI (tab bar, detalhes, botoes, toasts, upload de foto, gestao admin) | Implementada |
+| 9 - Avaliacao por capitulo (nota fracionada + heatmap de satisfacao) | Implementada |
 
 Detalhes em [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) e [SPRINTS.md](SPRINTS.md).

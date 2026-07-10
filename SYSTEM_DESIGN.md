@@ -179,6 +179,62 @@ Endpoint:
 - `GET /api/books/history` agrega livros finalizados, reviews (via helper
   compartilhado com a Fase 6) e comentarios por capitulo.
 
+## Fase 8 - Redesign UX/UI e gestao
+
+Mudancas estruturais (decididas com wireframes em `docs/wireframes/`):
+
+- Navegacao inferior com 5 abas e botao central (Feed, Capitulos,
+  Inicio = livro atual, Lidos, Perfil); Home vira a pagina do livro atual.
+- Padrao lista -> pagina de detalhe: atividade (`/activity/:id`),
+  capitulo (`/chapters/:id`), livro lido (`/history/:id`).
+- Componentes base: `BaseButton` (primary/secondary/outline + loading),
+  toast global de sucesso/erro, `StarRating` (preenchimento fracionado),
+  icones `lucide-vue-next` (emojis so nas reacoes).
+- Fluxo dedicado de avaliacao do livro em `/review` (estilo enquete).
+- Conta: troca de senha pelo membro (`POST /api/profile/password`, exige a
+  senha atual) e foto de perfil por upload (redimensionada no cliente e
+  salva como data URL em `avatarUrl`).
+- Admin: desativar/reativar membro (soft delete via `User.deactivatedAt`;
+  conta desativada nao loga, historico preservado), redefinir senha
+  (`PATCH /api/admin/users/:id`), editar capitulo sempre e excluir apenas
+  sem progresso/comentarios (`PATCH/DELETE /api/admin/chapters/:id`).
+- Desfazer conclusao de capitulo (`POST /api/chapters/:id/reopen`):
+  FINISHED -> STARTED, comentario preservado, sem atividade nova.
+- `Book.description` (opcional, informado pelo admin; some na Home e nos
+  detalhes) — absorve a antiga "aba de livros".
+- Deploy: uma unica serverless function (`api/index.ts` + rewrite no
+  `vercel.json`) por causa do limite de 12 do plano Hobby da Vercel.
+
+## Fase 9 - Avaliacao por capitulo
+
+Objetivos:
+
+- Cada membro da uma nota fracionada (1,0 a 5,0) por capitulo concluido.
+- Heatmap do livro (`/books/:id/ratings`): media e satisfacao (%) por
+  capitulo, com faixas de cor.
+
+Entidade adicionada:
+
+- `ChapterRating` (uma por membro/capitulo, upsert; `rating Float`).
+
+Regras:
+
+- So quem concluiu o capitulo pode dar nota (`POST /api/chapters/:id/rating`).
+- Avaliar o livro exige nota em todos os capitulos (alem de conclui-los).
+- Satisfacao = media/5. Faixas: 4,5-5,0 Incrivel · 4,0-4,4 Otimo ·
+  3,0-3,9 Mediano · 2,0-2,9 Ruim · < 2,0 Pessimo.
+- Anti-spoiler estendido: em livro CURRENT, a media de um capitulo so
+  aparece para quem o concluiu (tile com cadeado); em livro FINISHED,
+  todas as medias sao publicas.
+- `BookReview.rating` tambem e fracionado (`Float`, uma casa decimal);
+  estrelas exibem preenchimento proporcional.
+
+Capitulos avulsos (prologo/epilogo):
+
+- Cadastrados com numero apenas para ordenacao (0 = prologo, ultimo =
+  epilogo) e exibidos pelo nome, sem "Capitulo N" (tiles "P"/"E" no
+  heatmap). Deteccao pelo titulo ("Prologo"/"Epilogo").
+
 Variaveis obrigatorias:
 
 - `DATABASE_URL`
