@@ -28,17 +28,23 @@
 html {
   min-height: 100%;
   background: #d7ddc5;
+  /* iOS: evita reescalar fontes ao girar para paisagem. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   position: relative;
   min-width: 320px;
   min-height: 100vh;
+  /* dvh acompanha a barra do Safari que aparece/some no iPhone. */
+  min-height: 100dvh;
   margin: 0;
   overflow-x: hidden;
   background: linear-gradient(145deg, #fbf7ee 0%, #f1dfbd 42%, #cbd5b2 72%, #7f895e 100%);
   color: var(--color-ink);
   font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body::before {
@@ -100,8 +106,12 @@ textarea:focus-visible {
   z-index: 1;
   width: min(100%, 520px);
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 20px 16px 44px;
+  /* Safe areas do iPhone (status bar/notch e bordas em paisagem). */
+  padding: calc(20px + env(safe-area-inset-top, 0px))
+    calc(16px + env(safe-area-inset-right, 0px)) 44px
+    calc(16px + env(safe-area-inset-left, 0px));
 }
 
 .glass-panel {
@@ -292,6 +302,20 @@ textarea {
   outline: none;
   padding: 0 16px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
+  /* 16px+ evita o zoom automático do Safari ao focar o campo. */
+  font-size: 16px;
+}
+
+/* Tira o visual nativo do iOS (cantos/sombras proprios) dos campos.
+   O range fica de fora para preservar o thumb com accent-color. */
+input:not([type='range']),
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
 }
 
 input {
@@ -384,7 +408,7 @@ textarea:focus {
 /* Toast global de feedback (wireframe 06). */
 .toast-region {
   position: fixed;
-  top: 14px;
+  top: calc(14px + env(safe-area-inset-top, 0px));
   right: 16px;
   left: 16px;
   z-index: 60;
@@ -1451,6 +1475,7 @@ textarea:focus {
 
 .rating-input-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   justify-content: space-between;
