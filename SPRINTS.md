@@ -193,3 +193,69 @@ Entregaveis:
 - Estatisticas simples: capitulos, comentarios e avaliacoes.
 - Pagina "Livros lidos" (`/history`) com cards expansiveis por livro.
 - Seed cria um livro finalizado de exemplo para o historico.
+
+## Fase 8 - Melhorias de UX/UI (backlog)
+
+Objetivo: elevar a qualidade visual e a experiencia de uso da plataforma
+apos o primeiro deploy em producao.
+
+Status: backlog, anotado em 2026-07-10. Itens ainda nao priorizados.
+
+### 8.1 Estado de carregamento em requisicoes
+
+- Feedback visual (spinner/skeleton e botoes desabilitados) durante toda
+  chamada a API: login, feed, capitulos, comentarios, reacoes, admin.
+- Evitar duplo submit enquanto a requisicao esta em andamento.
+
+### 8.2 Botao de exclusao de usuario (admin)
+
+- Acao de excluir membro no painel admin, com confirmacao.
+- Decidir estrategia para os dados vinculados (progresso, comentarios,
+  reacoes, avaliacoes, atividades): exclusao em cascata ou desativacao
+  (soft delete) preservando o historico do clube. Hoje o schema nao tem
+  cascata configurada, entao a exclusao direta falharia por FK.
+- Novo endpoint DELETE em `/api/admin/users`.
+
+### 8.3 Acentuacao nos textos (portugues do Brasil)
+
+- Revisar todos os textos da interface e das mensagens da API para
+  aplicar acentuacao correta (hoje muitos textos estao sem acento).
+- Vale definir se docs/comentarios de codigo tambem entram na revisao.
+
+### 8.4 Fundo com degrade radial animado
+
+- Background da aplicacao com degrade radial que se move lentamente
+  (posicao do centro do gradiente animada).
+- Respeitar `prefers-reduced-motion` (desativar a animacao).
+- Manter contraste e legibilidade dos cartoes translucidos por cima.
+
+### 8.5 Componente de botao com variantes
+
+- Criar `BaseButton` (ou `AppButton`) com variantes `primary`,
+  `secondary` e `outline`, alem de estados hover/focus/disabled/loading.
+- Substituir os botoes existentes aplicando a variante conforme a
+  utilidade: acao principal da tela = primary; acoes de apoio =
+  secondary; acoes discretas/destrutivas leves = outline.
+- Integra com 8.1 (estado loading do botao).
+
+### 8.6 Upload de imagem da galeria (perfil e livro)
+
+- Trocar o input de URL por upload de arquivo (galeria/camera no mobile).
+- Requer storage de arquivos: candidato natural e o Supabase Storage
+  (bucket publico para avatares e capas), gerando a URL apos o upload.
+- Validar tamanho/formato e redimensionar/comprimir no cliente antes de
+  enviar (funcoes serverless tem limite de payload).
+
+### 8.7 Aba de livros com modal de detalhes
+
+- Nova aba/pagina listando os livros do clube.
+- Ao clicar em um livro, abrir modal com nome, autor e descricao.
+- O modelo `Book` hoje nao tem campo `description` — adicionar no schema
+  e nos formularios do admin.
+
+### 8.8 Aplicar layout inspirado no baixa fidelidade
+
+- Redesenhar as telas seguindo o wireframe de baixa fidelidade como
+  referencia de estrutura, aplicando o design system atual (liquid
+  glass, paleta oliva/bege) com estetica moderna.
+- Pendencia: anexar/linkar o wireframe de referencia ao repositorio.
