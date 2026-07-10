@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
+import ActivityDetailView from './views/ActivityDetailView.vue'
 import AdminLoginView from './views/AdminLoginView.vue'
 import AdminView from './views/AdminView.vue'
 import ChaptersView from './views/ChaptersView.vue'
@@ -14,6 +15,7 @@ export const router = createRouter({
   routes: [
     { path: '/', component: HomeView, meta: { requiresAuth: true } },
     { path: '/feed', component: FeedView, meta: { requiresAuth: true } },
+    { path: '/activity/:activityId', component: ActivityDetailView, meta: { requiresAuth: true } },
     { path: '/chapters', component: ChaptersView, meta: { requiresAuth: true } },
     { path: '/history', component: HistoryView, meta: { requiresAuth: true } },
     { path: '/login', component: LoginView },

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import ActivityCommentModal from '../components/ActivityCommentModal.vue'
+import { useRouter } from 'vue-router'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity } from '../types/platform'
 
+const router = useRouter()
 const platformStore = usePlatformStore()
 const activities = computed(() => platformStore.clubState.activities)
 
-const selectedActivity = ref<Activity | null>(null)
 const searchTerm = ref('')
 
 interface FeedFilter {
@@ -74,11 +74,7 @@ function openActivity(activity: Activity) {
     return
   }
 
-  selectedActivity.value = activity
-}
-
-function closeActivity() {
-  selectedActivity.value = null
+  void router.push(`/activity/${activity.id}`)
 }
 
 function activityDate(activity: Activity) {
@@ -157,6 +153,4 @@ function actorName(activity: Activity) {
       <p>O feed ainda esta vazio.</p>
     </div>
   </section>
-
-  <ActivityCommentModal :activity="selectedActivity" @close="closeActivity" />
 </template>
