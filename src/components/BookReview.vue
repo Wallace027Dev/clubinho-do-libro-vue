@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import BaseButton from './ui/BaseButton.vue'
+import StarRating from './ui/StarRating.vue'
 
 const platformStore = usePlatformStore()
 const authStore = useAuthStore()
@@ -30,10 +31,6 @@ const averageLabel = computed(() => {
   return summary.value.average.toFixed(1).replace('.', ',')
 })
 
-function stars(value: number) {
-  const rounded = Math.round(value)
-  return '★★★★★☆☆☆☆☆'.slice(5 - rounded, 10 - rounded)
-}
 </script>
 
 <template>
@@ -41,6 +38,9 @@ function stars(value: number) {
     <div class="flow-heading">
       <p class="section-label">Avaliação do livro</p>
       <h2>Nota e resenha do clube</h2>
+      <p v-if="averageLabel" class="review-stars">
+        <StarRating :value="summary.average!" :size="18" />
+      </p>
       <p v-if="averageLabel">
         Média do clube: <strong>{{ averageLabel }}</strong> / 5
         <span class="review-count">({{ summary.count }} avaliação{{ summary.count === 1 ? '' : 'es' }})</span>
@@ -71,7 +71,7 @@ function stars(value: number) {
           <div class="avatar">{{ item.user.displayName?.[0] || item.user.login[0] }}</div>
           <div>
             <strong>{{ item.user.displayName || item.user.login }}</strong>
-            <p class="review-stars" :aria-label="`${item.rating} de 5`">{{ stars(item.rating) }}</p>
+            <StarRating :value="item.rating" :size="16" />
           </div>
         </div>
         <p v-if="item.review" class="comment-body">{{ item.review }}</p>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
+import StarRating from '../components/ui/StarRating.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlatformStore } from '../stores/platformStore'
 import type { ChapterCommentReactionType } from '../types/platform'
@@ -45,11 +46,6 @@ onMounted(() => {
   }
 })
 
-function stars(value: number) {
-  const rounded = Math.round(value)
-  return '★★★★★☆☆☆☆☆'.slice(5 - rounded, 10 - rounded)
-}
-
 function reactionEntries(reactions: Partial<Record<ChapterCommentReactionType, number>>) {
   return Object.entries(reactions) as Array<[ChapterCommentReactionType, number]>
 }
@@ -89,7 +85,7 @@ function goBack() {
           <h3>{{ book.book.title }}</h3>
           <p v-if="book.book.author" class="history-author">{{ book.book.author }}</p>
           <p v-if="averageLabel" class="review-stars">
-            {{ stars(book.reviewSummary.average!) }}
+            <StarRating :value="book.reviewSummary.average!" :size="18" />
             <span class="review-count">{{ averageLabel }}/5</span>
           </p>
           <p v-else class="comment-muted">Sem avaliações.</p>
@@ -116,7 +112,7 @@ function goBack() {
             <div class="avatar">{{ review.user.displayName?.[0] || review.user.login[0] }}</div>
             <div>
               <strong>{{ review.user.displayName || review.user.login }}</strong>
-              <p class="review-stars" :aria-label="`${review.rating} de 5`">{{ stars(review.rating) }}</p>
+              <StarRating :value="review.rating" :size="16" />
             </div>
           </div>
           <p v-if="review.review" class="comment-body">{{ review.review }}</p>

@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import StarRating from '../components/ui/StarRating.vue'
 import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
@@ -97,20 +98,19 @@ function cancel() {
 
     <form class="stack-form review-form" @submit.prevent="submit">
       <p class="review-form-label">{{ myReview ? 'Editar sua nota' : 'Sua nota' }}</p>
-      <div class="star-input" role="radiogroup" aria-label="Nota de 1 a 5">
-        <button
-          v-for="value in 5"
-          :key="value"
-          type="button"
-          class="star-button"
-          :class="{ active: value <= rating }"
-          role="radio"
-          :aria-checked="value === rating"
-          :aria-label="`${value} de 5`"
-          @click="rating = value"
-        >
-          ★
-        </button>
+      <div class="rating-input">
+        <StarRating :value="rating" :size="30" />
+        <input
+          v-model.number="rating"
+          type="range"
+          min="1"
+          max="5"
+          step="0.1"
+          aria-label="Nota de 1 a 5, em passos de 0,1"
+        />
+        <span class="rating-value">
+          {{ rating >= 1 ? `${rating.toFixed(1).replace('.', ',')}/5` : 'Arraste para dar a nota' }}
+        </span>
       </div>
 
       <label>

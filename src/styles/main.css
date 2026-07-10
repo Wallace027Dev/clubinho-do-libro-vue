@@ -1393,34 +1393,60 @@ textarea:focus {
   font-weight: 800;
 }
 
-.star-input {
-  display: flex;
-  gap: 6px;
+/* Estrelas com preenchimento fracionado (nota quebrada, ex.: 4,8). */
+.star-rating {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
 }
 
-.star-button {
+.star-rating__star {
+  position: relative;
+  display: inline-block;
+  flex: none;
+}
+
+.star-rating__star svg {
+  display: block;
+}
+
+.star-rating__base {
+  color: rgba(77, 87, 51, 0.3);
+  fill: rgba(77, 87, 51, 0.1);
+}
+
+.star-rating__fill {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.star-rating__active {
+  color: #d99a1b;
+  fill: #f6c343;
+}
+
+/* Controle da nota no fluxo de avaliacao. */
+.rating-input {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.rating-input input[type='range'] {
+  width: 100%;
+  min-height: 0;
+  padding: 0;
   border: 0;
   background: transparent;
-  padding: 2px;
-  font-size: 1.9rem;
-  line-height: 1;
-  color: rgba(77, 87, 51, 0.28);
-  cursor: pointer;
-  transition: transform 0.12s ease, color 0.12s ease;
+  box-shadow: none;
+  accent-color: var(--color-olive-650);
 }
 
-.star-button.active {
-  color: #d8a13a;
-}
-
-.star-button:hover {
-  transform: scale(1.12);
-}
-
-.star-button:focus-visible {
-  outline: 2px solid var(--color-olive-800);
-  outline-offset: 2px;
-  border-radius: 6px;
+.rating-value {
+  color: var(--color-olive-950);
+  font-size: 1.15rem;
+  font-weight: 900;
 }
 
 .review-list {

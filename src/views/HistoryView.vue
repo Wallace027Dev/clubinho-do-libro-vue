@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronRight } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
+import StarRating from '../components/ui/StarRating.vue'
 import { useRouter } from 'vue-router'
 import { usePlatformStore } from '../stores/platformStore'
 import type { FinishedBook } from '../types/platform'
@@ -23,11 +24,6 @@ function finishedLabel(book: FinishedBook) {
     year: 'numeric'
   })
   return label.charAt(0).toUpperCase() + label.slice(1)
-}
-
-function stars(value: number) {
-  const rounded = Math.round(value)
-  return '★★★★★☆☆☆☆☆'.slice(5 - rounded, 10 - rounded)
 }
 
 function openBook(book: FinishedBook) {
@@ -77,7 +73,7 @@ function openBook(book: FinishedBook) {
           <strong>{{ book.book.title }}</strong>
           <p v-if="book.book.author">{{ book.book.author }}</p>
           <p v-if="book.reviewSummary.average !== null" class="review-stars">
-            {{ stars(book.reviewSummary.average) }}
+            <StarRating :value="book.reviewSummary.average" :size="16" />
             <span class="review-count">
               {{ book.reviewSummary.average.toFixed(1).replace('.', ',') }}/5
             </span>

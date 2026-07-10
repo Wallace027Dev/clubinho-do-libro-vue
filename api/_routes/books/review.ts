@@ -34,10 +34,11 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = readBody<ReviewBody>(req)
-  const rating = Number(body.rating)
+  // Nota fracionada e permitida (ex.: 4.8); guardamos com uma casa decimal.
+  const rating = Math.round(Number(body.rating) * 10) / 10
 
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    sendJson(res, 400, { error: 'A nota deve ser um número de 1 a 5.' })
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    sendJson(res, 400, { error: 'A nota deve ser um número entre 1 e 5.' })
     return
   }
 
@@ -79,7 +80,7 @@ export default async function handler(req: any, res: any) {
         clubId: club.id,
         actorId: session.userId,
         type: 'BOOK_REVIEWED',
-        message: `${user?.displayName || user?.login || 'Um membro'} avaliou ${currentBook.book.title} com ${rating}/5.`,
+        message: `${user?.displayName || user?.login || 'Um membro'} avaliou ${currentBook.book.title} com ${String(rating).replace('.', ',')}/5.`,
         metadata: { bookId: currentBook.bookId, rating }
       }
     })

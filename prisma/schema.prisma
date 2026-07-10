@@ -106,7 +106,7 @@ model BookReview {
   id         String   @id @default(uuid())
   clubBookId String
   userId     String
-  rating     Int
+  rating     Float
   review     String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
