@@ -3,7 +3,9 @@ import { useAuthStore } from './stores/authStore'
 import ActivityDetailView from './views/ActivityDetailView.vue'
 import AdminLoginView from './views/AdminLoginView.vue'
 import AdminView from './views/AdminView.vue'
+import ChapterDetailView from './views/ChapterDetailView.vue'
 import ChaptersView from './views/ChaptersView.vue'
+import ReviewView from './views/ReviewView.vue'
 import FeedView from './views/FeedView.vue'
 import HistoryView from './views/HistoryView.vue'
 import HomeView from './views/HomeView.vue'
@@ -17,6 +19,8 @@ export const router = createRouter({
     { path: '/feed', component: FeedView, meta: { requiresAuth: true } },
     { path: '/activity/:activityId', component: ActivityDetailView, meta: { requiresAuth: true } },
     { path: '/chapters', component: ChaptersView, meta: { requiresAuth: true } },
+    { path: '/chapters/:chapterId', component: ChapterDetailView, meta: { requiresAuth: true } },
+    { path: '/review', component: ReviewView, meta: { requiresAuth: true } },
     { path: '/history', component: HistoryView, meta: { requiresAuth: true } },
     { path: '/login', component: LoginView },
     { path: '/login/admin', component: AdminLoginView },

@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import BookReview from '../components/BookReview.vue'
-import ChapterComments from '../components/ChapterComments.vue'
-import BaseButton from '../components/ui/BaseButton.vue'
-import { ApiError } from '../services/apiClient'
 import { usePlatformStore } from '../stores/platformStore'
-import { useUiStore } from '../stores/uiStore'
 import type { Chapter } from '../types/platform'
 
+const router = useRouter()
 const platformStore = usePlatformStore()
-const uiStore = useUiStore()
 const currentBook = computed(() => platformStore.clubState.currentBook)
-const pendingChapterId = ref<string | null>(null)
 
 onMounted(() => {
   void platformStore.loadHome()
@@ -21,50 +17,14 @@ function getChapterStatus(chapter: Chapter): 'NOT_STARTED' | 'STARTED' | 'FINISH
   return chapter.progress[0]?.status ?? 'NOT_STARTED'
 }
 
-function getStatusLabel(chapter: Chapter) {
-  const status = getChapterStatus(chapter)
+const statusLabels = {
+  NOT_STARTED: 'Nao iniciado',
+  STARTED: 'Em leitura',
+  FINISHED: 'Concluido'
+} as const
 
-  if (status === 'FINISHED') {
-    return 'Concluido'
-  }
-
-  if (status === 'STARTED') {
-    return 'Em leitura'
-  }
-
-  return 'Nao iniciado'
-}
-
-async function startChapter(chapter: Chapter) {
-  pendingChapterId.value = chapter.id
-
-  try {
-    await platformStore.startChapter(chapter.id)
-    uiStore.notify(`Capitulo ${chapter.number} iniciado. Boa leitura!`)
-  } catch (error) {
-    uiStore.notify(
-      error instanceof ApiError ? error.message : 'Nao foi possivel iniciar o capitulo.',
-      'error'
-    )
-  } finally {
-    pendingChapterId.value = null
-  }
-}
-
-async function finishChapter(chapter: Chapter) {
-  pendingChapterId.value = chapter.id
-
-  try {
-    await platformStore.finishChapter(chapter.id)
-    uiStore.notify(`Capitulo ${chapter.number} concluido!`)
-  } catch (error) {
-    uiStore.notify(
-      error instanceof ApiError ? error.message : 'Nao foi possivel concluir o capitulo.',
-      'error'
-    )
-  } finally {
-    pendingChapterId.value = null
-  }
+function openChapter(chapter: Chapter) {
+  void router.push(`/chapters/${chapter.id}`)
 }
 </script>
 
@@ -75,12 +35,10 @@ async function finishChapter(chapter: Chapter) {
       <h2 v-if="currentBook">{{ currentBook.book.title }}</h2>
       <h2 v-else>Nenhum livro em andamento</h2>
       <p v-if="currentBook">
-        Acompanhe sua leitura. As interacoes dos outros membros aparecem no feed.
+        Toque em um capitulo para registrar seu progresso e comentar.
       </p>
       <p v-else>Quando o administrador aceitar um sorteio, os capitulos aparecem aqui.</p>
     </div>
-
-    <RouterLink v-if="currentBook" class="text-link" to="/feed">Ver o feed do clube</RouterLink>
   </section>
 
   <div v-if="platformStore.isLoading && !currentBook" class="empty-state">
@@ -91,43 +49,33 @@ async function finishChapter(chapter: Chapter) {
     <div class="flow-heading">
       <p class="section-label">Capitulos</p>
       <h2>Seu progresso de leitura</h2>
-      <p>Iniciar e concluir capitulos gera atividades no feed do livro.</p>
     </div>
 
-    <ol v-if="currentBook.chapters.length" class="chapter-list">
-      <li v-for="chapter in currentBook.chapters" :key="chapter.id">
-        <div class="chapter-main">
-          <div>
-            <span class="chapter-kicker">Capitulo {{ chapter.number }}</span>
-            <strong>{{ chapter.title }}</strong>
-            <p>{{ getStatusLabel(chapter) }}</p>
-          </div>
-
-          <BaseButton
-            v-if="getChapterStatus(chapter) === 'NOT_STARTED'"
-            class="chapter-action"
-            variant="secondary"
-            :loading="pendingChapterId === chapter.id"
-            @click="startChapter(chapter)"
+    <ol v-if="currentBook.chapters.length" class="feed-list">
+      <li
+        v-for="chapter in currentBook.chapters"
+        :key="chapter.id"
+        class="feed-card is-clickable chapter-card"
+        role="button"
+        tabindex="0"
+        :aria-label="`Abrir capitulo ${chapter.number}: ${chapter.title}`"
+        @click="openChapter(chapter)"
+        @keydown.enter.prevent="openChapter(chapter)"
+        @keydown.space.prevent="openChapter(chapter)"
+      >
+        <div class="feed-card-top">
+          <span class="feed-tag">Capitulo {{ chapter.number }}</span>
+          <span
+            class="chapter-status"
+            :class="`chapter-status--${getChapterStatus(chapter).toLowerCase()}`"
           >
-            Iniciar
-          </BaseButton>
-
-          <BaseButton
-            v-else-if="getChapterStatus(chapter) === 'STARTED'"
-            class="chapter-action"
-            :loading="pendingChapterId === chapter.id"
-            @click="finishChapter(chapter)"
-          >
-            Concluir
-          </BaseButton>
+            {{ statusLabels[getChapterStatus(chapter)] }}
+          </span>
         </div>
-
-        <ChapterComments v-if="getChapterStatus(chapter) === 'FINISHED'" :chapter-id="chapter.id" />
-
-        <p v-else class="spoiler-lock">
-          Seu comentario deste capitulo abre depois que voce concluir a leitura.
-        </p>
+        <div class="chapter-card-row">
+          <strong>{{ chapter.title }}</strong>
+          <span class="chapter-chevron" aria-hidden="true">›</span>
+        </div>
       </li>
     </ol>
 

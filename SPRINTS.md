@@ -272,3 +272,16 @@ Decisoes tomadas em 2026-07-10:
 - Ordem de aplicacao: 1) componentes base (BaseButton com variantes,
   toast de feedback, estados de loading — itens 8.1/8.5 + wireframe 06),
   2) navegacao inferior + feed, 3) pagina de detalhe, 4) demais telas.
+
+Decisoes da tela de Capitulos (etapa 4, alinhadas em 2026-07-10):
+
+- Cada capitulo abre pagina de detalhe (`/chapters/:id`) com status,
+  acoes e campo de comentario fixo no rodape (wireframe 04).
+- Avaliacao final vira fluxo dedicado em `/review` (wireframe 05), com
+  Confirmar/Cancelar e toast; o card na tela de capitulos so aponta
+  para o fluxo.
+- Progressao de leitura continua livre (sem ordem sequencial).
+- Desfazer conclusao e permitido (novo endpoint
+  `POST /api/chapters/:id/reopen`): volta para "em leitura" com aviso;
+  o comentario continua salvo, o feed preserva o historico e nenhuma
+  atividade nova e gerada.

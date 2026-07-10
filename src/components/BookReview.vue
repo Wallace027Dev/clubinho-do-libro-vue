@@ -1,41 +1,25 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { ApiError } from '../services/apiClient'
+import { computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
-import { useUiStore } from '../stores/uiStore'
 import BaseButton from './ui/BaseButton.vue'
 
 const platformStore = usePlatformStore()
 const authStore = useAuthStore()
-const uiStore = useUiStore()
 
 const currentBook = computed(() => platformStore.clubState.currentBook)
 
 const canReview = computed(() => {
   const chapters = currentBook.value?.chapters ?? []
-  return chapters.length > 0 && chapters.every((chapter) => chapter.progress[0]?.status === 'FINISHED')
+  return (
+    chapters.length > 0 && chapters.every((chapter) => chapter.progress[0]?.status === 'FINISHED')
+  )
 })
 
 const reviews = computed(() => currentBook.value?.reviews ?? [])
 const summary = computed(() => currentBook.value?.reviewSummary ?? { average: null, count: 0 })
-const myReview = computed(() =>
-  reviews.value.find((review) => review.user.id === authStore.user?.id) ?? null
-)
-
-const rating = ref(0)
-const reviewText = ref('')
-const errorMessage = ref('')
-const isSubmitting = ref(false)
-
-// Sincroniza o formulario com a avaliacao ja existente do usuario.
-watch(
-  myReview,
-  (review) => {
-    rating.value = review?.rating ?? 0
-    reviewText.value = review?.review ?? ''
-  },
-  { immediate: true }
+const myReview = computed(
+  () => reviews.value.find((review) => review.user.id === authStore.user?.id) ?? null
 )
 
 const averageLabel = computed(() => {
@@ -49,26 +33,6 @@ const averageLabel = computed(() => {
 function stars(value: number) {
   const rounded = Math.round(value)
   return '★★★★★☆☆☆☆☆'.slice(5 - rounded, 10 - rounded)
-}
-
-async function submit() {
-  errorMessage.value = ''
-
-  if (rating.value < 1) {
-    errorMessage.value = 'Escolha uma nota de 1 a 5.'
-    return
-  }
-
-  isSubmitting.value = true
-
-  try {
-    await platformStore.submitReview(rating.value, reviewText.value)
-    uiStore.notify('Avaliacao salva com sucesso!')
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel salvar a avaliacao.'
-  } finally {
-    isSubmitting.value = false
-  }
 }
 </script>
 
@@ -84,39 +48,18 @@ async function submit() {
       <p v-else>Ainda nao ha avaliacoes deste livro.</p>
     </div>
 
-    <form v-if="canReview" class="stack-form review-form" @submit.prevent="submit">
-      <p class="review-form-label">{{ myReview ? 'Editar sua nota' : 'Sua nota' }}</p>
-      <div class="star-input" role="radiogroup" aria-label="Nota de 1 a 5">
-        <button
-          v-for="value in 5"
-          :key="value"
-          type="button"
-          class="star-button"
-          :class="{ active: value <= rating }"
-          role="radio"
-          :aria-checked="value === rating"
-          :aria-label="`${value} de 5`"
-          @click="rating = value"
-        >
-          ★
-        </button>
-      </div>
-
-      <label>
-        Resenha (opcional)
-        <textarea
-          v-model="reviewText"
-          maxlength="1000"
-          placeholder="O que voce achou do livro? Pode escrever com spoiler: so aparece para quem terminou."
-        ></textarea>
-      </label>
-
-      <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
-
-      <BaseButton type="submit" :loading="isSubmitting">
-        {{ isSubmitting ? 'Salvando...' : myReview ? 'Atualizar avaliacao' : 'Finalizar e avaliar' }}
-      </BaseButton>
-    </form>
+    <div v-if="canReview" class="review-cta">
+      <p class="review-form-label">
+        {{ myReview ? 'Voce ja avaliou este livro.' : 'Voce terminou o livro!' }}
+      </p>
+      <RouterLink to="/review" custom>
+        <template #default="{ navigate }">
+          <BaseButton :variant="myReview ? 'secondary' : 'primary'" @click="navigate">
+            {{ myReview ? 'Editar minha avaliacao' : 'Avaliar o livro' }}
+          </BaseButton>
+        </template>
+      </RouterLink>
+    </div>
 
     <p v-else class="spoiler-lock">
       Conclua todos os capitulos para dar sua nota e resenha.

@@ -666,6 +666,99 @@ textarea:focus {
   outline-offset: 2px;
 }
 
+/* Lista e detalhe de capitulos (fase 8 etapa 4). */
+.chapter-card-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chapter-chevron {
+  color: rgba(40, 41, 31, 0.45);
+  font-size: 1.4rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chapter-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 8px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chapter-status--not_started {
+  background: rgba(40, 41, 31, 0.08);
+  color: rgba(40, 41, 31, 0.62);
+}
+
+.chapter-status--started {
+  background: rgba(213, 168, 94, 0.22);
+  color: #7c5a22;
+}
+
+.chapter-status--finished {
+  background: rgba(109, 168, 94, 0.2);
+  color: #3f6b35;
+}
+
+/* Campo de comentario fixo no rodape do detalhe do capitulo (wireframe 04). */
+.comment-dock-spacer {
+  height: 76px;
+}
+
+.comment-dock {
+  position: fixed;
+  right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  z-index: 25;
+  display: grid;
+  grid-template-columns: 1fr 52px;
+  gap: 8px;
+  align-items: center;
+  width: min(calc(100% - 24px), 520px);
+  margin: 0 auto;
+  padding: 8px;
+  border-radius: 22px;
+}
+
+.comment-dock input {
+  min-height: 46px;
+  border-radius: 16px;
+}
+
+.comment-dock-send {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 46px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
+  color: var(--color-cream-50);
+  font-size: 1.15rem;
+}
+
+.review-cta {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 14px;
+}
+
+.review-cta .review-form-label {
+  margin: 0;
+}
+
 /* Progresso da Home (livro atual). */
 .home-progress {
   display: grid;

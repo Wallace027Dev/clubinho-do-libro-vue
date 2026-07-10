@@ -23,6 +23,7 @@ import booksHistory from '../_routes/books/history.js'
 import profile from '../_routes/profile.js'
 import chapterStart from '../_routes/chapters/[chapterId]/start.js'
 import chapterFinish from '../_routes/chapters/[chapterId]/finish.js'
+import chapterReopen from '../_routes/chapters/[chapterId]/reopen.js'
 import chapterComments from '../_routes/chapters/[chapterId]/comments.js'
 import commentReaction from '../_routes/comments/[commentId]/reaction.js'
 
@@ -49,6 +50,7 @@ const routes: Route[] = [
   ['profile', profile],
   ['chapters/[chapterId]/start', chapterStart],
   ['chapters/[chapterId]/finish', chapterFinish],
+  ['chapters/[chapterId]/reopen', chapterReopen],
   ['chapters/[chapterId]/comments', chapterComments],
   ['comments/[commentId]/reaction', commentReaction]
 ].map(([pattern, handler]) => ({
