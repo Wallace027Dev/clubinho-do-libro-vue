@@ -21,6 +21,7 @@ import booksCurrent from '../_routes/books/current.js'
 import booksReview from '../_routes/books/review.js'
 import booksHistory from '../_routes/books/history.js'
 import profile from '../_routes/profile.js'
+import profilePassword from '../_routes/profile/password.js'
 import chapterStart from '../_routes/chapters/[chapterId]/start.js'
 import chapterFinish from '../_routes/chapters/[chapterId]/finish.js'
 import chapterReopen from '../_routes/chapters/[chapterId]/reopen.js'
@@ -48,6 +49,7 @@ const routes: Route[] = [
   ['books/review', booksReview],
   ['books/history', booksHistory],
   ['profile', profile],
+  ['profile/password', profilePassword],
   ['chapters/[chapterId]/start', chapterStart],
   ['chapters/[chapterId]/finish', chapterFinish],
   ['chapters/[chapterId]/reopen', chapterReopen],
