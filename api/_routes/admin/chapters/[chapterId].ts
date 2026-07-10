@@ -9,10 +9,10 @@ interface UpdateChapterBody {
 }
 
 /**
- * Edicao/exclusao de capitulo pelo admin (fase 8):
- * - PATCH: numero e titulo editaveis a qualquer momento.
- * - DELETE: apenas se nenhum membro tem progresso ou comentario no
- *   capitulo (nao apagamos participacao dos membros em cascata).
+ * Edição/exclusão de capítulo pelo admin (fase 8):
+ * - PATCH: número e título editáveis a qualquer momento.
+ * - DELETE: apenas se nenhum membro tem progresso ou comentário no
+ *   capítulo (não apagamos participação dos membros em cascata).
  */
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['PATCH', 'DELETE'])) {
@@ -36,14 +36,14 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!chapter || chapter.clubBook.clubId !== club.id || chapter.clubBook.status !== 'CURRENT') {
-    sendJson(res, 404, { error: 'Capitulo atual nao encontrado.' })
+    sendJson(res, 404, { error: 'Capítulo atual não encontrado.' })
     return
   }
 
   if (req.method === 'DELETE') {
     if (chapter._count.progress > 0 || chapter._count.comments > 0) {
       sendJson(res, 409, {
-        error: 'Este capitulo ja tem progresso ou comentarios de membros e nao pode ser excluido.'
+        error: 'Este capítulo já tem progresso ou comentários de membros e não pode ser excluído.'
       })
       return
     }
@@ -60,7 +60,7 @@ export default async function handler(req: any, res: any) {
     const number = Number(body.number)
 
     if (!Number.isInteger(number) || number < 1) {
-      sendJson(res, 400, { error: 'Numero de capitulo invalido.' })
+      sendJson(res, 400, { error: 'Número de capítulo inválido.' })
       return
     }
 
@@ -71,7 +71,7 @@ export default async function handler(req: any, res: any) {
     const title = body.title.trim()
 
     if (!title) {
-      sendJson(res, 400, { error: 'Titulo do capitulo nao pode ficar vazio.' })
+      sendJson(res, 400, { error: 'Título do capítulo não pode ficar vazio.' })
       return
     }
 
@@ -88,7 +88,7 @@ export default async function handler(req: any, res: any) {
     sendJson(res, 200, { chapter: updated })
   } catch (error: any) {
     if (error?.code === 'P2002') {
-      sendJson(res, 409, { error: 'Ja existe um capitulo com esse numero neste livro.' })
+      sendJson(res, 409, { error: 'Já existe um capítulo com esse número neste livro.' })
       return
     }
 

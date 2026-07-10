@@ -48,13 +48,13 @@ const activityDate = computed(() => {
 })
 
 onMounted(async () => {
-  // Ao abrir por link direto (ou recarregar), o feed ainda nao esta na
-  // memoria: carrega o estado do clube antes de procurar a atividade.
+  // Ao abrir por link direto (ou recarregar), o feed ainda não está na
+  // memória: carrega o estado do clube antes de procurar a atividade.
   if (!platformStore.clubState.activities.length) {
     try {
       await platformStore.loadHome()
     } catch {
-      // O erro aparece no estado de "atividade nao encontrada" abaixo.
+      // O erro aparece no estado de "atividade não encontrada" abaixo.
     }
   }
 
@@ -84,7 +84,7 @@ async function loadComment() {
       isLocked.value = true
     } else {
       errorMessage.value =
-        error instanceof ApiError ? error.message : 'Nao foi possivel carregar o comentario.'
+        error instanceof ApiError ? error.message : 'Não foi possível carregar o comentário.'
     }
   } finally {
     isLoading.value = false
@@ -105,7 +105,7 @@ async function react(type: ChapterCommentReactionType) {
     })
     await loadComment()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel reagir.'
+    errorMessage.value = error instanceof ApiError ? error.message : 'Não foi possível reagir.'
   } finally {
     isReacting.value = false
   }
@@ -137,12 +137,12 @@ function goBack() {
 
     <div class="detail-divider" aria-hidden="true"></div>
 
-    <p v-if="chapterNumber" class="section-label">Capitulo {{ chapterNumber }}</p>
+    <p v-if="chapterNumber" class="section-label">Capítulo {{ chapterNumber }}</p>
 
-    <p v-if="isLoading" class="comment-muted">Carregando comentario...</p>
+    <p v-if="isLoading" class="comment-muted">Carregando comentário...</p>
 
     <p v-else-if="isLocked" class="spoiler-lock">
-      Voce precisa concluir o capitulo {{ chapterNumber }} para ver este comentario e reagir.
+      Você precisa concluir o capítulo {{ chapterNumber }} para ver este comentário e reagir.
     </p>
 
     <p v-else-if="errorMessage" class="form-error">{{ errorMessage }}</p>
@@ -160,7 +160,7 @@ function goBack() {
 
       <p class="comment-body">{{ comment.body }}</p>
 
-      <div v-if="!isOwnActivity" class="reaction-row" aria-label="Reagir ao comentario">
+      <div v-if="!isOwnActivity" class="reaction-row" aria-label="Reagir ao comentário">
         <button
           v-for="reaction in reactionOptions"
           :key="reaction.type"
@@ -177,18 +177,18 @@ function goBack() {
       </div>
 
       <p v-else class="comment-muted">
-        Este e o seu comentario. As reacoes de outros membros aparecem aqui.
+        Este é o seu comentário. As reações de outros membros aparecem aqui.
       </p>
     </template>
 
     <p v-else class="comment-muted">
-      {{ authorName }} ainda nao deixou comentario no capitulo {{ chapterNumber }}.
+      {{ authorName }} ainda não deixou comentário no capítulo {{ chapterNumber }}.
     </p>
   </section>
 
   <section v-else-if="!platformStore.isLoading" class="flow-card glass-panel">
     <div class="empty-state">
-      <p>Atividade nao encontrada. Ela pode ter saido do feed recente do clube.</p>
+      <p>Atividade não encontrada. Ela pode ter saido do feed recente do clube.</p>
     </div>
   </section>
 </template>

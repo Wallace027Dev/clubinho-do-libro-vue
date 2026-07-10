@@ -60,8 +60,8 @@ export default async function handler(req: any, res: any) {
     if (currentBook) {
       const { reviews, reviewSummary } = await getClubBookReviews(currentBook.id)
 
-      // Anti-spoiler: a resenha (texto) so aparece para quem terminou o livro.
-      // Nota e media continuam visiveis para todos.
+      // Anti-spoiler: a resenha (texto) só aparece para quem terminou o livro.
+      // Nota e média continuam visíveis para todos.
       const viewerFinished = session.userId
         ? await userFinishedAllChapters(currentBook.id, session.userId)
         : false
@@ -87,7 +87,7 @@ export default async function handler(req: any, res: any) {
   const title = body.title?.trim()
 
   if (!title) {
-    sendJson(res, 400, { error: 'Titulo do livro e obrigatorio.' })
+    sendJson(res, 400, { error: 'Título do livro é obrigatório.' })
     return
   }
 
@@ -97,7 +97,7 @@ export default async function handler(req: any, res: any) {
   })
 
   if (existingCurrent) {
-    sendJson(res, 409, { error: 'Ja existe um livro atual em andamento.' })
+    sendJson(res, 409, { error: 'Já existe um livro atual em andamento.' })
     return
   }
 

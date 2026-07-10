@@ -25,14 +25,14 @@ export default async function handler(req: any, res: any) {
   const comment = await userCanReadComment(commentId, session.userId)
 
   if (!comment) {
-    sendJson(res, 403, { error: 'Reacao liberada apenas para quem concluiu o capitulo.' })
+    sendJson(res, 403, { error: 'Reação liberada apenas para quem concluiu o capítulo.' })
     return
   }
 
   const body = readBody<ReactionBody>(req)
 
   if (!body.type || !allowedReactions.has(body.type)) {
-    sendJson(res, 400, { error: 'Reacao invalida.' })
+    sendJson(res, 400, { error: 'Reação inválida.' })
     return
   }
 

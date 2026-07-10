@@ -58,11 +58,11 @@ async function submit() {
 
   try {
     await platformStore.submitReview(rating.value, reviewText.value)
-    uiStore.notify('Avaliacao registrada com sucesso!')
+    uiStore.notify('Avaliação registrada com sucesso!')
     void router.push('/chapters')
   } catch (error) {
     errorMessage.value =
-      error instanceof ApiError ? error.message : 'Nao foi possivel salvar a avaliacao.'
+      error instanceof ApiError ? error.message : 'Não foi possível salvar a avaliação.'
   } finally {
     isSubmitting.value = false
   }
@@ -91,7 +91,7 @@ function cancel() {
   <section v-else-if="currentBook && canReview" class="flow-card glass-panel activity-detail">
     <div>
       <p class="section-label">{{ currentBook.book.title }}</p>
-      <h2>De modo geral, o que voce achou do livro?</h2>
+      <h2>De modo geral, o que você achou do livro?</h2>
     </div>
 
     <form class="stack-form review-form" @submit.prevent="submit">
@@ -117,7 +117,7 @@ function cancel() {
         <textarea
           v-model="reviewText"
           maxlength="1000"
-          placeholder="O que voce achou do livro? Pode escrever com spoiler: so aparece para quem terminou."
+          placeholder="O que você achou do livro? Pode escrever com spoiler: só aparece para quem terminou."
         ></textarea>
       </label>
 
@@ -137,10 +137,10 @@ function cancel() {
   <section v-else class="flow-card glass-panel">
     <div class="empty-state">
       <p v-if="currentBook">
-        Conclua todos os capitulos para dar sua nota e resenha.
+        Conclua todos os capítulos para dar sua nota e resenha.
       </p>
       <p v-else>Nenhum livro em andamento para avaliar.</p>
     </div>
-    <RouterLink class="text-link" to="/chapters">Ir para meus capitulos</RouterLink>
+    <RouterLink class="text-link" to="/chapters">Ir para meus capítulos</RouterLink>
   </section>
 </template>

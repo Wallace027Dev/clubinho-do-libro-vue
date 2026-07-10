@@ -30,7 +30,7 @@ onMounted(() => {
   void platformStore.loadHistory()
 })
 
-// Estatisticas pessoais calculadas com dados que o front ja recebe.
+// Estatísticas pessoais calculadas com dados que o front já recebe.
 const finishedChapters = computed(() => {
   const chapters = platformStore.clubState.currentBook?.chapters ?? []
   return {
@@ -75,7 +75,7 @@ async function onFileSelected(event: Event) {
     avatarUrl.value = await resizeToDataUrl(file, 256)
     uiStore.notify('Foto pronta! Toque em "Salvar perfil" para confirmar.')
   } catch {
-    uiStore.notify('Nao foi possivel processar a imagem.', 'error')
+    uiStore.notify('Não foi possível processar a imagem.', 'error')
   } finally {
     if (fileInput.value) fileInput.value.value = ''
   }
@@ -95,7 +95,7 @@ function resizeToDataUrl(file: File, maxSize: number): Promise<string> {
 
       const context = canvas.getContext('2d')
       if (!context) {
-        reject(new Error('Canvas indisponivel.'))
+        reject(new Error('Canvas indisponível.'))
         return
       }
 
@@ -105,7 +105,7 @@ function resizeToDataUrl(file: File, maxSize: number): Promise<string> {
 
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl)
-      reject(new Error('Imagem invalida.'))
+      reject(new Error('Imagem inválida.'))
     }
 
     image.src = objectUrl
@@ -132,7 +132,7 @@ async function saveProfile() {
     authStore.setUser(response.user)
     uiStore.notify('Perfil atualizado com sucesso!')
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel salvar.'
+    errorMessage.value = error instanceof ApiError ? error.message : 'Não foi possível salvar.'
   } finally {
     isSaving.value = false
   }
@@ -162,7 +162,7 @@ async function changePassword() {
     uiStore.notify('Senha alterada com sucesso!')
   } catch (error) {
     passwordError.value =
-      error instanceof ApiError ? error.message : 'Nao foi possivel alterar a senha.'
+      error instanceof ApiError ? error.message : 'Não foi possível alterar a senha.'
   } finally {
     isChangingPassword.value = false
   }
@@ -185,7 +185,7 @@ async function handleLogout() {
     <div class="flow-heading">
       <p class="section-label">Perfil</p>
       <h2>Seu nome no clube</h2>
-      <p>O login continua privado; os membros conhecem voce pelo feed e pelo apelido.</p>
+      <p>O login continua privado; os membros conhecem você pelo feed e pelo apelido.</p>
     </div>
 
     <form class="stack-form" @submit.prevent="saveProfile">
@@ -214,7 +214,7 @@ async function handleLogout() {
       </div>
 
       <p v-if="isDataUrlAvatar" class="comment-muted">
-        A foto e comprimida no seu aparelho antes de salvar.
+        A foto é comprimida no seu aparelho antes de salvar.
       </p>
 
       <label>
@@ -233,13 +233,13 @@ async function handleLogout() {
   <section class="flow-card glass-panel">
     <div class="flow-heading">
       <p class="section-label">Minha leitura</p>
-      <h2>Estatisticas</h2>
+      <h2>Estatísticas</h2>
     </div>
 
     <div class="profile-stats">
       <div class="profile-stat">
         <strong>{{ finishedChapters.finished }}/{{ finishedChapters.total || '—' }}</strong>
-        <p>Capitulos do livro atual</p>
+        <p>Capítulos do livro atual</p>
       </div>
       <div class="profile-stat">
         <strong>{{ participatedBooks }}</strong>
@@ -254,7 +254,7 @@ async function handleLogout() {
 
   <section class="flow-card glass-panel">
     <div class="flow-heading">
-      <p class="section-label">Seguranca</p>
+      <p class="section-label">Segurança</p>
       <h2>Trocar senha</h2>
     </div>
 
@@ -279,7 +279,7 @@ async function handleLogout() {
   <section class="flow-card glass-panel">
     <div class="flow-heading">
       <p class="section-label">Conta</p>
-      <h2>Sessao e acessos</h2>
+      <h2>Sessão e acessos</h2>
     </div>
 
     <div class="action-stack">

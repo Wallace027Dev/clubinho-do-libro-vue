@@ -29,7 +29,7 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!currentBook) {
-    sendJson(res, 404, { error: 'Nao existe livro atual em andamento.' })
+    sendJson(res, 404, { error: 'Não existe livro atual em andamento.' })
     return
   }
 
@@ -37,21 +37,21 @@ export default async function handler(req: any, res: any) {
   const rating = Number(body.rating)
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    sendJson(res, 400, { error: 'A nota deve ser um numero de 1 a 5.' })
+    sendJson(res, 400, { error: 'A nota deve ser um número de 1 a 5.' })
     return
   }
 
   const review = body.review?.trim() || null
 
   if (review && review.length > MAX_REVIEW_LENGTH) {
-    sendJson(res, 400, { error: `A resenha deve ter ate ${MAX_REVIEW_LENGTH} caracteres.` })
+    sendJson(res, 400, { error: `A resenha deve ter até ${MAX_REVIEW_LENGTH} caracteres.` })
     return
   }
 
   const finishedAll = await userFinishedAllChapters(currentBook.id, session.userId)
 
   if (!finishedAll) {
-    sendJson(res, 403, { error: 'Conclua todos os capitulos para avaliar o livro.' })
+    sendJson(res, 403, { error: 'Conclua todos os capítulos para avaliar o livro.' })
     return
   }
 

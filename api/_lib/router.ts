@@ -1,14 +1,14 @@
 /**
- * Roteador unico das rotas de /api.
+ * Roteador único das rotas de /api.
  *
  * O plano Hobby da Vercel limita o deploy a 12 serverless functions, entao
- * todas as rotas sao servidas por uma unica funcao (api/index.ts) — um
+ * todas as rotas são servidas por uma única função (api/index.ts) — um
  * rewrite no vercel.json manda todo /api/* para ela — que delega para os
- * handlers em api/_routes/ (pastas com prefixo _ nao viram funcoes na
+ * handlers em api/_routes/ (pastas com prefixo _ não viram funções na
  * Vercel).
  *
  * O dev-server local (scripts/dev-api.ts) usa este mesmo roteador, entao o
- * comportamento e identico nos dois ambientes.
+ * comportamento é idêntico nos dois ambientes.
  */
 import authLogin from '../_routes/auth/login.js'
 import authLogout from '../_routes/auth/logout.js'
@@ -69,7 +69,7 @@ export interface RouteMatch {
   params: Record<string, string>
 }
 
-/** Recebe os segmentos do path apos /api (ex.: ['auth', 'login']). */
+/** Recebe os segmentos do path após /api (ex.: ['auth', 'login']). */
 export function matchRoute(segments: string[]): RouteMatch | null {
   for (const route of routes) {
     if (route.pattern.length !== segments.length) {

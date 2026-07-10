@@ -11,7 +11,7 @@ const raffleStore = useRaffleStore()
       <p class="section-label">Passo 2</p>
       <h2>Gire a roleta</h2>
       <p v-if="raffleStore.hasCurrentMonthBook">
-        O sorteio deste mes ja foi concluido. O proximo libera em
+        O sorteio deste mês já foi concluído. O próximo libera em
         {{ raffleStore.nextRaffleMonthLabel }}.
       </p>
       <p v-else>A roleta desacelera e para no livro sorteado.</p>
@@ -22,7 +22,7 @@ const raffleStore = useRaffleStore()
     <div v-if="raffleStore.hasCurrentMonthBook" class="locked-raffle" role="status">
       <p class="section-label">Sorteio bloqueado</p>
       <h3>{{ raffleStore.monthlyBook?.book.title }}</h3>
-      <p>Livro confirmado para o mes atual.</p>
+      <p>Livro confirmado para o mês atual.</p>
     </div>
 
     <div class="action-stack">
@@ -34,7 +34,7 @@ const raffleStore = useRaffleStore()
       >
         {{
           raffleStore.hasCurrentMonthBook
-            ? 'Bloqueado ate o proximo mes'
+            ? 'Bloqueado até o próximo mês'
             : raffleStore.isSpinning
               ? 'Sorteando...'
               : 'Sortear'
@@ -46,7 +46,7 @@ const raffleStore = useRaffleStore()
       </button>
 
       <button class="ghost-action" type="button" @click="raffleStore.resetCurrentRaffle">
-        Comecar de novo
+        Começar de novo
       </button>
     </div>
   </section>

@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
   const body = readBody<AdminLoginBody>(req)
 
   if (!body.password || body.password !== getRequiredEnv('ADMIN_PASSWORD')) {
-    sendJson(res, 401, { error: 'Senha administrativa invalida.' })
+    sendJson(res, 401, { error: 'Senha administrativa inválida.' })
     return
   }
 

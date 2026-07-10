@@ -1,5 +1,5 @@
 /**
- * Unica serverless function do projeto: recebe qualquer path de /api e
+ * Única serverless function do projeto: recebe qualquer path de /api e
  * delega ao roteador (ver api/_lib/router.ts para o porque).
  */
 import { matchRoute } from './_lib/router.js'
@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
   const match = matchRoute(segments)
 
   if (!match) {
-    res.status(404).json({ error: 'Rota de API nao encontrada.' })
+    res.status(404).json({ error: 'Rota de API não encontrada.' })
     return
   }
 

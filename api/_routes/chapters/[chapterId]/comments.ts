@@ -24,7 +24,7 @@ export default async function handler(req: any, res: any) {
   const access = await getFinishedChapterForUser(chapterId, session.userId)
 
   if (!access) {
-    sendJson(res, 403, { error: 'Comentarios liberam apenas depois de concluir o capitulo.' })
+    sendJson(res, 403, { error: 'Comentários liberam apenas depois de concluir o capítulo.' })
     return
   }
 
@@ -38,12 +38,12 @@ export default async function handler(req: any, res: any) {
   const commentBody = body.body?.trim()
 
   if (!commentBody) {
-    sendJson(res, 400, { error: 'Comentario vazio.' })
+    sendJson(res, 400, { error: 'Comentário vazio.' })
     return
   }
 
   if (commentBody.length > MAX_COMMENT_LENGTH) {
-    sendJson(res, 400, { error: `Comentario deve ter ate ${MAX_COMMENT_LENGTH} caracteres.` })
+    sendJson(res, 400, { error: `Comentário deve ter até ${MAX_COMMENT_LENGTH} caracteres.` })
     return
   }
 
@@ -69,7 +69,7 @@ export default async function handler(req: any, res: any) {
         clubId: access.club.id,
         actorId: session.userId,
         type: 'CHAPTER_COMMENTED',
-        message: `${user?.displayName || user?.login || 'Um membro'} comentou o capitulo ${access.chapter.number}.`,
+        message: `${user?.displayName || user?.login || 'Um membro'} comentou o capítulo ${access.chapter.number}.`,
         metadata: { chapterId, chapterNumber: access.chapter.number }
       }
     })

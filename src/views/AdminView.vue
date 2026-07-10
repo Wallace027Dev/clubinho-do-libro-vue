@@ -47,7 +47,7 @@ function createMember() {
       memberDisplayName.value = ''
       uiStore.notify('Membro cadastrado com sucesso!')
     },
-    'Nao foi possivel cadastrar.'
+    'Não foi possível cadastrar.'
   )
 }
 
@@ -61,7 +61,7 @@ function selectBook() {
       bookDescription.value = ''
       uiStore.notify('Livro atual definido com sucesso!')
     },
-    'Nao foi possivel definir o livro.'
+    'Não foi possível definir o livro.'
   )
 }
 
@@ -72,9 +72,9 @@ function createChapter() {
       await platformStore.createChapter(chapterNumber.value, chapterTitle.value)
       chapterNumber.value += 1
       chapterTitle.value = ''
-      uiStore.notify('Capitulo cadastrado com sucesso!')
+      uiStore.notify('Capítulo cadastrado com sucesso!')
     },
-    'Nao foi possivel cadastrar o capitulo.'
+    'Não foi possível cadastrar o capítulo.'
   )
 }
 
@@ -83,13 +83,13 @@ function finishBook() {
     'finish',
     async () => {
       await platformStore.finishCurrentBook()
-      uiStore.notify('Livro finalizado. O proximo sorteio esta liberado!')
+      uiStore.notify('Livro finalizado. O próximo sorteio está liberado!')
     },
-    'Nao foi possivel finalizar.'
+    'Não foi possível finalizar.'
   )
 }
 
-// --- Gestao de membros (item 8.2: desativar/reativar e redefinir senha) ---
+// --- Gestão de membros (item 8.2: desativar/reativar e redefinir senha) ---
 const pendingMemberId = ref<string | null>(null)
 
 async function runMemberAction(userId: string, task: () => Promise<void>, fallback: string) {
@@ -112,7 +112,7 @@ function toggleMemberActive(member: { id: string | null; login: string; deactiva
   if (
     deactivating &&
     !window.confirm(
-      `Desativar ${member.login}? A pessoa nao consegue mais entrar, mas os comentarios e notas dela continuam no historico do clube.`
+      `Desativar ${member.login}? A pessoa não consegue mais entrar, mas os comentários e notas dela continuam no histórico do clube.`
     )
   ) {
     return
@@ -124,7 +124,7 @@ function toggleMemberActive(member: { id: string | null; login: string; deactiva
       await platformStore.updateMember(member.id!, { deactivated: deactivating })
       uiStore.notify(deactivating ? 'Membro desativado.' : 'Membro reativado!')
     },
-    'Nao foi possivel atualizar o membro.'
+    'Não foi possível atualizar o membro.'
   )
 }
 
@@ -132,7 +132,7 @@ function resetMemberPassword(member: { id: string | null; login: string }) {
   if (!member.id) return
 
   const newPassword = window.prompt(
-    `Nova senha provisoria para ${member.login} (minimo 6 caracteres):`
+    `Nova senha provisória para ${member.login} (mínimo 6 caracteres):`
   )
 
   if (newPassword === null) return
@@ -148,11 +148,11 @@ function resetMemberPassword(member: { id: string | null; login: string }) {
       await platformStore.updateMember(member.id!, { newPassword })
       uiStore.notify(`Senha de ${member.login} redefinida. Avise a pessoa!`)
     },
-    'Nao foi possivel redefinir a senha.'
+    'Não foi possível redefinir a senha.'
   )
 }
 
-// --- Edicao de capitulos (editar sempre; excluir so sem uso) ---
+// --- Edição de capítulos (editar sempre; excluir só sem uso) ---
 const editingChapterId = ref<string | null>(null)
 const editNumber = ref(1)
 const editTitle = ref('')
@@ -177,10 +177,10 @@ async function saveChapterEdit(chapterId: string) {
       title: editTitle.value
     })
     editingChapterId.value = null
-    uiStore.notify('Capitulo atualizado!')
+    uiStore.notify('Capítulo atualizado!')
   } catch (error) {
     uiStore.notify(
-      error instanceof ApiError ? error.message : 'Nao foi possivel atualizar o capitulo.',
+      error instanceof ApiError ? error.message : 'Não foi possível atualizar o capítulo.',
       'error'
     )
   } finally {
@@ -189,7 +189,7 @@ async function saveChapterEdit(chapterId: string) {
 }
 
 async function removeChapter(chapter: { id: string; number: number; title: string }) {
-  if (!window.confirm(`Excluir o capitulo ${chapter.number} (${chapter.title})?`)) {
+  if (!window.confirm(`Excluir o capítulo ${chapter.number} (${chapter.title})?`)) {
     return
   }
 
@@ -197,10 +197,10 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
 
   try {
     await platformStore.deleteChapter(chapter.id)
-    uiStore.notify('Capitulo excluido.')
+    uiStore.notify('Capítulo excluído.')
   } catch (error) {
     uiStore.notify(
-      error instanceof ApiError ? error.message : 'Nao foi possivel excluir o capitulo.',
+      error instanceof ApiError ? error.message : 'Não foi possível excluir o capítulo.',
       'error'
     )
   } finally {
@@ -214,7 +214,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
     <div class="flow-heading">
       <p class="section-label">Admin</p>
       <h2>Gerenciar clube</h2>
-      <p>Cadastre membros, controle o livro atual e libere o proximo sorteio.</p>
+      <p>Cadastre membros, controle o livro atual e libere o próximo sorteio.</p>
     </div>
 
     <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
@@ -223,7 +223,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
   <section class="flow-card glass-panel">
     <div class="flow-heading">
       <p class="section-label">Membros</p>
-      <h2>Cadastrar usuario</h2>
+      <h2>Cadastrar usuário</h2>
     </div>
 
     <form class="stack-form" @submit.prevent="createMember">
@@ -294,7 +294,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
 
     <form v-if="!platformStore.clubState.currentBook" class="stack-form" @submit.prevent="selectBook">
       <label>
-        Titulo
+        Título
         <input v-model="bookTitle" required />
       </label>
       <label>
@@ -302,7 +302,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
         <input v-model="bookAuthor" />
       </label>
       <label>
-        Descricao opcional
+        Descrição opcional
         <textarea
           v-model="bookDescription"
           maxlength="1000"
@@ -321,22 +321,22 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
 
   <section v-if="platformStore.clubState.currentBook" class="flow-card glass-panel">
     <div class="flow-heading">
-      <p class="section-label">Capitulos</p>
+      <p class="section-label">Capítulos</p>
       <h2>Estrutura do livro</h2>
-      <p>Cadastre os capitulos para liberar o progresso individual dos membros.</p>
+      <p>Cadastre os capítulos para liberar o progresso individual dos membros.</p>
     </div>
 
     <form class="stack-form" @submit.prevent="createChapter">
       <label>
-        Numero
+        Número
         <input v-model.number="chapterNumber" min="1" required type="number" />
       </label>
       <label>
-        Titulo do capitulo
+        Título do capítulo
         <input v-model="chapterTitle" required />
       </label>
       <BaseButton type="submit" :loading="pendingAction === 'chapter'">
-        Cadastrar capitulo
+        Cadastrar capítulo
       </BaseButton>
     </form>
 
@@ -348,11 +348,11 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
         <template v-if="editingChapterId === chapter.id">
           <div class="stack-form">
             <label>
-              Numero
+              Número
               <input v-model.number="editNumber" min="1" required type="number" />
             </label>
             <label>
-              Titulo
+              Título
               <input v-model="editTitle" required />
             </label>
             <div class="member-actions">
@@ -374,7 +374,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
         <template v-else>
           <div class="chapter-card-row">
             <div>
-              <span class="chapter-kicker">Capitulo {{ chapter.number }}</span>
+              <span class="chapter-kicker">Capítulo {{ chapter.number }}</span>
               <strong>{{ chapter.title }}</strong>
             </div>
             <div class="member-actions">

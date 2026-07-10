@@ -8,15 +8,15 @@ interface TabItem {
 
 const tabs: TabItem[] = [
   { to: '/feed', label: 'Feed', icon: '🗞️' },
-  { to: '/chapters', label: 'Capitulos', icon: '🔖' },
-  { to: '/', label: 'Inicio', icon: '📖', central: true },
+  { to: '/chapters', label: 'Capítulos', icon: '🔖' },
+  { to: '/', label: 'Início', icon: '📖', central: true },
   { to: '/history', label: 'Lidos', icon: '📚' },
   { to: '/profile', label: 'Perfil', icon: '👤' }
 ]
 </script>
 
 <template>
-  <nav class="tab-bar glass-panel" aria-label="Navegacao principal">
+  <nav class="tab-bar glass-panel" aria-label="Navegação principal">
     <RouterLink
       v-for="tab in tabs"
       :key="tab.to"

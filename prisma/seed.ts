@@ -1,12 +1,12 @@
 /**
  * Seed de desenvolvimento do Clubinho do Libro.
  *
- * Cria dados suficientes para testar as 5 fases ja implementadas:
+ * Cria dados suficientes para testar as 5 fases já implementadas:
  *   1. Clube + membros + livro atual  -> login e Home
- *   2. Capitulos + progresso           -> iniciar/concluir capitulo
+ *   2. Capítulos + progresso           -> iniciar/concluir capítulo
  *   3. Feed de atividades              -> gerado ao interagir
- *   4. Comentarios anti-spoiler        -> comentar capitulo concluido
- *   5. Reacoes                         -> reagir a comentarios visiveis
+ *   4. Comentários anti-spoiler        -> comentar capítulo concluído
+ *   5. Reações                         -> reagir a comentários visíveis
  *
  * Idempotente: pode rodar varias vezes sem duplicar (usa upsert por login/nome).
  */
@@ -33,7 +33,7 @@ const CHAPTERS = [
 ]
 
 async function main() {
-  // Clube unico.
+  // Clube único.
   const club = await prisma.club.upsert({
     where: { name: CLUB_NAME },
     update: {},
@@ -55,7 +55,7 @@ async function main() {
     })
   }
 
-  // Livro atual (so cria se ainda nao houver um CURRENT).
+  // Livro atual (só cria se ainda não houver um CURRENT).
   const existingCurrent = await prisma.clubBook.findFirst({
     where: { clubId: club.id, status: 'CURRENT' },
     include: { book: true }
@@ -87,7 +87,7 @@ async function main() {
     })
   }
 
-  // Capitulos do livro atual.
+  // Capítulos do livro atual.
   for (const chapter of CHAPTERS) {
     await prisma.chapter.upsert({
       where: {
@@ -105,13 +105,13 @@ async function main() {
     })
   }
 
-  // Livro finalizado (memoria de leitura) para popular o historico (Fase 7).
-  // So cria se ainda nao houver nenhum livro finalizado.
+  // Livro finalizado (memória de leitura) para popular o histórico (Fase 7).
+  // Só cria se ainda não houver nenhum livro finalizado.
   await seedFinishedBook(club.id)
 
-  console.log('\nSeed concluido.\n')
+  console.log('\nSeed concluído.\n')
   console.log('Livro atual:', clubBook.book.title)
-  console.log('Capitulos  :', CHAPTERS.length)
+  console.log('Capítulos  :', CHAPTERS.length)
   console.log('\nContas de teste (login / senha):')
   for (const member of MEMBERS) {
     console.log(`  - ${member.login} / ${member.password}  (${member.displayName})`)
@@ -168,7 +168,7 @@ async function seedFinishedBook(clubId: string) {
     )
   }
 
-  // Ambos concluiram todos os capitulos.
+  // Ambos concluiram todos os capítulos.
   for (const user of [ana, bruno]) {
     for (const chapter of createdChapters) {
       await prisma.chapterProgress.create({
@@ -183,7 +183,7 @@ async function seedFinishedBook(clubId: string) {
     }
   }
 
-  // Comentarios arquivados no primeiro capitulo.
+  // Comentários arquivados no primeiro capítulo.
   const anaComment = await prisma.chapterComment.create({
     data: {
       chapterId: createdChapters[0].id,
@@ -195,21 +195,21 @@ async function seedFinishedBook(clubId: string) {
     data: {
       chapterId: createdChapters[0].id,
       userId: bruno.id,
-      body: 'Comeco lento, mas fui fisgado no capitulo 1 mesmo.'
+      body: 'Comeco lento, mas fui fisgado no capítulo 1 mesmo.'
     }
   })
 
-  // Uma reacao ao comentario da Ana.
+  // Uma reação ao comentário da Ana.
   await prisma.chapterCommentReaction.create({
     data: { commentId: anaComment.id, userId: bruno.id, type: 'GOSTEI' }
   })
 
-  // Avaliacoes finais.
+  // Avaliações finais.
   await prisma.bookReview.create({
     data: { clubBookId: clubBook.id, userId: ana.id, rating: 5, review: 'Chorei no final. Melhor leitura do ano.' }
   })
   await prisma.bookReview.create({
-    data: { clubBookId: clubBook.id, userId: bruno.id, rating: 4, review: 'Muito bom, so achei o meio arrastado.' }
+    data: { clubBookId: clubBook.id, userId: bruno.id, rating: 4, review: 'Muito bom, só achei o meio arrastado.' }
   })
 
   await prisma.activity.create({
@@ -223,7 +223,7 @@ async function seedFinishedBook(clubId: string) {
     }
   })
 
-  console.log('Historico    : 1 livro finalizado (A Biblioteca da Meia-Noite)')
+  console.log('Histórico    : 1 livro finalizado (A Biblioteca da Meia-Noite)')
 }
 
 main()

@@ -37,13 +37,13 @@ function openBook(book: FinishedBook) {
 <template>
   <section class="flow-card glass-panel">
     <div class="flow-heading">
-      <p class="section-label">Historico</p>
+      <p class="section-label">Histórico</p>
       <h2>Livros lidos</h2>
-      <p>A memoria do clube: toque em um livro para ver notas, resenhas e comentarios.</p>
+      <p>A memória do clube: toque em um livro para ver notas, resenhas e comentários.</p>
     </div>
 
     <div v-if="platformStore.isLoading && !history.length" class="empty-state">
-      <p>Carregando historico...</p>
+      <p>Carregando histórico...</p>
     </div>
 
     <div v-else-if="!history.length" class="empty-state">
@@ -81,7 +81,7 @@ function openBook(book: FinishedBook) {
               {{ book.reviewSummary.average.toFixed(1).replace('.', ',') }}/5
             </span>
           </p>
-          <p v-else class="comment-muted">Sem avaliacoes.</p>
+          <p v-else class="comment-muted">Sem avaliações.</p>
         </div>
 
         <span class="chapter-chevron" aria-hidden="true">›</span>

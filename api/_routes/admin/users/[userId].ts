@@ -9,10 +9,10 @@ interface UpdateUserBody {
 }
 
 /**
- * Gestao de um membro pelo admin (fase 8, item 8.2):
- * - deactivated true/false: desativa/reativa (soft delete — o historico
- *   de comentarios, notas e atividades do clube e preservado).
- * - newPassword: redefine a senha provisoria de quem esqueceu.
+ * Gestão de um membro pelo admin (fase 8, item 8.2):
+ * - deactivated true/false: desativa/reativa (soft delete — o histórico
+ *   de comentários, notas e atividades do clube é preservado).
+ * - newPassword: redefine a senha provisória de quem esqueceu.
  */
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['PATCH'])) {
@@ -29,7 +29,7 @@ export default async function handler(req: any, res: any) {
   const user = await prisma.user.findUnique({ where: { id: userId } })
 
   if (!user) {
-    sendJson(res, 404, { error: 'Membro nao encontrado.' })
+    sendJson(res, 404, { error: 'Membro não encontrado.' })
     return
   }
 

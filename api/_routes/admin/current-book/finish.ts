@@ -21,7 +21,7 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!currentBook) {
-    sendJson(res, 404, { error: 'Nao existe livro atual em andamento.' })
+    sendJson(res, 404, { error: 'Não existe livro atual em andamento.' })
     return
   }
 

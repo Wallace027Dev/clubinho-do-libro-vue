@@ -5,10 +5,10 @@ import { prisma } from '../../_lib/prisma.js'
 import { getClubBookReviews } from '../../_lib/reviews.js'
 
 /**
- * Historico do clube (Fase 7): livros ja finalizados com a memoria da leitura.
+ * Histórico do clube (Fase 7): livros já finalizados com a memória da leitura.
  *
- * Livro finalizado nao tem mais anti-spoiler: notas, resenhas e comentarios
- * por capitulo ficam arquivados e visiveis para os membros.
+ * Livro finalizado não tem mais anti-spoiler: notas, resenhas e comentários
+ * por capítulo ficam arquivados e visíveis para os membros.
  */
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['GET'])) {

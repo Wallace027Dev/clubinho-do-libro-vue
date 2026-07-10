@@ -8,7 +8,7 @@ interface PasswordBody {
   newPassword?: string
 }
 
-/** Troca de senha pelo proprio membro (fase 8): exige a senha atual. */
+/** Troca de senha pelo próprio membro (fase 8): exige a senha atual. */
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {
     return

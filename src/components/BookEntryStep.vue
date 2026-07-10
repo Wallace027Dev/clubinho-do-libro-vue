@@ -16,7 +16,7 @@ function handleSubmit() {
     <div class="flow-heading">
       <p class="section-label">Passo 1</p>
       <h2>Cadastre os livros</h2>
-      <p>Inclua pelo menos duas opcoes para criar a roleta.</p>
+      <p>Inclua pelo menos duas opções para criar a roleta.</p>
     </div>
 
     <form class="book-form" @submit.prevent="handleSubmit">
@@ -44,7 +44,7 @@ function handleSubmit() {
     </ul>
 
     <div v-else class="empty-state">
-      <p>A lista ainda esta vazia.</p>
+      <p>A lista ainda está vazia.</p>
     </div>
 
     <button
@@ -53,11 +53,11 @@ function handleSubmit() {
       :disabled="!raffleStore.canConfirmBooks"
       @click="raffleStore.confirmBooks"
     >
-      {{ raffleStore.hasCurrentMonthBook ? 'Sorteio bloqueado neste mes' : 'Confirmar livros' }}
+      {{ raffleStore.hasCurrentMonthBook ? 'Sorteio bloqueado neste mês' : 'Confirmar livros' }}
     </button>
 
     <p v-if="raffleStore.hasCurrentMonthBook" class="lock-note" role="status">
-      O livro deste mes ja foi confirmado. O proximo sorteio libera em
+      O livro deste mês já foi confirmado. O próximo sorteio libera em
       {{ raffleStore.nextRaffleMonthLabel }}.
     </p>
   </section>

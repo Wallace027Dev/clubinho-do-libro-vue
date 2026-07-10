@@ -18,9 +18,9 @@ function getChapterStatus(chapter: Chapter): 'NOT_STARTED' | 'STARTED' | 'FINISH
 }
 
 const statusLabels = {
-  NOT_STARTED: 'Nao iniciado',
+  NOT_STARTED: 'Não iniciado',
   STARTED: 'Em leitura',
-  FINISHED: 'Concluido'
+  FINISHED: 'Concluído'
 } as const
 
 function openChapter(chapter: Chapter) {
@@ -31,23 +31,23 @@ function openChapter(chapter: Chapter) {
 <template>
   <section class="glass-panel current-book">
     <div>
-      <p class="section-label">Meus capitulos</p>
+      <p class="section-label">Meus capítulos</p>
       <h2 v-if="currentBook">{{ currentBook.book.title }}</h2>
       <h2 v-else>Nenhum livro em andamento</h2>
       <p v-if="currentBook">
-        Toque em um capitulo para registrar seu progresso e comentar.
+        Toque em um capítulo para registrar seu progresso e comentar.
       </p>
-      <p v-else>Quando o administrador aceitar um sorteio, os capitulos aparecem aqui.</p>
+      <p v-else>Quando o administrador aceitar um sorteio, os capítulos aparecem aqui.</p>
     </div>
   </section>
 
   <div v-if="platformStore.isLoading && !currentBook" class="empty-state">
-    <p>Carregando capitulos...</p>
+    <p>Carregando capítulos...</p>
   </div>
 
   <section v-if="currentBook" class="flow-card glass-panel">
     <div class="flow-heading">
-      <p class="section-label">Capitulos</p>
+      <p class="section-label">Capítulos</p>
       <h2>Seu progresso de leitura</h2>
     </div>
 
@@ -58,13 +58,13 @@ function openChapter(chapter: Chapter) {
         class="feed-card is-clickable chapter-card"
         role="button"
         tabindex="0"
-        :aria-label="`Abrir capitulo ${chapter.number}: ${chapter.title}`"
+        :aria-label="`Abrir capítulo ${chapter.number}: ${chapter.title}`"
         @click="openChapter(chapter)"
         @keydown.enter.prevent="openChapter(chapter)"
         @keydown.space.prevent="openChapter(chapter)"
       >
         <div class="feed-card-top">
-          <span class="feed-tag">Capitulo {{ chapter.number }}</span>
+          <span class="feed-tag">Capítulo {{ chapter.number }}</span>
           <span
             class="chapter-status"
             :class="`chapter-status--${getChapterStatus(chapter).toLowerCase()}`"
@@ -80,7 +80,7 @@ function openChapter(chapter: Chapter) {
     </ol>
 
     <div v-else class="empty-state">
-      <p>O admin ainda nao cadastrou capitulos para este livro.</p>
+      <p>O admin ainda não cadastrou capítulos para este livro.</p>
     </div>
   </section>
 

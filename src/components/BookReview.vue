@@ -39,30 +39,30 @@ function stars(value: number) {
 <template>
   <section class="flow-card glass-panel">
     <div class="flow-heading">
-      <p class="section-label">Avaliacao do livro</p>
+      <p class="section-label">Avaliação do livro</p>
       <h2>Nota e resenha do clube</h2>
       <p v-if="averageLabel">
-        Media do clube: <strong>{{ averageLabel }}</strong> / 5
-        <span class="review-count">({{ summary.count }} avaliacao{{ summary.count === 1 ? '' : 'es' }})</span>
+        Média do clube: <strong>{{ averageLabel }}</strong> / 5
+        <span class="review-count">({{ summary.count }} avaliação{{ summary.count === 1 ? '' : 'es' }})</span>
       </p>
-      <p v-else>Ainda nao ha avaliacoes deste livro.</p>
+      <p v-else>Ainda não há avaliações deste livro.</p>
     </div>
 
     <div v-if="canReview" class="review-cta">
       <p class="review-form-label">
-        {{ myReview ? 'Voce ja avaliou este livro.' : 'Voce terminou o livro!' }}
+        {{ myReview ? 'Você já avaliou este livro.' : 'Você terminou o livro!' }}
       </p>
       <RouterLink to="/review" custom>
         <template #default="{ navigate }">
           <BaseButton :variant="myReview ? 'secondary' : 'primary'" @click="navigate">
-            {{ myReview ? 'Editar minha avaliacao' : 'Avaliar o livro' }}
+            {{ myReview ? 'Editar minha avaliação' : 'Avaliar o livro' }}
           </BaseButton>
         </template>
       </RouterLink>
     </div>
 
     <p v-else class="spoiler-lock">
-      Conclua todos os capitulos para dar sua nota e resenha.
+      Conclua todos os capítulos para dar sua nota e resenha.
     </p>
 
     <ol v-if="reviews.length" class="review-list">
@@ -79,7 +79,7 @@ function stars(value: number) {
     </ol>
 
     <p v-if="reviews.length && !canReview" class="comment-muted">
-      As resenhas escritas ficam ocultas ate voce terminar o livro. As notas ja aparecem acima.
+      As resenhas escritas ficam ocultas até você terminar o livro. As notas já aparecem acima.
     </p>
   </section>
 </template>

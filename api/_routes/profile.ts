@@ -24,7 +24,7 @@ export default async function handler(req: any, res: any) {
   const avatarUrl = body.avatarUrl?.trim()
 
   // A foto chega como data URL comprimida pelo front (~256px). O limite
-  // evita abusos que inflariam a linha do usuario no banco.
+  // evita abusos que inflariam a linha do usuário no banco.
   if (avatarUrl && avatarUrl.length > 400_000) {
     sendJson(res, 400, { error: 'Imagem muito grande. Escolha uma foto menor.' })
     return

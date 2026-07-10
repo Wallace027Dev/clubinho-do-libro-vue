@@ -34,9 +34,9 @@ const status = computed<'NOT_STARTED' | 'STARTED' | 'FINISHED'>(
 )
 
 const statusLabels = {
-  NOT_STARTED: 'Nao iniciado',
+  NOT_STARTED: 'Não iniciado',
   STARTED: 'Em leitura',
-  FINISHED: 'Concluido'
+  FINISHED: 'Concluído'
 } as const
 
 const isActing = ref(false)
@@ -51,7 +51,7 @@ onMounted(async () => {
   }
 })
 
-// Carrega o comentario quando o capitulo esta (ou passa a estar) concluido.
+// Carrega o comentário quando o capítulo está (ou passa a estar) concluído.
 watch(
   [chapter, status],
   ([current, currentStatus]) => {
@@ -73,7 +73,7 @@ async function loadComment(chapterId: string) {
       response.comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
     commentBody.value = myComment.value?.body ?? ''
   } catch {
-    // Sem comentario carregado; o formulario continua disponivel.
+    // Sem comentário carregado; o formulario continua disponivel.
   } finally {
     isLoadingComment.value = false
   }
@@ -97,8 +97,8 @@ function startChapter() {
   const id = chapter.value.id
   void runProgressAction(
     () => platformStore.startChapter(id),
-    'Capitulo iniciado. Boa leitura!',
-    'Nao foi possivel iniciar o capitulo.'
+    'Capítulo iniciado. Boa leitura!',
+    'Não foi possível iniciar o capítulo.'
   )
 }
 
@@ -107,8 +107,8 @@ function finishChapter() {
   const id = chapter.value.id
   void runProgressAction(
     () => platformStore.finishChapter(id),
-    'Capitulo concluido!',
-    'Nao foi possivel concluir o capitulo.'
+    'Capítulo concluído!',
+    'Não foi possível concluir o capítulo.'
   )
 }
 
@@ -116,7 +116,7 @@ function reopenChapter() {
   if (!chapter.value) return
 
   const confirmed = window.confirm(
-    'Voltar este capitulo para "em leitura"? Seu comentario continua salvo, mas ele fica bloqueado para voce ate concluir de novo.'
+    'Voltar este capítulo para "em leitura"? Seu comentário continua salvo, mas ele fica bloqueado para você até concluir de novo.'
   )
 
   if (!confirmed) return
@@ -124,8 +124,8 @@ function reopenChapter() {
   const id = chapter.value.id
   void runProgressAction(
     () => platformStore.reopenChapter(id),
-    'Capitulo voltou para "em leitura".',
-    'Nao foi possivel desfazer a conclusao.'
+    'Capítulo voltou para "em leitura".',
+    'Não foi possível desfazer a conclusão.'
   )
 }
 
@@ -145,10 +145,10 @@ async function submitComment() {
     myComment.value =
       response.comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
     commentBody.value = myComment.value?.body ?? ''
-    uiStore.notify('Comentario salvo com sucesso!')
+    uiStore.notify('Comentário salvo com sucesso!')
   } catch (error) {
     uiStore.notify(
-      error instanceof ApiError ? error.message : 'Nao foi possivel salvar o comentario.',
+      error instanceof ApiError ? error.message : 'Não foi possível salvar o comentário.',
       'error'
     )
   } finally {
@@ -161,7 +161,7 @@ function reactionEmoji(type: ChapterCommentReactionType) {
 }
 
 function reactionLabel(type: ChapterCommentReactionType) {
-  return reactionOptions.find((reaction) => reaction.type === type)?.label ?? 'reacao'
+  return reactionOptions.find((reaction) => reaction.type === type)?.label ?? 'reação'
 }
 
 function goBack() {
@@ -177,11 +177,11 @@ function goBack() {
 <template>
   <header class="detail-header glass-panel">
     <button class="back-button" type="button" aria-label="Voltar" @click="goBack">←</button>
-    <h2>{{ chapter ? `Capitulo ${chapter.number}` : 'Capitulo' }}</h2>
+    <h2>{{ chapter ? `Capítulo ${chapter.number}` : 'Capítulo' }}</h2>
   </header>
 
   <div v-if="platformStore.isLoading && !chapter" class="empty-state">
-    <p>Carregando capitulo...</p>
+    <p>Carregando capítulo...</p>
   </div>
 
   <section v-else-if="chapter" class="flow-card glass-panel activity-detail">
@@ -202,7 +202,7 @@ function goBack() {
       </BaseButton>
 
       <BaseButton v-else-if="status === 'STARTED'" :loading="isActing" @click="finishChapter">
-        Concluir capitulo
+        Concluir capítulo
       </BaseButton>
 
       <BaseButton v-else variant="outline" :loading="isActing" @click="reopenChapter">
@@ -213,9 +213,9 @@ function goBack() {
     <template v-if="status === 'FINISHED'">
       <div class="detail-divider" aria-hidden="true"></div>
 
-      <p class="section-label">Meu comentario</p>
+      <p class="section-label">Meu comentário</p>
 
-      <p v-if="isLoadingComment" class="comment-muted">Carregando seu comentario...</p>
+      <p v-if="isLoadingComment" class="comment-muted">Carregando seu comentário...</p>
 
       <template v-else-if="myComment">
         <p class="comment-body">{{ myComment.body }}</p>
@@ -223,7 +223,7 @@ function goBack() {
         <div
           v-if="myComment.reactionTotal"
           class="reaction-row"
-          :aria-label="`${myComment.reactionTotal} reacoes no seu comentario`"
+          :aria-label="`${myComment.reactionTotal} reações no seu comentário`"
         >
           <span
             v-for="(reaction, index) in myComment.recentReactions"
@@ -241,42 +241,42 @@ function goBack() {
           </span>
         </div>
 
-        <p v-else class="comment-muted">Seu comentario ainda nao recebeu reacoes.</p>
+        <p v-else class="comment-muted">Seu comentário ainda não recebeu reações.</p>
       </template>
 
       <p v-else class="comment-muted">
-        Voce ainda nao comentou este capitulo. Escreva abaixo — o comentario aparece no feed para
-        quem ja concluiu.
+        Você ainda não comentou este capítulo. Escreva abaixo — o comentário aparece no feed para
+        quem já concluiu.
       </p>
     </template>
 
     <p v-else class="spoiler-lock">
-      Seu comentario deste capitulo abre depois que voce concluir a leitura.
+      Seu comentário deste capítulo abre depois que você concluir a leitura.
     </p>
   </section>
 
   <section v-else class="flow-card glass-panel">
     <div class="empty-state">
-      <p>Capitulo nao encontrado no livro atual.</p>
+      <p>Capítulo não encontrado no livro atual.</p>
     </div>
   </section>
 
   <div v-if="chapter && status === 'FINISHED'" class="comment-dock-spacer" aria-hidden="true"></div>
 
   <form v-if="chapter && status === 'FINISHED'" class="comment-dock glass-panel" @submit.prevent="submitComment">
-    <label class="visually-hidden" for="chapter-comment-input">Escreva um comentario</label>
+    <label class="visually-hidden" for="chapter-comment-input">Escreva um comentário</label>
     <input
       id="chapter-comment-input"
       v-model="commentBody"
       maxlength="420"
-      :placeholder="myComment ? 'Editar meu comentario...' : 'Escreva um comentario...'"
+      :placeholder="myComment ? 'Editar meu comentário...' : 'Escreva um comentário...'"
       required
     />
     <button
       class="comment-dock-send"
       type="submit"
       :disabled="isSubmittingComment"
-      aria-label="Salvar comentario"
+      aria-label="Salvar comentário"
     >
       ➤
     </button>

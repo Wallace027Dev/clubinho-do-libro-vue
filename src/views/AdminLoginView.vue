@@ -19,7 +19,7 @@ async function handleSubmit() {
     await authStore.adminLogin(password.value)
     await router.push('/admin')
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel entrar.'
+    errorMessage.value = error instanceof ApiError ? error.message : 'Não foi possível entrar.'
   } finally {
     isSubmitting.value = false
   }

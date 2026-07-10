@@ -43,7 +43,7 @@ watch(
           ></span>
           {{ raffleStore.selectedBook.title }}
         </h2>
-        <p id="winner-description">Esse sera o livro do mes?</p>
+        <p id="winner-description">Esse será o livro do mês?</p>
 
         <div class="modal-actions">
           <button

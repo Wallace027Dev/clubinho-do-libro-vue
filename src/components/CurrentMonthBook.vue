@@ -17,7 +17,7 @@ const monthLabel = computed(() => {
 <template>
   <section class="glass-panel current-book" aria-live="polite">
     <div>
-      <p class="section-label">Livro do mes</p>
+      <p class="section-label">Livro do mês</p>
       <h2 v-if="raffleStore.monthlyBook">{{ raffleStore.monthlyBook.book.title }}</h2>
       <h2 v-else>Nenhum livro escolhido ainda</h2>
       <p v-if="raffleStore.monthlyBook">{{ monthLabel }}</p>
@@ -30,11 +30,11 @@ const monthLabel = computed(() => {
       type="button"
       @click="raffleStore.clearMonthlyBook"
     >
-      Limpar livro do mes
+      Limpar livro do mês
     </button>
 
     <p v-if="raffleStore.hasCurrentMonthBook" class="lock-note" role="status">
-      Sorteio encerrado neste mes. O proximo libera em
+      Sorteio encerrado neste mês. O próximo libera em
       {{ raffleStore.nextRaffleMonthLabel }}.
     </p>
   </section>

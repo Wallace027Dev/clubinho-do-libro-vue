@@ -18,14 +18,14 @@ export default async function handler(req: any, res: any) {
   const password = body.password ?? ''
 
   if (!login || !password) {
-    sendJson(res, 400, { error: 'Login e senha sao obrigatorios.' })
+    sendJson(res, 400, { error: 'Login e senha são obrigatórios.' })
     return
   }
 
   const user = await prisma.user.findUnique({ where: { login } })
 
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
-    sendJson(res, 401, { error: 'Credenciais invalidas.' })
+    sendJson(res, 401, { error: 'Credenciais inválidas.' })
     return
   }
 

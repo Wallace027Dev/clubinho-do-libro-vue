@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!chapter || chapter.clubBook.clubId !== club.id || chapter.clubBook.status !== 'CURRENT') {
-    sendJson(res, 404, { error: 'Capitulo atual nao encontrado.' })
+    sendJson(res, 404, { error: 'Capítulo atual não encontrado.' })
     return
   }
 
@@ -55,7 +55,7 @@ export default async function handler(req: any, res: any) {
         clubId: club.id,
         actorId: session.userId,
         type: 'CHAPTER_STARTED',
-        message: `${user?.displayName || user?.login || 'Um membro'} iniciou o capitulo ${chapter.number}.`,
+        message: `${user?.displayName || user?.login || 'Um membro'} iniciou o capítulo ${chapter.number}.`,
         metadata: { chapterId: chapter.id, chapterNumber: chapter.number }
       }
     })

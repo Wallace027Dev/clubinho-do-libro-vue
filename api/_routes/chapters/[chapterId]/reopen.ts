@@ -4,12 +4,12 @@ import { assertMethod, sendJson } from '../../../_lib/http.js'
 import { prisma } from '../../../_lib/prisma.js'
 
 /**
- * Desfaz a conclusao de um capitulo (FINISHED -> STARTED).
+ * Desfaz a conclusão de um capítulo (FINISHED -> STARTED).
  *
- * Regras alinhadas na fase 8: o comentario do usuario continua existindo,
- * as atividades anteriores do feed sao preservadas e nenhuma atividade
- * nova e criada (o desfazer e discreto). O capitulo volta a ficar
- * bloqueado pelo anti-spoiler para o proprio usuario.
+ * Regras alinhadas na fase 8: o comentário do usuário continua existindo,
+ * as atividades anteriores do feed são preservadas e nenhuma atividade
+ * nova é criada (o desfazer é discreto). O capítulo volta a ficar
+ * bloqueado pelo anti-spoiler para o próprio usuário.
  */
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {
@@ -30,7 +30,7 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!chapter || chapter.clubBook.clubId !== club.id || chapter.clubBook.status !== 'CURRENT') {
-    sendJson(res, 404, { error: 'Capitulo atual nao encontrado.' })
+    sendJson(res, 404, { error: 'Capítulo atual não encontrado.' })
     return
   }
 
@@ -44,7 +44,7 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!existing || existing.status !== 'FINISHED') {
-    sendJson(res, 409, { error: 'So e possivel desfazer a conclusao de um capitulo concluido.' })
+    sendJson(res, 409, { error: 'Só é possível desfazer a conclusão de um capítulo concluído.' })
     return
   }
 

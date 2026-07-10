@@ -18,8 +18,8 @@ interface FeedFilter {
 
 const filters: FeedFilter[] = [
   { key: 'all', label: 'Tudo', types: null },
-  { key: 'comments', label: 'Comentarios', types: ['CHAPTER_COMMENTED'] },
-  { key: 'chapters', label: 'Capitulos', types: ['CHAPTER_STARTED', 'CHAPTER_FINISHED'] },
+  { key: 'comments', label: 'Comentários', types: ['CHAPTER_COMMENTED'] },
+  { key: 'chapters', label: 'Capítulos', types: ['CHAPTER_STARTED', 'CHAPTER_FINISHED'] },
   { key: 'book', label: 'Livro', types: ['BOOK_SELECTED', 'BOOK_FINISHED', 'BOOK_REVIEWED'] },
   { key: 'members', label: 'Membros', types: ['MEMBER_CREATED', 'PROFILE_UPDATED'] }
 ]
@@ -27,12 +27,12 @@ const filters: FeedFilter[] = [
 const activeFilter = ref('all')
 
 const typeLabels: Record<string, string> = {
-  CHAPTER_COMMENTED: 'Comentario',
-  CHAPTER_STARTED: 'Capitulo',
-  CHAPTER_FINISHED: 'Capitulo',
+  CHAPTER_COMMENTED: 'Comentário',
+  CHAPTER_STARTED: 'Capítulo',
+  CHAPTER_FINISHED: 'Capítulo',
   BOOK_SELECTED: 'Livro',
   BOOK_FINISHED: 'Livro',
-  BOOK_REVIEWED: 'Avaliacao',
+  BOOK_REVIEWED: 'Avaliação',
   MEMBER_CREATED: 'Membro',
   PROFILE_UPDATED: 'Perfil'
 }
@@ -94,7 +94,7 @@ function actorName(activity: Activity) {
     <div class="flow-heading">
       <p class="section-label">Feed do clube</p>
       <h2>Atividades da leitura</h2>
-      <p>Toque em uma atividade de comentario para ler e reagir.</p>
+      <p>Toque em uma atividade de comentário para ler e reagir.</p>
     </div>
 
     <div class="feed-toolbar">
@@ -150,7 +150,7 @@ function actorName(activity: Activity) {
     </div>
 
     <div v-else class="empty-state">
-      <p>O feed ainda esta vazio.</p>
+      <p>O feed ainda está vazio.</p>
     </div>
   </section>
 </template>

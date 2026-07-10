@@ -1,8 +1,8 @@
 import { prisma } from './prisma.js'
 
 /**
- * Carrega as avaliacoes de um ClubBook com o resumo (media e total).
- * Usado no livro atual (Fase 6) e no historico do clube (Fase 7).
+ * Carrega as avaliações de um ClubBook com o resumo (média e total).
+ * Usado no livro atual (Fase 6) e no histórico do clube (Fase 7).
  */
 export async function getClubBookReviews(clubBookId: string) {
   const reviews = await prisma.bookReview.findMany({
@@ -22,8 +22,8 @@ export async function getClubBookReviews(clubBookId: string) {
 }
 
 /**
- * Indica se o usuario concluiu todos os capitulos do ClubBook.
- * Livro sem capitulos ainda nao pode ser avaliado.
+ * Indica se o usuário concluiu todos os capítulos do ClubBook.
+ * Livro sem capítulos ainda não pode ser avaliado.
  */
 export async function userFinishedAllChapters(clubBookId: string, userId: string) {
   const chapters = await prisma.chapter.findMany({

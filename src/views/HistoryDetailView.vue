@@ -91,15 +91,15 @@ function goBack() {
             {{ stars(book.reviewSummary.average!) }}
             <span class="review-count">{{ averageLabel }}/5</span>
           </p>
-          <p v-else class="comment-muted">Sem avaliacoes.</p>
+          <p v-else class="comment-muted">Sem avaliações.</p>
         </div>
       </div>
 
       <p v-if="book.book.description" class="comment-body">{{ book.book.description }}</p>
 
       <p class="history-stats">
-        {{ book.stats.chapters }} capitulos · {{ book.stats.comments }} comentarios ·
-        {{ book.stats.reviewers }} avaliacoes
+        {{ book.stats.chapters }} capítulos · {{ book.stats.comments }} comentários ·
+        {{ book.stats.reviewers }} avaliações
       </p>
     </section>
 
@@ -125,13 +125,13 @@ function goBack() {
 
     <section v-if="book.stats.comments" class="flow-card glass-panel">
       <div class="flow-heading">
-        <p class="section-label">Memoria da leitura</p>
-        <h2>Comentarios por capitulo</h2>
+        <p class="section-label">Memória da leitura</p>
+        <h2>Comentários por capítulo</h2>
       </div>
 
       <div v-for="chapter in book.chapters" :key="chapter.id" class="history-chapter">
         <template v-if="chapter.comments.length">
-          <p class="chapter-kicker">Capitulo {{ chapter.number }} — {{ chapter.title }}</p>
+          <p class="chapter-kicker">Capítulo {{ chapter.number }} — {{ chapter.title }}</p>
           <ol class="comment-list">
             <li v-for="comment in chapter.comments" :key="comment.id">
               <div class="comment-author">
@@ -156,7 +156,7 @@ function goBack() {
 
   <section v-else class="flow-card glass-panel">
     <div class="empty-state">
-      <p>Livro nao encontrado no historico do clube.</p>
+      <p>Livro não encontrado no histórico do clube.</p>
     </div>
     <RouterLink class="text-link" to="/history">Voltar para livros lidos</RouterLink>
   </section>

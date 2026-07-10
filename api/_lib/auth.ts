@@ -68,7 +68,7 @@ export async function requireAdmin(req: any, res: any): Promise<SessionPayload |
 }
 
 // Em dev (http://localhost) o atributo Secure impede o browser de gravar o
-// cookie; so o aplicamos em producao, onde a Vercel serve via HTTPS.
+// cookie; só o aplicamos em produção, onde a Vercel serve via HTTPS.
 const secureAttr = process.env.NODE_ENV === 'production' ? '; Secure' : ''
 
 export function setSessionCookie(res: any, token: string) {

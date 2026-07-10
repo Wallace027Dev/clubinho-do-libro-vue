@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any) {
   })
 
   if (!currentBook) {
-    sendJson(res, 404, { error: 'Nao existe livro atual em andamento.' })
+    sendJson(res, 404, { error: 'Não existe livro atual em andamento.' })
     return
   }
 
@@ -45,7 +45,7 @@ export default async function handler(req: any, res: any) {
   const title = body.title?.trim()
 
   if (!Number.isInteger(number) || number < 1 || !title) {
-    sendJson(res, 400, { error: 'Informe numero e titulo do capitulo.' })
+    sendJson(res, 400, { error: 'Informe número e título do capítulo.' })
     return
   }
 

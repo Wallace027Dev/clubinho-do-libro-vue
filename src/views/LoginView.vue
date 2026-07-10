@@ -20,7 +20,7 @@ async function handleSubmit() {
     await authStore.login(login.value, password.value)
     await router.push('/')
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel entrar.'
+    errorMessage.value = error instanceof ApiError ? error.message : 'Não foi possível entrar.'
   } finally {
     isSubmitting.value = false
   }

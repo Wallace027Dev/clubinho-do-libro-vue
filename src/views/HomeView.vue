@@ -33,7 +33,7 @@ onMounted(() => {
         Em leitura desde {{ new Date(currentBook.selectedAt).toLocaleDateString('pt-BR') }}.
         <span v-if="averageLabel"> · Nota do clube {{ averageLabel }}/5</span>
       </p>
-      <p v-else>Quando o administrador definir o proximo livro, ele aparece aqui.</p>
+      <p v-else>Quando o administrador definir o próximo livro, ele aparece aqui.</p>
       <p v-if="currentBook?.book.description" class="hero-copy">
         {{ currentBook.book.description }}
       </p>
@@ -48,9 +48,9 @@ onMounted(() => {
         <p class="section-label">Seu progresso</p>
         <p v-if="chapterStats.total">
           <strong>{{ chapterStats.finished }}</strong> de
-          <strong>{{ chapterStats.total }}</strong> capitulos concluidos.
+          <strong>{{ chapterStats.total }}</strong> capítulos concluídos.
         </p>
-        <p v-else>O admin ainda nao cadastrou os capitulos deste livro.</p>
+        <p v-else>O admin ainda não cadastrou os capítulos deste livro.</p>
 
         <div
           v-if="chapterStats.total"
@@ -59,7 +59,7 @@ onMounted(() => {
           :aria-valuemin="0"
           :aria-valuemax="chapterStats.total"
           :aria-valuenow="chapterStats.finished"
-          aria-label="Capitulos concluidos"
+          aria-label="Capítulos concluídos"
         >
           <div
             class="progress-fill"
@@ -69,7 +69,7 @@ onMounted(() => {
       </div>
 
       <div class="action-stack">
-        <RouterLink class="text-link" to="/chapters">Ir para meus capitulos</RouterLink>
+        <RouterLink class="text-link" to="/chapters">Ir para meus capítulos</RouterLink>
         <RouterLink class="text-link" to="/feed">Ver o feed do clube</RouterLink>
       </div>
     </template>
