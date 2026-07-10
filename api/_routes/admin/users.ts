@@ -30,6 +30,7 @@ export default async function handler(req: any, res: any) {
         role: true,
         displayName: true,
         avatarUrl: true,
+        deactivatedAt: true,
         createdAt: true
       }
     })
@@ -60,6 +61,7 @@ export default async function handler(req: any, res: any) {
       role: true,
       displayName: true,
       avatarUrl: true,
+      deactivatedAt: true,
       createdAt: true
     }
   })

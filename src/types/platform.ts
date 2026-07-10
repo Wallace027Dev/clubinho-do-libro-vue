@@ -6,6 +6,7 @@ export interface AuthUser {
   role: UserRole
   displayName: string | null
   avatarUrl?: string | null
+  deactivatedAt?: string | null
 }
 
 export interface ActivityMetadata {

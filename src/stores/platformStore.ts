@@ -52,6 +52,34 @@ export const usePlatformStore = defineStore('platform', () => {
     return response.user
   }
 
+  async function updateMember(
+    userId: string,
+    changes: { deactivated?: boolean; newPassword?: string }
+  ) {
+    const response = await apiRequest<UserResponse>(`/api/admin/users/${userId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes)
+    })
+
+    members.value = members.value.map((member) =>
+      member.id === response.user.id ? response.user : member
+    )
+    return response.user
+  }
+
+  async function updateChapter(chapterId: string, changes: { number?: number; title?: string }) {
+    await apiRequest(`/api/admin/chapters/${chapterId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes)
+    })
+    await loadHome()
+  }
+
+  async function deleteChapter(chapterId: string) {
+    await apiRequest(`/api/admin/chapters/${chapterId}`, { method: 'DELETE' })
+    await loadHome()
+  }
+
   async function selectCurrentBook(title: string, author: string, description: string) {
     await apiRequest('/api/books/current', {
       method: 'POST',
@@ -116,8 +144,11 @@ export const usePlatformStore = defineStore('platform', () => {
     loadHistory,
     loadMembers,
     createMember,
+    updateMember,
     selectCurrentBook,
     createChapter,
+    updateChapter,
+    deleteChapter,
     startChapter,
     finishChapter,
     reopenChapter,

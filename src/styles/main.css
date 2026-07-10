@@ -1150,6 +1150,21 @@ textarea:focus {
   margin-top: 18px;
 }
 
+.member-list li.member-item {
+  grid-template-columns: 42px 1fr auto;
+}
+
+.member-item--inactive {
+  opacity: 0.6;
+}
+
+.member-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
 .avatar {
   display: grid;
   place-items: center;

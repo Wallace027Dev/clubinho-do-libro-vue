@@ -29,6 +29,11 @@ export default async function handler(req: any, res: any) {
     return
   }
 
+  if (user.deactivatedAt) {
+    sendJson(res, 403, { error: 'Conta desativada. Fale com o administrador do clube.' })
+    return
+  }
+
   const token = await createSession({ userId: user.id, role: user.role === 'ADMIN' ? 'ADMIN' : 'MEMBER' })
   setSessionCookie(res, token)
 

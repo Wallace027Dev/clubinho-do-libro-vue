@@ -88,6 +88,125 @@ function finishBook() {
     'Nao foi possivel finalizar.'
   )
 }
+
+// --- Gestao de membros (item 8.2: desativar/reativar e redefinir senha) ---
+const pendingMemberId = ref<string | null>(null)
+
+async function runMemberAction(userId: string, task: () => Promise<void>, fallback: string) {
+  pendingMemberId.value = userId
+
+  try {
+    await task()
+  } catch (error) {
+    uiStore.notify(error instanceof ApiError ? error.message : fallback, 'error')
+  } finally {
+    pendingMemberId.value = null
+  }
+}
+
+function toggleMemberActive(member: { id: string | null; login: string; deactivatedAt?: string | null }) {
+  if (!member.id) return
+
+  const deactivating = !member.deactivatedAt
+
+  if (
+    deactivating &&
+    !window.confirm(
+      `Desativar ${member.login}? A pessoa nao consegue mais entrar, mas os comentarios e notas dela continuam no historico do clube.`
+    )
+  ) {
+    return
+  }
+
+  void runMemberAction(
+    member.id,
+    async () => {
+      await platformStore.updateMember(member.id!, { deactivated: deactivating })
+      uiStore.notify(deactivating ? 'Membro desativado.' : 'Membro reativado!')
+    },
+    'Nao foi possivel atualizar o membro.'
+  )
+}
+
+function resetMemberPassword(member: { id: string | null; login: string }) {
+  if (!member.id) return
+
+  const newPassword = window.prompt(
+    `Nova senha provisoria para ${member.login} (minimo 6 caracteres):`
+  )
+
+  if (newPassword === null) return
+
+  if (newPassword.length < 6) {
+    uiStore.notify('A senha precisa ter pelo menos 6 caracteres.', 'error')
+    return
+  }
+
+  void runMemberAction(
+    member.id,
+    async () => {
+      await platformStore.updateMember(member.id!, { newPassword })
+      uiStore.notify(`Senha de ${member.login} redefinida. Avise a pessoa!`)
+    },
+    'Nao foi possivel redefinir a senha.'
+  )
+}
+
+// --- Edicao de capitulos (editar sempre; excluir so sem uso) ---
+const editingChapterId = ref<string | null>(null)
+const editNumber = ref(1)
+const editTitle = ref('')
+const pendingChapterId = ref<string | null>(null)
+
+function startEditChapter(chapter: { id: string; number: number; title: string }) {
+  editingChapterId.value = chapter.id
+  editNumber.value = chapter.number
+  editTitle.value = chapter.title
+}
+
+function cancelEditChapter() {
+  editingChapterId.value = null
+}
+
+async function saveChapterEdit(chapterId: string) {
+  pendingChapterId.value = chapterId
+
+  try {
+    await platformStore.updateChapter(chapterId, {
+      number: editNumber.value,
+      title: editTitle.value
+    })
+    editingChapterId.value = null
+    uiStore.notify('Capitulo atualizado!')
+  } catch (error) {
+    uiStore.notify(
+      error instanceof ApiError ? error.message : 'Nao foi possivel atualizar o capitulo.',
+      'error'
+    )
+  } finally {
+    pendingChapterId.value = null
+  }
+}
+
+async function removeChapter(chapter: { id: string; number: number; title: string }) {
+  if (!window.confirm(`Excluir o capitulo ${chapter.number} (${chapter.title})?`)) {
+    return
+  }
+
+  pendingChapterId.value = chapter.id
+
+  try {
+    await platformStore.deleteChapter(chapter.id)
+    uiStore.notify('Capitulo excluido.')
+  } catch (error) {
+    uiStore.notify(
+      error instanceof ApiError ? error.message : 'Nao foi possivel excluir o capitulo.',
+      'error'
+    )
+  } finally {
+    pendingChapterId.value = null
+  }
+}
 </script>
 
 <template>
@@ -126,11 +245,42 @@ function finishBook() {
     </form>
 
     <ul class="member-list">
-      <li v-for="member in platformStore.members" :key="member.id || member.login">
-        <div class="avatar">{{ member.displayName?.[0] || member.login[0] }}</div>
+      <li
+        v-for="member in platformStore.members"
+        :key="member.id || member.login"
+        class="member-item"
+        :class="{ 'member-item--inactive': member.deactivatedAt }"
+      >
+        <div class="avatar">
+          <img v-if="member.avatarUrl" :src="member.avatarUrl" :alt="`Foto de ${member.login}`" />
+          <template v-else>{{ member.displayName?.[0] || member.login[0] }}</template>
+        </div>
         <div>
           <strong>{{ member.displayName || member.login }}</strong>
-          <p>{{ member.login }}</p>
+          <p>
+            {{ member.login }}
+            <span v-if="member.deactivatedAt" class="chapter-status chapter-status--not_started">
+              Desativado
+            </span>
+          </p>
+        </div>
+        <div class="member-actions">
+          <button
+            type="button"
+            class="filter-chip"
+            :disabled="pendingMemberId === member.id"
+            @click="resetMemberPassword(member)"
+          >
+            Redefinir senha
+          </button>
+          <button
+            type="button"
+            class="filter-chip"
+            :disabled="pendingMemberId === member.id"
+            @click="toggleMemberActive(member)"
+          >
+            {{ member.deactivatedAt ? 'Reativar' : 'Desativar' }}
+          </button>
         </div>
       </li>
     </ul>
@@ -195,10 +345,53 @@ function finishBook() {
       class="chapter-list admin-chapter-list"
     >
       <li v-for="chapter in platformStore.clubState.currentBook.chapters" :key="chapter.id">
-        <div>
-          <span class="chapter-kicker">Capitulo {{ chapter.number }}</span>
-          <strong>{{ chapter.title }}</strong>
-        </div>
+        <template v-if="editingChapterId === chapter.id">
+          <div class="stack-form">
+            <label>
+              Numero
+              <input v-model.number="editNumber" min="1" required type="number" />
+            </label>
+            <label>
+              Titulo
+              <input v-model="editTitle" required />
+            </label>
+            <div class="member-actions">
+              <button
+                type="button"
+                class="filter-chip active"
+                :disabled="pendingChapterId === chapter.id"
+                @click="saveChapterEdit(chapter.id)"
+              >
+                Salvar
+              </button>
+              <button type="button" class="filter-chip" @click="cancelEditChapter">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="chapter-card-row">
+            <div>
+              <span class="chapter-kicker">Capitulo {{ chapter.number }}</span>
+              <strong>{{ chapter.title }}</strong>
+            </div>
+            <div class="member-actions">
+              <button type="button" class="filter-chip" @click="startEditChapter(chapter)">
+                Editar
+              </button>
+              <button
+                type="button"
+                class="filter-chip"
+                :disabled="pendingChapterId === chapter.id"
+                @click="removeChapter(chapter)"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </template>
       </li>
     </ol>
   </section>

@@ -15,7 +15,9 @@ import authLogout from '../_routes/auth/logout.js'
 import authMe from '../_routes/auth/me.js'
 import adminLogin from '../_routes/admin/login.js'
 import adminUsers from '../_routes/admin/users.js'
+import adminUserById from '../_routes/admin/users/[userId].js'
 import adminChapters from '../_routes/admin/chapters.js'
+import adminChapterById from '../_routes/admin/chapters/[chapterId].js'
 import adminFinishBook from '../_routes/admin/current-book/finish.js'
 import booksCurrent from '../_routes/books/current.js'
 import booksReview from '../_routes/books/review.js'
@@ -43,7 +45,9 @@ const routes: Route[] = [
   ['auth/me', authMe],
   ['admin/login', adminLogin],
   ['admin/users', adminUsers],
+  ['admin/users/[userId]', adminUserById],
   ['admin/chapters', adminChapters],
+  ['admin/chapters/[chapterId]', adminChapterById],
   ['admin/current-book/finish', adminFinishBook],
   ['books/current', booksCurrent],
   ['books/review', booksReview],
