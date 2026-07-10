@@ -202,7 +202,7 @@ apos o primeiro deploy em producao.
 Status geral (2026-07-10): 8.1, 8.2, 8.5, 8.7 e 8.8 implementados e em
 producao; 8.6 implementado para foto de perfil (capa de livro continua
 por URL); 8.4 ja existia no fundo atual (validar se o efeito atende);
-8.3 (acentuacao) pendente.
+8.3 (acentuação) e 8.4 (fundo animado, corrigido) concluídos em 2026-07-10. Fase 8 completa.
 
 ### 8.1 Estado de carregamento em requisicoes
 
