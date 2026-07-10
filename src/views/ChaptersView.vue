@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronRight } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BookReview from '../components/BookReview.vue'
@@ -74,7 +75,7 @@ function openChapter(chapter: Chapter) {
         </div>
         <div class="chapter-card-row">
           <strong>{{ chapter.title }}</strong>
-          <span class="chapter-chevron" aria-hidden="true">›</span>
+          <ChevronRight class="chapter-chevron" :size="20" aria-hidden="true" />
         </div>
       </li>
     </ol>

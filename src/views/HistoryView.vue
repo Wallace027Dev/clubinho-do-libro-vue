@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronRight } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlatformStore } from '../stores/platformStore'
@@ -84,7 +85,7 @@ function openBook(book: FinishedBook) {
           <p v-else class="comment-muted">Sem avaliações.</p>
         </div>
 
-        <span class="chapter-chevron" aria-hidden="true">›</span>
+        <ChevronRight class="chapter-chevron" :size="20" aria-hidden="true" />
       </li>
     </ol>
   </section>

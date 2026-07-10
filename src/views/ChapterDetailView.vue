@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowLeft, SendHorizontal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -176,7 +177,7 @@ function goBack() {
 
 <template>
   <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="goBack">←</button>
+    <button class="back-button" type="button" aria-label="Voltar" @click="goBack"><ArrowLeft :size="20" /></button>
     <h2>{{ chapter ? `Capítulo ${chapter.number}` : 'Capítulo' }}</h2>
   </header>
 
@@ -278,7 +279,7 @@ function goBack() {
       :disabled="isSubmittingComment"
       aria-label="Salvar comentário"
     >
-      ➤
+      <SendHorizontal :size="18" />
     </button>
   </form>
 </template>

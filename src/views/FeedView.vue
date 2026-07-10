@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Search } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlatformStore } from '../stores/platformStore'
@@ -101,7 +102,7 @@ function actorName(activity: Activity) {
       <label class="feed-search">
         <span class="visually-hidden">Pesquisar no feed</span>
         <input v-model="searchTerm" type="search" placeholder="Pesquisar..." />
-        <span class="feed-search-icon" aria-hidden="true">🔍</span>
+        <Search class="feed-search-icon" :size="18" aria-hidden="true" />
       </label>
 
       <div class="filter-chips" role="group" aria-label="Filtrar por tipo de atividade">

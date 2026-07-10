@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ApiError, apiRequest } from '../services/apiClient'
@@ -123,7 +124,7 @@ function goBack() {
 
 <template>
   <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="goBack">←</button>
+    <button class="back-button" type="button" aria-label="Voltar" @click="goBack"><ArrowLeft :size="20" /></button>
     <h2>{{ activity?.message ?? 'Atividade' }}</h2>
   </header>
 

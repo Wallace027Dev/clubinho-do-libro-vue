@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -80,7 +81,7 @@ function cancel() {
 
 <template>
   <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="cancel">←</button>
+    <button class="back-button" type="button" aria-label="Voltar" @click="cancel"><ArrowLeft :size="20" /></button>
     <h2>Avaliar o livro</h2>
   </header>
 

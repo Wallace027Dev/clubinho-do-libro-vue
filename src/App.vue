@@ -7,6 +7,8 @@ const authStore = useAuthStore()
 </script>
 
 <template>
+  <div class="bg-drift" aria-hidden="true"></div>
+
   <main class="app-shell" :class="{ 'app-shell--with-tab-bar': authStore.isAuthenticated }">
     <section class="hero glass-panel">
       <h1 class="brand-logo">Clubinho do Libro</h1>

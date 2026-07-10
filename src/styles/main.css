@@ -55,20 +55,21 @@ body::before {
 }
 
 /* Degrade radial animado (fase 8.4): as manchas de cor do fundo vivem
-   nesta camada e se deslocam continuamente. */
-body::after {
+   neste elemento (ver App.vue) e se deslocam continuamente. Elemento
+   real em vez de pseudo-elemento do body por confiabilidade em
+   navegadores mobile. */
+.bg-drift {
   position: fixed;
-  inset: -28vmax;
+  inset: -30vmax;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 28% 26%, rgba(255, 248, 230, 0.92), transparent 24vmax),
-    radial-gradient(circle at 74% 34%, rgba(154, 167, 122, 0.6), transparent 28vmax),
-    radial-gradient(circle at 44% 78%, rgba(213, 168, 94, 0.5), transparent 26vmax),
-    radial-gradient(circle at 82% 82%, rgba(48, 53, 31, 0.22), transparent 30vmax);
-  content: "";
-  filter: blur(28px);
-  animation: gradientDrift 22s ease-in-out infinite alternate;
+    radial-gradient(circle at 28% 26%, rgba(255, 248, 230, 0.95), transparent 22vmax),
+    radial-gradient(circle at 74% 34%, rgba(154, 167, 122, 0.68), transparent 26vmax),
+    radial-gradient(circle at 44% 78%, rgba(213, 168, 94, 0.58), transparent 24vmax),
+    radial-gradient(circle at 84% 84%, rgba(48, 53, 31, 0.26), transparent 28vmax);
+  filter: blur(18px);
+  animation: gradientDrift 12s ease-in-out infinite alternate;
   will-change: transform;
 }
 
@@ -126,6 +127,7 @@ textarea:focus-visible {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  border-radius: inherit;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 36%),
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 18rem);
@@ -484,6 +486,13 @@ textarea:focus {
   margin: 0 auto;
   padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
   border-radius: 26px;
+  /* O glass-panel corta em overflow: hidden; aqui precisa ficar visivel
+     para o botao central elevado nao ser decepado. */
+  overflow: visible;
+}
+
+.tab-icon svg {
+  display: block;
 }
 
 .tab-item {
@@ -530,7 +539,7 @@ textarea:focus {
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
   box-shadow: 0 14px 28px rgba(77, 87, 51, 0.32);
-  font-size: 1.5rem;
+  color: var(--color-cream-50);
 }
 
 .tab-item--central.router-link-exact-active .tab-icon {
@@ -1634,14 +1643,14 @@ textarea:focus {
 
 @keyframes gradientDrift {
   0% {
-    transform: translate3d(-9vmax, -6vmax, 0) scale(1);
+    transform: translate3d(-13vmax, -9vmax, 0) scale(1);
   }
 
   50% {
-    transform: translate3d(6vmax, 5vmax, 0) scale(1.12);
+    transform: translate3d(9vmax, 7vmax, 0) scale(1.2);
   }
 
   100% {
-    transform: translate3d(11vmax, -8vmax, 0) scale(1.03);
+    transform: translate3d(15vmax, -11vmax, 0) scale(1.06);
   }
 }
