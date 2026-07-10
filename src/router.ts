@@ -7,6 +7,7 @@ import ChapterDetailView from './views/ChapterDetailView.vue'
 import ChaptersView from './views/ChaptersView.vue'
 import ReviewView from './views/ReviewView.vue'
 import FeedView from './views/FeedView.vue'
+import HistoryDetailView from './views/HistoryDetailView.vue'
 import HistoryView from './views/HistoryView.vue'
 import HomeView from './views/HomeView.vue'
 import LoginView from './views/LoginView.vue'
@@ -22,6 +23,7 @@ export const router = createRouter({
     { path: '/chapters/:chapterId', component: ChapterDetailView, meta: { requiresAuth: true } },
     { path: '/review', component: ReviewView, meta: { requiresAuth: true } },
     { path: '/history', component: HistoryView, meta: { requiresAuth: true } },
+    { path: '/history/:bookId', component: HistoryDetailView, meta: { requiresAuth: true } },
     { path: '/login', component: LoginView },
     { path: '/login/admin', component: AdminLoginView },
     { path: '/admin/login', redirect: '/login/admin' },

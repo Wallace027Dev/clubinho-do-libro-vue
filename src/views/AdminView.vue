@@ -12,6 +12,7 @@ const memberPassword = ref('')
 const memberDisplayName = ref('')
 const bookTitle = ref('')
 const bookAuthor = ref('')
+const bookDescription = ref('')
 const chapterNumber = ref(1)
 const chapterTitle = ref('')
 const errorMessage = ref('')
@@ -54,9 +55,10 @@ function selectBook() {
   return runAction(
     'book',
     async () => {
-      await platformStore.selectCurrentBook(bookTitle.value, bookAuthor.value)
+      await platformStore.selectCurrentBook(bookTitle.value, bookAuthor.value, bookDescription.value)
       bookTitle.value = ''
       bookAuthor.value = ''
+      bookDescription.value = ''
       uiStore.notify('Livro atual definido com sucesso!')
     },
     'Nao foi possivel definir o livro.'
@@ -148,6 +150,14 @@ function finishBook() {
       <label>
         Autor opcional
         <input v-model="bookAuthor" />
+      </label>
+      <label>
+        Descricao opcional
+        <textarea
+          v-model="bookDescription"
+          maxlength="1000"
+          placeholder="Sinopse curta ou por que o clube escolheu este livro."
+        ></textarea>
       </label>
       <BaseButton type="submit" :loading="pendingAction === 'book'">
         Definir livro atual

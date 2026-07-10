@@ -52,10 +52,10 @@ export const usePlatformStore = defineStore('platform', () => {
     return response.user
   }
 
-  async function selectCurrentBook(title: string, author: string) {
+  async function selectCurrentBook(title: string, author: string, description: string) {
     await apiRequest('/api/books/current', {
       method: 'POST',
-      body: JSON.stringify({ title, author })
+      body: JSON.stringify({ title, author, description })
     })
     await loadHome()
   }

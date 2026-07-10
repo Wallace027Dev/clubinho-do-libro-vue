@@ -34,6 +34,9 @@ onMounted(() => {
         <span v-if="averageLabel"> · Nota do clube {{ averageLabel }}/5</span>
       </p>
       <p v-else>Quando o administrador definir o proximo livro, ele aparece aqui.</p>
+      <p v-if="currentBook?.book.description" class="hero-copy">
+        {{ currentBook.book.description }}
+      </p>
     </div>
 
     <div v-if="platformStore.isLoading && !currentBook" class="empty-state">

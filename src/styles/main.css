@@ -1390,6 +1390,36 @@ textarea:focus {
   gap: 14px;
 }
 
+/* Item compacto da lista de livros lidos (fase 8 etapa 4). */
+.history-item {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.history-item-info {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.history-item-info p {
+  margin: 0;
+  color: rgba(40, 41, 31, 0.65);
+  font-size: 0.85rem;
+}
+
+.history-cover--small {
+  width: 48px;
+  height: 68px;
+  border-radius: 10px;
+}
+
+.history-cover--small.history-cover--empty {
+  font-size: 1.4rem;
+}
+
 .history-head {
   display: grid;
   grid-template-columns: 64px 1fr;

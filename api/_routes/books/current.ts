@@ -7,6 +7,7 @@ import { getClubBookReviews, userFinishedAllChapters } from '../../_lib/reviews.
 interface SelectBookBody {
   title?: string
   author?: string
+  description?: string
 }
 
 export default async function handler(req: any, res: any) {
@@ -104,7 +105,8 @@ export default async function handler(req: any, res: any) {
     const book = await tx.book.create({
       data: {
         title,
-        author: body.author?.trim() || null
+        author: body.author?.trim() || null,
+        description: body.description?.trim() || null
       }
     })
 

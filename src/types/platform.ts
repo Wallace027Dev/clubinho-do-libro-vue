@@ -86,6 +86,7 @@ export interface CurrentBook {
     id: string
     title: string
     author?: string | null
+    description?: string | null
     coverUrl?: string | null
   }
   chapters: Chapter[]
@@ -127,6 +128,7 @@ export interface FinishedBook {
     id: string
     title: string
     author?: string | null
+    description?: string | null
     coverUrl?: string | null
   }
   reviews: BookReview[]
