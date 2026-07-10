@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
@@ -8,6 +9,19 @@ import type { AuthUser } from '../types/platform'
 
 const authStore = useAuthStore()
 const uiStore = useUiStore()
+const router = useRouter()
+const isLoggingOut = ref(false)
+
+async function handleLogout() {
+  isLoggingOut.value = true
+
+  try {
+    await authStore.logout()
+    await router.push('/login')
+  } finally {
+    isLoggingOut.value = false
+  }
+}
 const displayName = ref(authStore.user?.displayName ?? '')
 const avatarUrl = ref(authStore.user?.avatarUrl ?? '')
 const errorMessage = ref('')
@@ -60,5 +74,22 @@ async function saveProfile() {
         {{ isSaving ? 'Salvando...' : 'Salvar perfil' }}
       </BaseButton>
     </form>
+  </section>
+
+  <section class="flow-card glass-panel">
+    <div class="flow-heading">
+      <p class="section-label">Conta</p>
+      <h2>Sessao e acessos</h2>
+    </div>
+
+    <div class="action-stack">
+      <RouterLink v-if="authStore.isAdmin" class="text-link" to="/admin">
+        Abrir painel do admin
+      </RouterLink>
+
+      <BaseButton variant="outline" :loading="isLoggingOut" @click="handleLogout">
+        Sair da conta
+      </BaseButton>
+    </div>
   </section>
 </template>

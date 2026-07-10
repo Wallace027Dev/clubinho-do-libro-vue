@@ -80,7 +80,7 @@ async function finishChapter(chapter: Chapter) {
       <p v-else>Quando o administrador aceitar um sorteio, os capitulos aparecem aqui.</p>
     </div>
 
-    <RouterLink v-if="currentBook" class="text-link" to="/">Voltar ao feed</RouterLink>
+    <RouterLink v-if="currentBook" class="text-link" to="/feed">Ver o feed do clube</RouterLink>
   </section>
 
   <div v-if="platformStore.isLoading && !currentBook" class="empty-state">

@@ -5,13 +5,15 @@ import AdminView from './views/AdminView.vue'
 import ChaptersView from './views/ChaptersView.vue'
 import FeedView from './views/FeedView.vue'
 import HistoryView from './views/HistoryView.vue'
+import HomeView from './views/HomeView.vue'
 import LoginView from './views/LoginView.vue'
 import ProfileView from './views/ProfileView.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', component: FeedView, meta: { requiresAuth: true } },
+    { path: '/', component: HomeView, meta: { requiresAuth: true } },
+    { path: '/feed', component: FeedView, meta: { requiresAuth: true } },
     { path: '/chapters', component: ChaptersView, meta: { requiresAuth: true } },
     { path: '/history', component: HistoryView, meta: { requiresAuth: true } },
     { path: '/login', component: LoginView },

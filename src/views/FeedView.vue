@@ -5,10 +5,61 @@ import { usePlatformStore } from '../stores/platformStore'
 import type { Activity } from '../types/platform'
 
 const platformStore = usePlatformStore()
-const currentBook = computed(() => platformStore.clubState.currentBook)
 const activities = computed(() => platformStore.clubState.activities)
 
 const selectedActivity = ref<Activity | null>(null)
+const searchTerm = ref('')
+
+interface FeedFilter {
+  key: string
+  label: string
+  types: string[] | null
+}
+
+const filters: FeedFilter[] = [
+  { key: 'all', label: 'Tudo', types: null },
+  { key: 'comments', label: 'Comentarios', types: ['CHAPTER_COMMENTED'] },
+  { key: 'chapters', label: 'Capitulos', types: ['CHAPTER_STARTED', 'CHAPTER_FINISHED'] },
+  { key: 'book', label: 'Livro', types: ['BOOK_SELECTED', 'BOOK_FINISHED', 'BOOK_REVIEWED'] },
+  { key: 'members', label: 'Membros', types: ['MEMBER_CREATED', 'PROFILE_UPDATED'] }
+]
+
+const activeFilter = ref('all')
+
+const typeLabels: Record<string, string> = {
+  CHAPTER_COMMENTED: 'Comentario',
+  CHAPTER_STARTED: 'Capitulo',
+  CHAPTER_FINISHED: 'Capitulo',
+  BOOK_SELECTED: 'Livro',
+  BOOK_FINISHED: 'Livro',
+  BOOK_REVIEWED: 'Avaliacao',
+  MEMBER_CREATED: 'Membro',
+  PROFILE_UPDATED: 'Perfil'
+}
+
+function normalize(text: string) {
+  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
+}
+
+const filteredActivities = computed(() => {
+  const filter = filters.find((item) => item.key === activeFilter.value)
+  const term = normalize(searchTerm.value.trim())
+
+  return activities.value.filter((activity) => {
+    if (filter?.types && !filter.types.includes(activity.type)) {
+      return false
+    }
+
+    if (!term) {
+      return true
+    }
+
+    const haystack = normalize(
+      `${activity.message} ${activity.actor?.displayName ?? ''} ${activity.actor?.login ?? ''}`
+    )
+    return haystack.includes(term)
+  })
+})
 
 onMounted(() => {
   void platformStore.loadHome()
@@ -29,43 +80,58 @@ function openActivity(activity: Activity) {
 function closeActivity() {
   selectedActivity.value = null
 }
+
+function activityDate(activity: Activity) {
+  return new Date(activity.createdAt).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit'
+  })
+}
+
+function actorName(activity: Activity) {
+  return activity.actor?.displayName || activity.actor?.login || 'Clubinho'
+}
 </script>
 
 <template>
-  <section class="glass-panel current-book">
-    <div>
-      <p class="section-label">Livro atual</p>
-      <h2 v-if="currentBook">{{ currentBook.book.title }}</h2>
-      <h2 v-else>Nenhum livro em andamento</h2>
-      <p v-if="currentBook">
-        Em leitura desde {{ new Date(currentBook.selectedAt).toLocaleDateString('pt-BR') }}.
-        <span v-if="currentBook.reviewSummary?.average != null">
-          · Nota do clube {{ currentBook.reviewSummary.average.toFixed(1).replace('.', ',') }}/5
-        </span>
-      </p>
-      <p v-else>Quando o administrador aceitar um sorteio, o livro aparece aqui.</p>
-    </div>
-
-    <RouterLink v-if="currentBook" class="text-link" to="/chapters">
-      Ver meus capitulos
-    </RouterLink>
-  </section>
-
   <section class="flow-card glass-panel">
     <div class="flow-heading">
       <p class="section-label">Feed do clube</p>
       <h2>Atividades da leitura</h2>
-      <p>Toque em uma atividade de capitulo para ver o comentario e reagir.</p>
+      <p>Toque em uma atividade de comentario para ler e reagir.</p>
+    </div>
+
+    <div class="feed-toolbar">
+      <label class="feed-search">
+        <span class="visually-hidden">Pesquisar no feed</span>
+        <input v-model="searchTerm" type="search" placeholder="Pesquisar..." />
+        <span class="feed-search-icon" aria-hidden="true">🔍</span>
+      </label>
+
+      <div class="filter-chips" role="group" aria-label="Filtrar por tipo de atividade">
+        <button
+          v-for="filter in filters"
+          :key="filter.key"
+          type="button"
+          class="filter-chip"
+          :class="{ active: activeFilter === filter.key }"
+          :aria-pressed="activeFilter === filter.key"
+          @click="activeFilter = filter.key"
+        >
+          {{ filter.label }}
+        </button>
+      </div>
     </div>
 
     <div v-if="platformStore.isLoading && !activities.length" class="empty-state">
       <p>Carregando o feed do clube...</p>
     </div>
 
-    <ol v-else-if="activities.length" class="activity-list">
+    <ol v-else-if="filteredActivities.length" class="feed-list">
       <li
-        v-for="activity in activities"
+        v-for="activity in filteredActivities"
         :key="activity.id"
+        class="feed-card"
         :class="{ 'is-clickable': isCommentActivity(activity) }"
         :role="isCommentActivity(activity) ? 'button' : undefined"
         :tabindex="isCommentActivity(activity) ? 0 : undefined"
@@ -74,15 +140,18 @@ function closeActivity() {
         @keydown.enter.prevent="openActivity(activity)"
         @keydown.space.prevent="openActivity(activity)"
       >
-        <div class="avatar">
-          {{ activity.actor?.displayName?.[0] || activity.actor?.login?.[0] || 'C' }}
+        <div class="feed-card-top">
+          <span class="feed-tag">{{ typeLabels[activity.type] ?? 'Atividade' }}</span>
+          <time class="feed-date" :datetime="activity.createdAt">{{ activityDate(activity) }}</time>
         </div>
-        <div>
-          <strong>{{ activity.message }}</strong>
-          <p>{{ new Date(activity.createdAt).toLocaleString('pt-BR') }}</p>
-        </div>
+        <strong>{{ activity.message }}</strong>
+        <p>{{ actorName(activity) }}</p>
       </li>
     </ol>
+
+    <div v-else-if="activities.length" class="empty-state">
+      <p>Nenhuma atividade combina com a busca ou o filtro.</p>
+    </div>
 
     <div v-else class="empty-state">
       <p>O feed ainda esta vazio.</p>
