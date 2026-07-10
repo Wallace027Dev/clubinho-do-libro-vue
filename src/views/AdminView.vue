@@ -4,6 +4,7 @@ import BaseButton from '../components/ui/BaseButton.vue'
 import { ApiError } from '../services/apiClient'
 import { usePlatformStore } from '../stores/platformStore'
 import { useUiStore } from '../stores/uiStore'
+import { chapterTag, chapterTagLower } from '../utils/chapters'
 
 const platformStore = usePlatformStore()
 const uiStore = useUiStore()
@@ -189,7 +190,7 @@ async function saveChapterEdit(chapterId: string) {
 }
 
 async function removeChapter(chapter: { id: string; number: number; title: string }) {
-  if (!window.confirm(`Excluir o capítulo ${chapter.number} (${chapter.title})?`)) {
+  if (!window.confirm(`Excluir ${chapterTagLower(chapter)} (${chapter.title})?`)) {
     return
   }
 
@@ -329,7 +330,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
     <form class="stack-form" @submit.prevent="createChapter">
       <label>
         Número
-        <input v-model.number="chapterNumber" min="1" required type="number" />
+        <input v-model.number="chapterNumber" min="0" required type="number" />
       </label>
       <label>
         Título do capítulo
@@ -349,7 +350,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
           <div class="stack-form">
             <label>
               Número
-              <input v-model.number="editNumber" min="1" required type="number" />
+              <input v-model.number="editNumber" min="0" required type="number" />
             </label>
             <label>
               Título
@@ -374,7 +375,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
         <template v-else>
           <div class="chapter-card-row">
             <div>
-              <span class="chapter-kicker">Capítulo {{ chapter.number }}</span>
+              <span class="chapter-kicker">{{ chapterTag(chapter) }}</span>
               <strong>{{ chapter.title }}</strong>
             </div>
             <div class="member-actions">

@@ -12,6 +12,7 @@ export interface AuthUser {
 export interface ActivityMetadata {
   chapterId?: string
   chapterNumber?: number
+  chapterTitle?: string
   bookId?: string
   userId?: string
 }

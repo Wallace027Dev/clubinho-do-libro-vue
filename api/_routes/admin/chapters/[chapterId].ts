@@ -59,7 +59,7 @@ export default async function handler(req: any, res: any) {
   if (body.number !== undefined) {
     const number = Number(body.number)
 
-    if (!Number.isInteger(number) || number < 1) {
+    if (!Number.isInteger(number) || number < 0) {
       sendJson(res, 400, { error: 'Número de capítulo inválido.' })
       return
     }

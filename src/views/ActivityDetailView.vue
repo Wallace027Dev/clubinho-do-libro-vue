@@ -6,6 +6,7 @@ import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity, ChapterComment, ChapterCommentReactionType } from '../types/platform'
+import { chapterTagFromMeta } from '../utils/chapters'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,6 +33,13 @@ const activity = computed<Activity | null>(() => {
 })
 
 const chapterNumber = computed(() => activity.value?.metadata?.chapterNumber)
+
+// "Prólogo"/"Epílogo"/"Capítulo 5" — e a variante minúscula para meio de
+// frase ("prólogo", "capítulo 5").
+const chapterLabel = computed(() =>
+  chapterTagFromMeta(activity.value?.metadata?.chapterNumber, activity.value?.metadata?.chapterTitle)
+)
+const chapterLabelBare = computed(() => chapterLabel.value.toLowerCase())
 const authorName = computed(
   () => activity.value?.actor?.displayName || activity.value?.actor?.login || 'Um membro'
 )
@@ -138,12 +146,12 @@ function goBack() {
 
     <div class="detail-divider" aria-hidden="true"></div>
 
-    <p v-if="chapterNumber" class="section-label">Capítulo {{ chapterNumber }}</p>
+    <p v-if="chapterNumber != null" class="section-label">{{ chapterLabel }}</p>
 
     <p v-if="isLoading" class="comment-muted">Carregando comentário...</p>
 
     <p v-else-if="isLocked" class="spoiler-lock">
-      Você precisa concluir o capítulo {{ chapterNumber }} para ver este comentário e reagir.
+      Você precisa concluir o {{ chapterLabelBare }} para ver este comentário e reagir.
     </p>
 
     <p v-else-if="errorMessage" class="form-error">{{ errorMessage }}</p>
@@ -183,7 +191,7 @@ function goBack() {
     </template>
 
     <p v-else class="comment-muted">
-      {{ authorName }} ainda não deixou comentário no capítulo {{ chapterNumber }}.
+      {{ authorName }} ainda não deixou comentário no {{ chapterLabelBare }}.
     </p>
   </section>
 

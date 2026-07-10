@@ -9,6 +9,7 @@ import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import { useUiStore } from '../stores/uiStore'
 import type { Chapter, ChapterComment, ChapterCommentReactionType } from '../types/platform'
+import { chapterTag } from '../utils/chapters'
 
 const route = useRoute()
 const router = useRouter()
@@ -213,7 +214,7 @@ function goBack() {
 <template>
   <header class="detail-header glass-panel">
     <button class="back-button" type="button" aria-label="Voltar" @click="goBack"><ArrowLeft :size="20" /></button>
-    <h2>{{ chapter ? `Capítulo ${chapter.number}` : 'Capítulo' }}</h2>
+    <h2>{{ chapter ? chapterTag(chapter) : 'Capítulo' }}</h2>
   </header>
 
   <div v-if="platformStore.isLoading && !chapter" class="empty-state">

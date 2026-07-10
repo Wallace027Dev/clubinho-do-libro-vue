@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import StarRating from '../components/ui/StarRating.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import type { BookRatings, ChapterRatingSummary } from '../types/platform'
+import { chapterShortTag, chapterTag } from '../utils/chapters'
 
 const route = useRoute()
 const router = useRouter()
@@ -69,14 +70,14 @@ function satisfaction(chapter: ChapterRatingSummary) {
 
 function tileAriaLabel(chapter: ChapterRatingSummary) {
   if (chapter.locked) {
-    return `Capítulo ${chapter.number}: conclua para ver a média`
+    return `${chapterTag(chapter)}: conclua para ver a média`
   }
 
   if (chapter.average == null) {
-    return `Capítulo ${chapter.number}: ainda sem notas`
+    return `${chapterTag(chapter)}: ainda sem notas`
   }
 
-  return `Capítulo ${chapter.number}: média ${tileAverage(chapter)} de 5, satisfação ${satisfaction(chapter)}`
+  return `${chapterTag(chapter)}: média ${tileAverage(chapter)} de 5, satisfação ${satisfaction(chapter)}`
 }
 
 function goBack() {
@@ -156,7 +157,7 @@ function goBack() {
           :aria-label="tileAriaLabel(chapter)"
           :title="chapter.title"
         >
-          <strong>C{{ chapter.number }}</strong>
+          <strong>{{ chapterShortTag(chapter) }}</strong>
           <Lock v-if="chapter.locked" :size="16" aria-hidden="true" />
           <span v-else>{{ tileAverage(chapter) }}</span>
           <small v-if="!chapter.locked && chapter.average != null">

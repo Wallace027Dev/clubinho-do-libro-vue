@@ -2,6 +2,7 @@
 import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
 import StarRating from '../components/ui/StarRating.vue'
+import { isStandaloneChapterTitle } from '../utils/chapters'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlatformStore } from '../stores/platformStore'
 import type { ChapterCommentReactionType } from '../types/platform'
@@ -132,7 +133,7 @@ function goBack() {
 
       <div v-for="chapter in book.chapters" :key="chapter.id" class="history-chapter">
         <template v-if="chapter.comments.length">
-          <p class="chapter-kicker">Capítulo {{ chapter.number }} — {{ chapter.title }}</p>
+          <p class="chapter-kicker">{{ isStandaloneChapterTitle(chapter.title) ? chapter.title : `Capítulo ${chapter.number} — ${chapter.title}` }}</p>
           <ol class="comment-list">
             <li v-for="comment in chapter.comments" :key="comment.id">
               <div class="comment-author">

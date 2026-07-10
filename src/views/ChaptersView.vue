@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import BookReview from '../components/BookReview.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Chapter } from '../types/platform'
+import { chapterTag, isStandaloneChapterTitle } from '../utils/chapters'
 
 const router = useRouter()
 const platformStore = usePlatformStore()
@@ -59,13 +60,13 @@ function openChapter(chapter: Chapter) {
         class="feed-card is-clickable chapter-card"
         role="button"
         tabindex="0"
-        :aria-label="`Abrir capítulo ${chapter.number}: ${chapter.title}`"
+        :aria-label="`Abrir ${chapterTag(chapter)}: ${chapter.title}`"
         @click="openChapter(chapter)"
         @keydown.enter.prevent="openChapter(chapter)"
         @keydown.space.prevent="openChapter(chapter)"
       >
         <div class="feed-card-top">
-          <span class="feed-tag">Capítulo {{ chapter.number }}</span>
+          <span class="feed-tag">{{ chapterTag(chapter) }}</span>
           <span
             class="chapter-status"
             :class="`chapter-status--${getChapterStatus(chapter).toLowerCase()}`"
@@ -74,7 +75,8 @@ function openChapter(chapter: Chapter) {
           </span>
         </div>
         <div class="chapter-card-row">
-          <strong>{{ chapter.title }}</strong>
+          <!-- Prólogo/Epílogo já aparecem na etiqueta; não repete o nome. -->
+          <strong>{{ isStandaloneChapterTitle(chapter.title) ? '' : chapter.title }}</strong>
           <ChevronRight class="chapter-chevron" :size="20" aria-hidden="true" />
         </div>
       </li>

@@ -1,6 +1,7 @@
 import { requireSession } from '../../../_lib/auth.js'
 import { getFinishedChapterForUser } from '../../../_lib/chapterAccess.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
+import { chapterMessageLabel } from '../../../_lib/chapterLabel.js'
 import { prisma } from '../../../_lib/prisma.js'
 
 interface CommentBody {
@@ -69,8 +70,8 @@ export default async function handler(req: any, res: any) {
         clubId: access.club.id,
         actorId: session.userId,
         type: 'CHAPTER_COMMENTED',
-        message: `${user?.displayName || user?.login || 'Um membro'} comentou o capítulo ${access.chapter.number}.`,
-        metadata: { chapterId, chapterNumber: access.chapter.number }
+        message: `${user?.displayName || user?.login || 'Um membro'} comentou ${chapterMessageLabel(access.chapter)}.`,
+        metadata: { chapterId, chapterNumber: access.chapter.number, chapterTitle: access.chapter.title }
       }
     })
   })

@@ -44,8 +44,8 @@ export default async function handler(req: any, res: any) {
   const number = Number(body.number)
   const title = body.title?.trim()
 
-  if (!Number.isInteger(number) || number < 1 || !title) {
-    sendJson(res, 400, { error: 'Informe número e título do capítulo.' })
+  if (!Number.isInteger(number) || number < 0 || !title) {
+    sendJson(res, 400, { error: 'Informe número (0 para prólogo) e título do capítulo.' })
     return
   }
 

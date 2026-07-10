@@ -1,6 +1,7 @@
 import { requireSession } from '../../../_lib/auth.js'
 import { getDefaultClub } from '../../../_lib/club.js'
 import { assertMethod, sendJson } from '../../../_lib/http.js'
+import { chapterMessageLabel } from '../../../_lib/chapterLabel.js'
 import { prisma } from '../../../_lib/prisma.js'
 
 export default async function handler(req: any, res: any) {
@@ -57,8 +58,8 @@ export default async function handler(req: any, res: any) {
       clubId: club.id,
       actorId: session.userId,
       type: 'CHAPTER_FINISHED',
-      message: `${user?.displayName || user?.login || 'Um membro'} terminou o capítulo ${chapter.number}.`,
-      metadata: { chapterId: chapter.id, chapterNumber: chapter.number }
+      message: `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)}.`,
+      metadata: { chapterId: chapter.id, chapterNumber: chapter.number, chapterTitle: chapter.title }
     }
   })
 
