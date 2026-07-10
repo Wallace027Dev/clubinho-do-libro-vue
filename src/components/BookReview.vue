@@ -3,9 +3,12 @@ import { computed, ref, watch } from 'vue'
 import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
+import { useUiStore } from '../stores/uiStore'
+import BaseButton from './ui/BaseButton.vue'
 
 const platformStore = usePlatformStore()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const currentBook = computed(() => platformStore.clubState.currentBook)
 
@@ -60,6 +63,7 @@ async function submit() {
 
   try {
     await platformStore.submitReview(rating.value, reviewText.value)
+    uiStore.notify('Avaliacao salva com sucesso!')
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel salvar a avaliacao.'
   } finally {
@@ -109,9 +113,9 @@ async function submit() {
 
       <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
 
-      <button class="primary-action" type="submit" :disabled="isSubmitting">
+      <BaseButton type="submit" :loading="isSubmitting">
         {{ isSubmitting ? 'Salvando...' : myReview ? 'Atualizar avaliacao' : 'Finalizar e avaliar' }}
-      </button>
+      </BaseButton>
     </form>
 
     <p v-else class="spoiler-lock">

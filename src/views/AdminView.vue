@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import BaseButton from '../components/ui/BaseButton.vue'
 import { ApiError } from '../services/apiClient'
 import { usePlatformStore } from '../stores/platformStore'
+import { useUiStore } from '../stores/uiStore'
 
 const platformStore = usePlatformStore()
+const uiStore = useUiStore()
 const memberLogin = ref('')
 const memberPassword = ref('')
 const memberDisplayName = ref('')
@@ -11,66 +14,77 @@ const bookTitle = ref('')
 const bookAuthor = ref('')
 const chapterNumber = ref(1)
 const chapterTitle = ref('')
-const feedback = ref('')
 const errorMessage = ref('')
+
+type AdminAction = 'member' | 'book' | 'chapter' | 'finish'
+const pendingAction = ref<AdminAction | null>(null)
 
 onMounted(async () => {
   await Promise.all([platformStore.loadHome(), platformStore.loadMembers()])
 })
 
-async function createMember() {
-  feedback.value = ''
+async function runAction(action: AdminAction, task: () => Promise<void>, fallbackError: string) {
   errorMessage.value = ''
+  pendingAction.value = action
 
   try {
-    await platformStore.createMember(memberLogin.value, memberPassword.value, memberDisplayName.value)
-    memberLogin.value = ''
-    memberPassword.value = ''
-    memberDisplayName.value = ''
-    feedback.value = 'Membro cadastrado.'
+    await task()
   } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel cadastrar.'
+    errorMessage.value = error instanceof ApiError ? error.message : fallbackError
+  } finally {
+    pendingAction.value = null
   }
 }
 
-async function selectBook() {
-  feedback.value = ''
-  errorMessage.value = ''
-
-  try {
-    await platformStore.selectCurrentBook(bookTitle.value, bookAuthor.value)
-    bookTitle.value = ''
-    bookAuthor.value = ''
-    feedback.value = 'Livro atual definido.'
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel definir o livro.'
-  }
+function createMember() {
+  return runAction(
+    'member',
+    async () => {
+      await platformStore.createMember(memberLogin.value, memberPassword.value, memberDisplayName.value)
+      memberLogin.value = ''
+      memberPassword.value = ''
+      memberDisplayName.value = ''
+      uiStore.notify('Membro cadastrado com sucesso!')
+    },
+    'Nao foi possivel cadastrar.'
+  )
 }
 
-async function createChapter() {
-  feedback.value = ''
-  errorMessage.value = ''
-
-  try {
-    await platformStore.createChapter(chapterNumber.value, chapterTitle.value)
-    chapterNumber.value += 1
-    chapterTitle.value = ''
-    feedback.value = 'Capitulo cadastrado.'
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel cadastrar o capitulo.'
-  }
+function selectBook() {
+  return runAction(
+    'book',
+    async () => {
+      await platformStore.selectCurrentBook(bookTitle.value, bookAuthor.value)
+      bookTitle.value = ''
+      bookAuthor.value = ''
+      uiStore.notify('Livro atual definido com sucesso!')
+    },
+    'Nao foi possivel definir o livro.'
+  )
 }
 
-async function finishBook() {
-  feedback.value = ''
-  errorMessage.value = ''
+function createChapter() {
+  return runAction(
+    'chapter',
+    async () => {
+      await platformStore.createChapter(chapterNumber.value, chapterTitle.value)
+      chapterNumber.value += 1
+      chapterTitle.value = ''
+      uiStore.notify('Capitulo cadastrado com sucesso!')
+    },
+    'Nao foi possivel cadastrar o capitulo.'
+  )
+}
 
-  try {
-    await platformStore.finishCurrentBook()
-    feedback.value = 'Livro finalizado. O proximo sorteio esta liberado.'
-  } catch (error) {
-    errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel finalizar.'
-  }
+function finishBook() {
+  return runAction(
+    'finish',
+    async () => {
+      await platformStore.finishCurrentBook()
+      uiStore.notify('Livro finalizado. O proximo sorteio esta liberado!')
+    },
+    'Nao foi possivel finalizar.'
+  )
 }
 </script>
 
@@ -82,7 +96,6 @@ async function finishBook() {
       <p>Cadastre membros, controle o livro atual e libere o proximo sorteio.</p>
     </div>
 
-    <p v-if="feedback" class="form-success">{{ feedback }}</p>
     <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
   </section>
 
@@ -105,7 +118,9 @@ async function finishBook() {
         Apelido inicial
         <input v-model="memberDisplayName" />
       </label>
-      <button class="primary-action" type="submit">Cadastrar membro</button>
+      <BaseButton type="submit" :loading="pendingAction === 'member'">
+        Cadastrar membro
+      </BaseButton>
     </form>
 
     <ul class="member-list">
@@ -134,12 +149,14 @@ async function finishBook() {
         Autor opcional
         <input v-model="bookAuthor" />
       </label>
-      <button class="primary-action" type="submit">Definir livro atual</button>
+      <BaseButton type="submit" :loading="pendingAction === 'book'">
+        Definir livro atual
+      </BaseButton>
     </form>
 
-    <button v-else class="primary-action" type="button" @click="finishBook">
+    <BaseButton v-else :loading="pendingAction === 'finish'" @click="finishBook">
       Finalizar livro atual
-    </button>
+    </BaseButton>
   </section>
 
   <section v-if="platformStore.clubState.currentBook" class="flow-card glass-panel">
@@ -158,7 +175,9 @@ async function finishBook() {
         Titulo do capitulo
         <input v-model="chapterTitle" required />
       </label>
-      <button class="primary-action" type="submit">Cadastrar capitulo</button>
+      <BaseButton type="submit" :loading="pendingAction === 'chapter'">
+        Cadastrar capitulo
+      </BaseButton>
     </form>
 
     <ol

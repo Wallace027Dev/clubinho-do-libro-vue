@@ -2,13 +2,16 @@
 import { computed, onMounted, ref } from 'vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
+import { useUiStore } from '../stores/uiStore'
 import type { ChapterComment, ChapterCommentReactionType } from '../types/platform'
+import BaseButton from './ui/BaseButton.vue'
 
 const props = defineProps<{
   chapterId: string
 }>()
 
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const reactionOptions: Array<{ type: ChapterCommentReactionType; emoji: string; label: string }> = [
   { type: 'GOSTEI', emoji: '🙂', label: 'gostei' },
@@ -63,6 +66,7 @@ async function submitComment() {
     myComment.value =
       response.comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
     body.value = myComment.value?.body ?? ''
+    uiStore.notify('Comentario salvo com sucesso!')
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel comentar.'
   } finally {
@@ -92,9 +96,9 @@ function reactionLabel(type: ChapterCommentReactionType) {
         ></textarea>
       </label>
 
-      <button class="secondary-action" type="submit" :disabled="isSubmitting">
+      <BaseButton class="comment-submit" variant="secondary" type="submit" :loading="isSubmitting">
         {{ isSubmitting ? 'Salvando...' : hasComment ? 'Salvar alteracao' : 'Comentar' }}
-      </button>
+      </BaseButton>
     </form>
 
     <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>

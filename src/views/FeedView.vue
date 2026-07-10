@@ -58,7 +58,11 @@ function closeActivity() {
       <p>Toque em uma atividade de capitulo para ver o comentario e reagir.</p>
     </div>
 
-    <ol v-if="activities.length" class="activity-list">
+    <div v-if="platformStore.isLoading && !activities.length" class="empty-state">
+      <p>Carregando o feed do clube...</p>
+    </div>
+
+    <ol v-else-if="activities.length" class="activity-list">
       <li
         v-for="activity in activities"
         :key="activity.id"

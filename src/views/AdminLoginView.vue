@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import BaseButton from '../components/ui/BaseButton.vue'
 import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 
@@ -41,9 +42,9 @@ async function handleSubmit() {
 
       <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
 
-      <button class="primary-action" type="submit" :disabled="isSubmitting">
+      <BaseButton type="submit" :loading="isSubmitting">
         {{ isSubmitting ? 'Verificando...' : 'Entrar no admin' }}
-      </button>
+      </BaseButton>
     </form>
 
     <RouterLink class="text-link" to="/login">Voltar para login de membro</RouterLink>

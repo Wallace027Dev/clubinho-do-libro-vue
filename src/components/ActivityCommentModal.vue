@@ -3,6 +3,7 @@ import { nextTick, ref, watch } from 'vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import type { Activity, ChapterComment, ChapterCommentReactionType } from '../types/platform'
+import BaseButton from './ui/BaseButton.vue'
 
 const props = defineProps<{
   activity: Activity | null
@@ -67,10 +68,14 @@ async function loadComment(activity: Activity) {
   }
 }
 
+const isReacting = ref(false)
+
 async function react(type: ChapterCommentReactionType) {
-  if (!comment.value) {
+  if (!comment.value || isReacting.value) {
     return
   }
+
+  isReacting.value = true
 
   try {
     await apiRequest(`/api/comments/${comment.value.id}/reaction`, {
@@ -83,6 +88,8 @@ async function react(type: ChapterCommentReactionType) {
     }
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel reagir.'
+  } finally {
+    isReacting.value = false
   }
 }
 
@@ -141,6 +148,7 @@ const isOwnActivity = () =>
               class="emoji-reaction-button"
               :class="{ selected: comment.myReaction === reaction.type }"
               :aria-label="`Reagir com ${reaction.label}`"
+              :disabled="isReacting"
               @click="react(reaction.type)"
             >
               <span aria-hidden="true">{{ reaction.emoji }}</span>
@@ -158,7 +166,7 @@ const isOwnActivity = () =>
         </p>
 
         <div class="modal-actions">
-          <button class="ghost-action" type="button" @click="close">Fechar</button>
+          <BaseButton variant="outline" @click="close">Fechar</BaseButton>
         </div>
       </section>
     </div>

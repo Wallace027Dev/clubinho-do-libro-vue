@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import BookReview from '../components/BookReview.vue'
 import ChapterComments from '../components/ChapterComments.vue'
+import BaseButton from '../components/ui/BaseButton.vue'
+import { ApiError } from '../services/apiClient'
 import { usePlatformStore } from '../stores/platformStore'
+import { useUiStore } from '../stores/uiStore'
 import type { Chapter } from '../types/platform'
 
 const platformStore = usePlatformStore()
+const uiStore = useUiStore()
 const currentBook = computed(() => platformStore.clubState.currentBook)
+const pendingChapterId = ref<string | null>(null)
 
 onMounted(() => {
   void platformStore.loadHome()
@@ -29,6 +34,38 @@ function getStatusLabel(chapter: Chapter) {
 
   return 'Nao iniciado'
 }
+
+async function startChapter(chapter: Chapter) {
+  pendingChapterId.value = chapter.id
+
+  try {
+    await platformStore.startChapter(chapter.id)
+    uiStore.notify(`Capitulo ${chapter.number} iniciado. Boa leitura!`)
+  } catch (error) {
+    uiStore.notify(
+      error instanceof ApiError ? error.message : 'Nao foi possivel iniciar o capitulo.',
+      'error'
+    )
+  } finally {
+    pendingChapterId.value = null
+  }
+}
+
+async function finishChapter(chapter: Chapter) {
+  pendingChapterId.value = chapter.id
+
+  try {
+    await platformStore.finishChapter(chapter.id)
+    uiStore.notify(`Capitulo ${chapter.number} concluido!`)
+  } catch (error) {
+    uiStore.notify(
+      error instanceof ApiError ? error.message : 'Nao foi possivel concluir o capitulo.',
+      'error'
+    )
+  } finally {
+    pendingChapterId.value = null
+  }
+}
 </script>
 
 <template>
@@ -46,6 +83,10 @@ function getStatusLabel(chapter: Chapter) {
     <RouterLink v-if="currentBook" class="text-link" to="/">Voltar ao feed</RouterLink>
   </section>
 
+  <div v-if="platformStore.isLoading && !currentBook" class="empty-state">
+    <p>Carregando capitulos...</p>
+  </div>
+
   <section v-if="currentBook" class="flow-card glass-panel">
     <div class="flow-heading">
       <p class="section-label">Capitulos</p>
@@ -62,23 +103,24 @@ function getStatusLabel(chapter: Chapter) {
             <p>{{ getStatusLabel(chapter) }}</p>
           </div>
 
-          <button
+          <BaseButton
             v-if="getChapterStatus(chapter) === 'NOT_STARTED'"
-            class="secondary-action"
-            type="button"
-            @click="platformStore.startChapter(chapter.id)"
+            class="chapter-action"
+            variant="secondary"
+            :loading="pendingChapterId === chapter.id"
+            @click="startChapter(chapter)"
           >
             Iniciar
-          </button>
+          </BaseButton>
 
-          <button
+          <BaseButton
             v-else-if="getChapterStatus(chapter) === 'STARTED'"
-            class="primary-action chapter-action"
-            type="button"
-            @click="platformStore.finishChapter(chapter.id)"
+            class="chapter-action"
+            :loading="pendingChapterId === chapter.id"
+            @click="finishChapter(chapter)"
           >
             Concluir
-          </button>
+          </BaseButton>
         </div>
 
         <ChapterComments v-if="getChapterStatus(chapter) === 'FINISHED'" :chapter-id="chapter.id" />

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import AppToast from './components/ui/AppToast.vue'
 import { useAuthStore } from './stores/authStore'
 
 const authStore = useAuthStore()
@@ -27,5 +28,7 @@ async function handleLogout() {
     </nav>
 
     <RouterView />
+
+    <AppToast />
   </main>
 </template>

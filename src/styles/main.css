@@ -326,6 +326,141 @@ textarea:focus {
   font-weight: 800;
 }
 
+/* Botao padrao da plataforma (fase 8.5). Variantes por utilidade:
+   primary = acao principal da tela, secondary = acao de apoio,
+   outline = acao discreta (cancelar, fechar). */
+.base-button {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: var(--radius-control);
+  padding: 0 18px;
+  font-weight: 800;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.base-button:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.base-button--primary {
+  background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
+  color: var(--color-cream-50);
+  box-shadow: 0 14px 28px rgba(77, 87, 51, 0.26);
+}
+
+.base-button--secondary {
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--color-olive-800);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.base-button--outline {
+  border: 1.5px solid rgba(77, 87, 51, 0.5);
+  background: transparent;
+  color: var(--color-olive-800);
+}
+
+.base-button--outline:hover:not(:disabled) {
+  background: rgba(77, 87, 51, 0.08);
+}
+
+.base-button__spinner {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: buttonSpin 0.7s linear infinite;
+}
+
+@keyframes buttonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast global de feedback (wireframe 06). */
+.toast-region {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  left: 16px;
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.app-toast {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: min(100%, 480px);
+  border-radius: 18px;
+  padding: 14px 18px;
+  background: rgba(251, 247, 238, 0.94);
+  box-shadow: 0 18px 42px rgba(48, 53, 31, 0.24);
+  backdrop-filter: blur(18px) saturate(160%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.app-toast p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: var(--color-ink);
+}
+
+.app-toast__icon {
+  display: grid;
+  flex: 0 0 26px;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.app-toast--success {
+  border: 2px solid #6da85e;
+}
+
+.app-toast--success .app-toast__icon {
+  background: rgba(109, 168, 94, 0.16);
+  color: #4c7c40;
+}
+
+.app-toast--error {
+  border: 2px solid #b05a45;
+}
+
+.app-toast--error .app-toast__icon {
+  background: rgba(176, 90, 69, 0.14);
+  color: #8c4534;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
 .icon-button,
 .primary-action {
   background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
@@ -561,10 +696,16 @@ textarea:focus {
   font-weight: 800;
 }
 
-.comment-form .secondary-action {
+.comment-form .secondary-action,
+.comment-form .comment-submit {
+  width: auto;
   justify-self: start;
   min-height: 44px;
   padding: 0 16px;
+}
+
+.chapter-list .base-button.chapter-action {
+  width: auto;
 }
 
 .comment-list {

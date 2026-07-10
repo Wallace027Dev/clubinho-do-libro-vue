@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import BaseButton from '../components/ui/BaseButton.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
+import { useUiStore } from '../stores/uiStore'
 import type { AuthUser } from '../types/platform'
 
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 const displayName = ref(authStore.user?.displayName ?? '')
 const avatarUrl = ref(authStore.user?.avatarUrl ?? '')
-const feedback = ref('')
 const errorMessage = ref('')
+const isSaving = ref(false)
 
 async function saveProfile() {
-  feedback.value = ''
   errorMessage.value = ''
+  isSaving.value = true
 
   try {
     const response = await apiRequest<{ user: AuthUser }>('/api/profile', {
@@ -24,9 +27,11 @@ async function saveProfile() {
     })
 
     authStore.setUser(response.user)
-    feedback.value = 'Perfil atualizado.'
+    uiStore.notify('Perfil atualizado com sucesso!')
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Nao foi possivel salvar.'
+  } finally {
+    isSaving.value = false
   }
 }
 </script>
@@ -49,10 +54,11 @@ async function saveProfile() {
         <input v-model="avatarUrl" inputmode="url" placeholder="https://..." />
       </label>
 
-      <p v-if="feedback" class="form-success">{{ feedback }}</p>
       <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
 
-      <button class="primary-action" type="submit">Salvar perfil</button>
+      <BaseButton type="submit" :loading="isSaving">
+        {{ isSaving ? 'Salvando...' : 'Salvar perfil' }}
+      </BaseButton>
     </form>
   </section>
 </template>
