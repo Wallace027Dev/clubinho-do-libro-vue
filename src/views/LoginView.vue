@@ -52,5 +52,7 @@ async function handleSubmit() {
         {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
       </BaseButton>
     </form>
+
+    <RouterLink class="text-link" to="/login/admin">Sou o administrador do clube</RouterLink>
   </section>
 </template>

@@ -199,7 +199,10 @@ Entregaveis:
 Objetivo: elevar a qualidade visual e a experiencia de uso da plataforma
 apos o primeiro deploy em producao.
 
-Status: backlog, anotado em 2026-07-10. Itens ainda nao priorizados.
+Status geral (2026-07-10): 8.1, 8.2, 8.5, 8.7 e 8.8 implementados e em
+producao; 8.6 implementado para foto de perfil (capa de livro continua
+por URL); 8.4 ja existia no fundo atual (validar se o efeito atende);
+8.3 (acentuacao) pendente.
 
 ### 8.1 Estado de carregamento em requisicoes
 
