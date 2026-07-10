@@ -58,6 +58,7 @@ model User {
   chapterProgress ChapterProgress[]
   chapterComments ChapterComment[]
   chapterCommentReactions ChapterCommentReaction[]
+  chapterRatings ChapterRating[]
   bookReviews BookReview[]
 }
 
@@ -128,9 +129,25 @@ model Chapter {
   clubBook ClubBook @relation(fields: [clubBookId], references: [id])
   progress ChapterProgress[]
   comments ChapterComment[]
+  ratings  ChapterRating[]
 
   @@unique([clubBookId, number])
   @@index([clubBookId])
+}
+
+model ChapterRating {
+  id        String   @id @default(uuid())
+  chapterId String
+  userId    String
+  rating    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chapter Chapter @relation(fields: [chapterId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([chapterId, userId])
+  @@index([chapterId])
 }
 
 model ChapterProgress {

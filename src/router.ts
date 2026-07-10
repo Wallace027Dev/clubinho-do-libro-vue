@@ -3,6 +3,7 @@ import { useAuthStore } from './stores/authStore'
 import ActivityDetailView from './views/ActivityDetailView.vue'
 import AdminLoginView from './views/AdminLoginView.vue'
 import AdminView from './views/AdminView.vue'
+import BookRatingsView from './views/BookRatingsView.vue'
 import ChapterDetailView from './views/ChapterDetailView.vue'
 import ChaptersView from './views/ChaptersView.vue'
 import ReviewView from './views/ReviewView.vue'
@@ -22,6 +23,7 @@ export const router = createRouter({
     { path: '/chapters', component: ChaptersView, meta: { requiresAuth: true } },
     { path: '/chapters/:chapterId', component: ChapterDetailView, meta: { requiresAuth: true } },
     { path: '/review', component: ReviewView, meta: { requiresAuth: true } },
+    { path: '/books/:clubBookId/ratings', component: BookRatingsView, meta: { requiresAuth: true } },
     { path: '/history', component: HistoryView, meta: { requiresAuth: true } },
     { path: '/history/:bookId', component: HistoryDetailView, meta: { requiresAuth: true } },
     { path: '/login', component: LoginView },

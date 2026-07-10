@@ -1,0 +1,186 @@
+<script setup lang="ts">
+import { ArrowLeft, Lock } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import StarRating from '../components/ui/StarRating.vue'
+import { ApiError, apiRequest } from '../services/apiClient'
+import type { BookRatings, ChapterRatingSummary } from '../types/platform'
+
+const route = useRoute()
+const router = useRouter()
+
+const data = ref<BookRatings | null>(null)
+const errorMessage = ref('')
+const isLoading = ref(true)
+
+// Faixas de satisfação (média/5): alinhadas à paleta do clube.
+const bands = [
+  { min: 4.5, key: 'incrivel', label: 'Incrível', range: '4,5–5,0' },
+  { min: 4.0, key: 'otimo', label: 'Ótimo', range: '4,0–4,4' },
+  { min: 3.0, key: 'mediano', label: 'Mediano', range: '3,0–3,9' },
+  { min: 2.0, key: 'ruim', label: 'Ruim', range: '2,0–2,9' },
+  { min: 0, key: 'pessimo', label: 'Péssimo', range: '< 2,0' }
+] as const
+
+onMounted(async () => {
+  try {
+    data.value = await apiRequest<BookRatings>(`/api/books/${route.params.clubBookId}/ratings`)
+  } catch (error) {
+    errorMessage.value =
+      error instanceof ApiError ? error.message : 'Não foi possível carregar as avaliações.'
+  } finally {
+    isLoading.value = false
+  }
+})
+
+const averageLabel = computed(() => {
+  const average = data.value?.reviewSummary.average
+  return average == null ? null : average.toFixed(1).replace('.', ',')
+})
+
+const satisfactionLabel = computed(() => {
+  const average = data.value?.reviewSummary.average
+  return average == null ? null : `${Math.round((average / 5) * 100)}%`
+})
+
+function bandFor(average: number) {
+  return bands.find((band) => average >= band.min) ?? bands[bands.length - 1]
+}
+
+function tileClass(chapter: ChapterRatingSummary) {
+  if (chapter.locked) {
+    return 'rating-tile--locked'
+  }
+
+  if (chapter.average == null) {
+    return 'rating-tile--empty'
+  }
+
+  return `rating-tile--${bandFor(chapter.average).key}`
+}
+
+function tileAverage(chapter: ChapterRatingSummary) {
+  return chapter.average == null ? '—' : chapter.average.toFixed(1).replace('.', ',')
+}
+
+function satisfaction(chapter: ChapterRatingSummary) {
+  return chapter.average == null ? null : `${Math.round((chapter.average / 5) * 100)}%`
+}
+
+function tileAriaLabel(chapter: ChapterRatingSummary) {
+  if (chapter.locked) {
+    return `Capítulo ${chapter.number}: conclua para ver a média`
+  }
+
+  if (chapter.average == null) {
+    return `Capítulo ${chapter.number}: ainda sem notas`
+  }
+
+  return `Capítulo ${chapter.number}: média ${tileAverage(chapter)} de 5, satisfação ${satisfaction(chapter)}`
+}
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back()
+    return
+  }
+
+  void router.push('/chapters')
+}
+</script>
+
+<template>
+  <header class="detail-header glass-panel">
+    <button class="back-button" type="button" aria-label="Voltar" @click="goBack">
+      <ArrowLeft :size="20" />
+    </button>
+    <h2>Avaliação por capítulo</h2>
+  </header>
+
+  <div v-if="isLoading" class="empty-state">
+    <p>Carregando avaliações...</p>
+  </div>
+
+  <section v-else-if="errorMessage" class="flow-card glass-panel">
+    <div class="empty-state">
+      <p>{{ errorMessage }}</p>
+    </div>
+  </section>
+
+  <template v-else-if="data">
+    <section class="flow-card glass-panel history-card">
+      <div class="history-head">
+        <div v-if="data.book.coverUrl" class="history-cover">
+          <img :src="data.book.coverUrl" :alt="`Capa de ${data.book.title}`" />
+        </div>
+        <div v-else class="history-cover history-cover--empty" aria-hidden="true">
+          {{ data.book.title[0] }}
+        </div>
+
+        <div class="history-info">
+          <p class="section-label">
+            {{ data.book.status === 'FINISHED' ? 'Livro finalizado' : 'Livro atual' }}
+          </p>
+          <h3>{{ data.book.title }}</h3>
+          <p v-if="data.book.author" class="history-author">{{ data.book.author }}</p>
+
+          <template v-if="averageLabel">
+            <p class="review-stars">
+              <StarRating :value="data.reviewSummary.average!" :size="18" />
+            </p>
+            <p class="history-stats">
+              {{ averageLabel }}/5 · satisfação do clube {{ satisfactionLabel }}
+            </p>
+          </template>
+          <p v-else class="comment-muted">O livro ainda não recebeu avaliações.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="flow-card glass-panel">
+      <div class="flow-heading">
+        <p class="section-label">Capítulos</p>
+        <h2>Média do clube por capítulo</h2>
+        <p v-if="data.book.status === 'CURRENT'">
+          Você só vê a média dos capítulos que já concluiu — sem spoiler de reação.
+        </p>
+      </div>
+
+      <div v-if="data.chapters.length" class="rating-grid">
+        <div
+          v-for="chapter in data.chapters"
+          :key="chapter.id"
+          class="rating-tile"
+          :class="tileClass(chapter)"
+          role="img"
+          :aria-label="tileAriaLabel(chapter)"
+          :title="chapter.title"
+        >
+          <strong>C{{ chapter.number }}</strong>
+          <Lock v-if="chapter.locked" :size="16" aria-hidden="true" />
+          <span v-else>{{ tileAverage(chapter) }}</span>
+          <small v-if="!chapter.locked && chapter.average != null">
+            {{ satisfaction(chapter) }}
+          </small>
+        </div>
+      </div>
+
+      <div v-else class="empty-state">
+        <p>Este livro não tem capítulos cadastrados.</p>
+      </div>
+
+      <ul class="rating-legend">
+        <li v-for="band in bands" :key="band.key">
+          <span class="rating-legend__swatch" :class="`rating-tile--${band.key}`"></span>
+          <span class="rating-legend__range">{{ band.range }}</span>
+          <span>{{ band.label }}</span>
+        </li>
+        <li>
+          <span class="rating-legend__swatch rating-tile--locked"></span>
+          <span class="rating-legend__range"><Lock :size="12" aria-hidden="true" /></span>
+          <span>Conclua o capítulo para ver</span>
+        </li>
+      </ul>
+    </section>
+  </template>
+</template>

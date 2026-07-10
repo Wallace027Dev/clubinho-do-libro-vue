@@ -36,6 +36,31 @@ export interface Chapter {
   number: number
   title: string
   progress: ChapterProgress[]
+  /** Nota que o próprio membro deu ao capítulo (0 ou 1 item). */
+  ratings?: Array<{ rating: number }>
+}
+
+export interface ChapterRatingSummary {
+  id: string
+  number: number
+  title: string
+  locked: boolean
+  average: number | null
+  count: number
+  myRating: number | null
+}
+
+export interface BookRatings {
+  book: {
+    id: string
+    status: 'CURRENT' | 'FINISHED'
+    finishedAt?: string | null
+    title: string
+    author?: string | null
+    coverUrl?: string | null
+  }
+  reviewSummary: ReviewSummary
+  chapters: ChapterRatingSummary[]
 }
 
 export type ChapterCommentReactionType = 'GOSTEI' | 'SOFRI' | 'SURPRESO' | 'SUSPEITO' | 'DISCUTIR'

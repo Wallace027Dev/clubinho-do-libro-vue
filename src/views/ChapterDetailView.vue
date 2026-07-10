@@ -3,6 +3,7 @@ import { ArrowLeft, SendHorizontal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import StarRating from '../components/ui/StarRating.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
@@ -45,6 +46,40 @@ const myComment = ref<ChapterComment | null>(null)
 const commentBody = ref('')
 const isLoadingComment = ref(false)
 const isSubmittingComment = ref(false)
+
+// Nota do capítulo (opcional na hora; obrigatória em todos os capítulos
+// antes de avaliar o livro).
+const myRating = computed(() => chapter.value?.ratings?.[0]?.rating ?? null)
+const ratingDraft = ref(0)
+const isSavingRating = ref(false)
+
+watch(
+  myRating,
+  (value) => {
+    ratingDraft.value = value ?? 0
+  },
+  { immediate: true }
+)
+
+async function saveRating() {
+  if (!chapter.value || ratingDraft.value < 1) {
+    return
+  }
+
+  isSavingRating.value = true
+
+  try {
+    await platformStore.rateChapter(chapter.value.id, ratingDraft.value)
+    uiStore.notify('Nota do capítulo salva!')
+  } catch (error) {
+    uiStore.notify(
+      error instanceof ApiError ? error.message : 'Não foi possível salvar a nota.',
+      'error'
+    )
+  } finally {
+    isSavingRating.value = false
+  }
+}
 
 onMounted(async () => {
   if (!platformStore.clubState.currentBook) {
@@ -212,6 +247,41 @@ function goBack() {
     </div>
 
     <template v-if="status === 'FINISHED'">
+      <div class="detail-divider" aria-hidden="true"></div>
+
+      <p class="section-label">Minha nota do capítulo</p>
+
+      <div class="rating-input">
+        <StarRating :value="ratingDraft" :size="26" />
+        <input
+          v-model.number="ratingDraft"
+          type="range"
+          min="1"
+          max="5"
+          step="0.1"
+          aria-label="Nota do capítulo, de 1 a 5"
+        />
+        <div class="rating-input-row">
+          <span class="rating-value">
+            {{ ratingDraft >= 1 ? `${ratingDraft.toFixed(1).replace('.', ',')}/5` : 'Arraste para dar a nota' }}
+          </span>
+          <BaseButton
+            class="chapter-action"
+            variant="secondary"
+            :loading="isSavingRating"
+            :disabled="ratingDraft < 1 || ratingDraft === myRating"
+            @click="saveRating"
+          >
+            {{ myRating ? 'Atualizar nota' : 'Salvar nota' }}
+          </BaseButton>
+        </div>
+      </div>
+
+      <p v-if="!myRating" class="comment-muted">
+        A nota é necessária para avaliar o livro no final; a média do clube aparece na página de
+        avaliação por capítulo.
+      </p>
+
       <div class="detail-divider" aria-hidden="true"></div>
 
       <p class="section-label">Meu comentário</p>

@@ -2,7 +2,7 @@ import { requireSession } from '../../_lib/auth.js'
 import { getDefaultClub } from '../../_lib/club.js'
 import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
 import { prisma } from '../../_lib/prisma.js'
-import { userFinishedAllChapters } from '../../_lib/reviews.js'
+import { userFinishedAllChapters, userRatedAllChapters } from '../../_lib/reviews.js'
 
 interface ReviewBody {
   rating?: number
@@ -53,6 +53,13 @@ export default async function handler(req: any, res: any) {
 
   if (!finishedAll) {
     sendJson(res, 403, { error: 'Conclua todos os capítulos para avaliar o livro.' })
+    return
+  }
+
+  const ratedAll = await userRatedAllChapters(currentBook.id, session.userId)
+
+  if (!ratedAll) {
+    sendJson(res, 403, { error: 'Dê sua nota a todos os capítulos antes de avaliar o livro.' })
     return
   }
 

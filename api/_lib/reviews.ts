@@ -22,6 +22,28 @@ export async function getClubBookReviews(clubBookId: string) {
 }
 
 /**
+ * Indica se o usuário deu nota a todos os capítulos do ClubBook.
+ * Regra da fase 8: avaliar o livro exige todos os capítulos notados.
+ */
+export async function userRatedAllChapters(clubBookId: string, userId: string) {
+  const chapters = await prisma.chapter.findMany({
+    where: { clubBookId },
+    include: {
+      ratings: {
+        where: { userId },
+        select: { id: true }
+      }
+    }
+  })
+
+  if (chapters.length === 0) {
+    return false
+  }
+
+  return chapters.every((chapter) => chapter.ratings.length > 0)
+}
+
+/**
  * Indica se o usuário concluiu todos os capítulos do ClubBook.
  * Livro sem capítulos ainda não pode ser avaliado.
  */

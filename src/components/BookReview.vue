@@ -17,6 +17,12 @@ const canReview = computed(() => {
   )
 })
 
+// Regra da fase 8: avaliar o livro exige nota em todos os capítulos.
+const unratedCount = computed(() => {
+  const chapters = currentBook.value?.chapters ?? []
+  return chapters.filter((chapter) => !chapter.ratings?.length).length
+})
+
 const reviews = computed(() => currentBook.value?.reviews ?? [])
 const summary = computed(() => currentBook.value?.reviewSummary ?? { average: null, count: 0 })
 const myReview = computed(
@@ -48,7 +54,7 @@ const averageLabel = computed(() => {
       <p v-else>Ainda não há avaliações deste livro.</p>
     </div>
 
-    <div v-if="canReview" class="review-cta">
+    <div v-if="canReview && unratedCount === 0" class="review-cta">
       <p class="review-form-label">
         {{ myReview ? 'Você já avaliou este livro.' : 'Você terminou o livro!' }}
       </p>
@@ -61,9 +67,22 @@ const averageLabel = computed(() => {
       </RouterLink>
     </div>
 
+    <p v-else-if="canReview" class="spoiler-lock">
+      Falta dar sua nota a {{ unratedCount }} capítulo{{ unratedCount === 1 ? '' : 's' }} para
+      liberar a avaliação do livro. Abra cada capítulo e use "Minha nota do capítulo".
+    </p>
+
     <p v-else class="spoiler-lock">
       Conclua todos os capítulos para dar sua nota e resenha.
     </p>
+
+    <RouterLink
+      v-if="currentBook && currentBook.chapters.length"
+      class="text-link"
+      :to="`/books/${currentBook.id}/ratings`"
+    >
+      Ver avaliação por capítulo
+    </RouterLink>
 
     <ol v-if="reviews.length" class="review-list">
       <li v-for="item in reviews" :key="item.id">

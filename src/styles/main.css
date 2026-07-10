@@ -1449,6 +1449,123 @@ textarea:focus {
   font-weight: 900;
 }
 
+.rating-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Heatmap de avaliação por capítulo (referência Mistborn, na paleta do
+   clube). Satisfação = média/5. */
+.rating-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.rating-tile {
+  display: grid;
+  gap: 2px;
+  place-items: center;
+  min-height: 72px;
+  border-radius: 16px;
+  padding: 10px 6px;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 18px rgba(48, 53, 31, 0.14);
+}
+
+.rating-tile strong {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.rating-tile span {
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.rating-tile small {
+  font-size: 0.68rem;
+  font-weight: 800;
+  opacity: 0.85;
+}
+
+.rating-tile--incrivel {
+  background: #3f6b35;
+  color: var(--color-cream-50);
+}
+
+.rating-tile--otimo {
+  background: #79a75f;
+  color: #1f2a17;
+}
+
+.rating-tile--mediano {
+  background: #d5a85e;
+  color: #4a3413;
+}
+
+.rating-tile--ruim {
+  background: #c26d4f;
+  color: #fff4e8;
+}
+
+.rating-tile--pessimo {
+  background: #8c4534;
+  color: #ffe9dd;
+}
+
+.rating-tile--empty {
+  border: 1px dashed rgba(77, 87, 51, 0.35);
+  background: rgba(255, 255, 255, 0.25);
+  color: rgba(40, 41, 31, 0.55);
+  box-shadow: none;
+}
+
+.rating-tile--locked {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(40, 41, 31, 0.1);
+  color: rgba(40, 41, 31, 0.5);
+  box-shadow: none;
+}
+
+.rating-legend {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rating-legend li {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: rgba(40, 41, 31, 0.75);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.rating-legend__swatch {
+  display: inline-block;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+}
+
+.rating-legend__range {
+  display: inline-flex;
+  align-items: center;
+  min-width: 58px;
+  color: var(--color-olive-950);
+  font-weight: 900;
+}
+
 .review-list {
   display: grid;
   gap: 12px;

@@ -22,11 +22,13 @@ import adminFinishBook from '../_routes/admin/current-book/finish.js'
 import booksCurrent from '../_routes/books/current.js'
 import booksReview from '../_routes/books/review.js'
 import booksHistory from '../_routes/books/history.js'
+import bookRatings from '../_routes/books/[clubBookId]/ratings.js'
 import profile from '../_routes/profile.js'
 import profilePassword from '../_routes/profile/password.js'
 import chapterStart from '../_routes/chapters/[chapterId]/start.js'
 import chapterFinish from '../_routes/chapters/[chapterId]/finish.js'
 import chapterReopen from '../_routes/chapters/[chapterId]/reopen.js'
+import chapterRating from '../_routes/chapters/[chapterId]/rating.js'
 import chapterComments from '../_routes/chapters/[chapterId]/comments.js'
 import commentReaction from '../_routes/comments/[commentId]/reaction.js'
 
@@ -52,11 +54,13 @@ const routes: Route[] = [
   ['books/current', booksCurrent],
   ['books/review', booksReview],
   ['books/history', booksHistory],
+  ['books/[clubBookId]/ratings', bookRatings],
   ['profile', profile],
   ['profile/password', profilePassword],
   ['chapters/[chapterId]/start', chapterStart],
   ['chapters/[chapterId]/finish', chapterFinish],
   ['chapters/[chapterId]/reopen', chapterReopen],
+  ['chapters/[chapterId]/rating', chapterRating],
   ['chapters/[chapterId]/comments', chapterComments],
   ['comments/[commentId]/reaction', commentReaction]
 ].map(([pattern, handler]) => ({

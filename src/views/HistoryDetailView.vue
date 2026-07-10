@@ -98,6 +98,10 @@ function goBack() {
         {{ book.stats.chapters }} capítulos · {{ book.stats.comments }} comentários ·
         {{ book.stats.reviewers }} avaliações
       </p>
+
+      <RouterLink class="text-link" :to="`/books/${book.id}/ratings`">
+        Ver avaliação por capítulo
+      </RouterLink>
     </section>
 
     <section v-if="book.reviews.length" class="flow-card glass-panel">

@@ -39,6 +39,14 @@ export default async function handler(req: any, res: any) {
                     finishedAt: true
                   }
                 }
+              : false,
+            // Nota que o próprio membro deu ao capítulo (para a UI de
+            // avaliação; as médias do clube vivem em books/:id/ratings).
+            ratings: session.userId
+              ? {
+                  where: { userId: session.userId },
+                  select: { rating: true }
+                }
               : false
           }
         }

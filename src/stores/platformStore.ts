@@ -111,6 +111,14 @@ export const usePlatformStore = defineStore('platform', () => {
     await loadHome()
   }
 
+  async function rateChapter(chapterId: string, rating: number) {
+    await apiRequest(`/api/chapters/${chapterId}/rating`, {
+      method: 'POST',
+      body: JSON.stringify({ rating })
+    })
+    await loadHome()
+  }
+
   async function finishCurrentBook() {
     await apiRequest('/api/admin/current-book/finish', { method: 'POST' })
     await loadHome()
@@ -152,6 +160,7 @@ export const usePlatformStore = defineStore('platform', () => {
     startChapter,
     finishChapter,
     reopenChapter,
+    rateChapter,
     finishCurrentBook,
     submitReview
   }
