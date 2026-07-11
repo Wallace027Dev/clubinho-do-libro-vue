@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
 import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 
@@ -28,13 +29,11 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Entrada do membro</p>
-      <h2>Acesse com seu convite</h2>
-      <p>Use o login e a senha enviados pelo administrador do clube.</p>
-    </div>
-
+  <SectionCard
+    label="Entrada do membro"
+    title="Acesse com seu convite"
+    subtitle="Use o login e a senha enviados pelo administrador do clube."
+  >
     <form class="stack-form" @submit.prevent="handleSubmit">
       <label>
         Login
@@ -54,5 +53,5 @@ async function handleSubmit() {
     </form>
 
     <RouterLink class="text-link" to="/login/admin">Sou o administrador do clube</RouterLink>
-  </section>
+  </SectionCard>
 </template>

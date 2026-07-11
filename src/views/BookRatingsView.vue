@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { ArrowLeft, Lock } from 'lucide-vue-next'
+import { Lock } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import BookCover from '../components/ui/BookCover.vue'
+import DetailHeader from '../components/ui/DetailHeader.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
 import StarRating from '../components/ui/StarRating.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import type { BookRatings, ChapterRatingSummary } from '../types/platform'
 import { chapterShortTag, chapterTag } from '../utils/chapters'
+import { formatRating } from '../utils/format'
 
 const route = useRoute()
-const router = useRouter()
 
 const data = ref<BookRatings | null>(null)
 const errorMessage = ref('')
@@ -36,7 +40,7 @@ onMounted(async () => {
 
 const averageLabel = computed(() => {
   const average = data.value?.reviewSummary.average
-  return average == null ? null : average.toFixed(1).replace('.', ',')
+  return average == null ? null : formatRating(average)
 })
 
 const satisfactionLabel = computed(() => {
@@ -61,7 +65,7 @@ function tileClass(chapter: ChapterRatingSummary) {
 }
 
 function tileAverage(chapter: ChapterRatingSummary) {
-  return chapter.average == null ? '—' : chapter.average.toFixed(1).replace('.', ',')
+  return chapter.average == null ? '—' : formatRating(chapter.average)
 }
 
 function satisfaction(chapter: ChapterRatingSummary) {
@@ -79,44 +83,21 @@ function tileAriaLabel(chapter: ChapterRatingSummary) {
 
   return `${chapterTag(chapter)}: média ${tileAverage(chapter)} de 5, satisfação ${satisfaction(chapter)}`
 }
-
-function goBack() {
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-
-  void router.push('/chapters')
-}
 </script>
 
 <template>
-  <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="goBack">
-      <ArrowLeft :size="20" />
-    </button>
-    <h2>Avaliação por capítulo</h2>
-  </header>
+  <DetailHeader title="Avaliação por capítulo" fallback="/chapters" />
 
-  <div v-if="isLoading" class="empty-state">
-    <p>Carregando avaliações...</p>
-  </div>
+  <EmptyState v-if="isLoading" message="Carregando avaliações..." />
 
-  <section v-else-if="errorMessage" class="flow-card glass-panel">
-    <div class="empty-state">
-      <p>{{ errorMessage }}</p>
-    </div>
-  </section>
+  <SectionCard v-else-if="errorMessage">
+    <EmptyState :message="errorMessage" />
+  </SectionCard>
 
   <template v-else-if="data">
-    <section class="flow-card glass-panel history-card">
+    <SectionCard class="history-card">
       <div class="history-head">
-        <div v-if="data.book.coverUrl" class="history-cover">
-          <img :src="data.book.coverUrl" :alt="`Capa de ${data.book.title}`" />
-        </div>
-        <div v-else class="history-cover history-cover--empty" aria-hidden="true">
-          {{ data.book.title[0] }}
-        </div>
+        <BookCover :title="data.book.title" :cover-url="data.book.coverUrl" />
 
         <div class="history-info">
           <p class="section-label">
@@ -136,17 +117,15 @@ function goBack() {
           <p v-else class="comment-muted">O livro ainda não recebeu avaliações.</p>
         </div>
       </div>
-    </section>
+    </SectionCard>
 
-    <section class="flow-card glass-panel">
-      <div class="flow-heading">
-        <p class="section-label">Capítulos</p>
-        <h2>Média do clube por capítulo</h2>
-        <p v-if="data.book.status === 'CURRENT'">
-          Você só vê a média dos capítulos que já concluiu — sem spoiler de reação.
-        </p>
-      </div>
-
+    <SectionCard
+      label="Capítulos"
+      title="Média do clube por capítulo"
+      :subtitle="data.book.status === 'CURRENT'
+        ? 'Você só vê a média dos capítulos que já concluiu — sem spoiler de reação.'
+        : undefined"
+    >
       <div v-if="data.chapters.length" class="rating-grid">
         <div
           v-for="chapter in data.chapters"
@@ -166,9 +145,7 @@ function goBack() {
         </div>
       </div>
 
-      <div v-else class="empty-state">
-        <p>Este livro não tem capítulos cadastrados.</p>
-      </div>
+      <EmptyState v-else message="Este livro não tem capítulos cadastrados." />
 
       <ul class="rating-legend">
         <li v-for="band in bands" :key="band.key">
@@ -182,6 +159,6 @@ function goBack() {
           <span>Conclua o capítulo para ver</span>
         </li>
       </ul>
-    </section>
+    </SectionCard>
   </template>
 </template>

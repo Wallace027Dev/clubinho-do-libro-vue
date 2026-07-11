@@ -3,6 +3,9 @@ import { ChevronRight } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BookReview from '../components/BookReview.vue'
+import ClickableCard from '../components/ui/ClickableCard.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Chapter } from '../types/platform'
 import { chapterTag, isStandaloneChapterTitle } from '../utils/chapters'
@@ -43,27 +46,16 @@ function openChapter(chapter: Chapter) {
     </div>
   </section>
 
-  <div v-if="platformStore.isLoading && !currentBook" class="empty-state">
-    <p>Carregando capítulos...</p>
-  </div>
+  <EmptyState v-if="platformStore.isLoading && !currentBook" message="Carregando capítulos..." />
 
-  <section v-if="currentBook" class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Capítulos</p>
-      <h2>Seu progresso de leitura</h2>
-    </div>
-
+  <SectionCard v-if="currentBook" label="Capítulos" title="Seu progresso de leitura">
     <ol v-if="currentBook.chapters.length" class="feed-list">
-      <li
+      <ClickableCard
         v-for="chapter in currentBook.chapters"
         :key="chapter.id"
-        class="feed-card is-clickable chapter-card"
-        role="button"
-        tabindex="0"
+        class="chapter-card"
         :aria-label="`Abrir ${chapterTag(chapter)}: ${chapter.title}`"
-        @click="openChapter(chapter)"
-        @keydown.enter.prevent="openChapter(chapter)"
-        @keydown.space.prevent="openChapter(chapter)"
+        @activate="openChapter(chapter)"
       >
         <div class="feed-card-top">
           <span class="feed-tag">{{ chapterTag(chapter) }}</span>
@@ -79,13 +71,11 @@ function openChapter(chapter: Chapter) {
           <strong>{{ isStandaloneChapterTitle(chapter.title) ? '' : chapter.title }}</strong>
           <ChevronRight class="chapter-chevron" :size="20" aria-hidden="true" />
         </div>
-      </li>
+      </ClickableCard>
     </ol>
 
-    <div v-else class="empty-state">
-      <p>O admin ainda não cadastrou capítulos para este livro.</p>
-    </div>
-  </section>
+    <EmptyState v-else message="O admin ainda não cadastrou capítulos para este livro." />
+  </SectionCard>
 
   <BookReview v-if="currentBook" />
 </template>

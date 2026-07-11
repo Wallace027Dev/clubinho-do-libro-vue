@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
+import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
@@ -49,10 +51,6 @@ const participatedBooks = computed(() => {
       book.chapters.some((chapter) => chapter.comments.some((comment) => comment.user.id === userId))
   ).length
 })
-
-const avatarInitial = computed(
-  () => authStore.user?.displayName?.[0] || authStore.user?.login?.[0] || '?'
-)
 
 const isDataUrlAvatar = computed(() => avatarUrl.value.startsWith('data:image/'))
 
@@ -181,19 +179,20 @@ async function handleLogout() {
 </script>
 
 <template>
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Perfil</p>
-      <h2>Seu nome no clube</h2>
-      <p>O login continua privado; os membros conhecem você pelo feed e pelo apelido.</p>
-    </div>
-
+  <SectionCard
+    label="Perfil"
+    title="Seu nome no clube"
+    subtitle="O login continua privado; os membros conhecem você pelo feed e pelo apelido."
+  >
     <form class="stack-form" @submit.prevent="saveProfile">
       <div class="profile-avatar-row">
-        <div class="avatar profile-avatar">
-          <img v-if="avatarUrl" :src="avatarUrl" alt="Sua foto de perfil" />
-          <template v-else>{{ avatarInitial }}</template>
-        </div>
+        <UserAvatar
+          class="profile-avatar"
+          :avatar-url="avatarUrl"
+          :display-name="authStore.user?.displayName"
+          :login="authStore.user?.login"
+          alt="Sua foto de perfil"
+        />
 
         <div class="action-stack">
           <BaseButton variant="secondary" @click="pickPhoto">
@@ -228,14 +227,9 @@ async function handleLogout() {
         {{ isSaving ? 'Salvando...' : 'Salvar perfil' }}
       </BaseButton>
     </form>
-  </section>
+  </SectionCard>
 
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Minha leitura</p>
-      <h2>Estatísticas</h2>
-    </div>
-
+  <SectionCard label="Minha leitura" title="Estatísticas">
     <div class="profile-stats">
       <div class="profile-stat">
         <strong>{{ finishedChapters.finished }}/{{ finishedChapters.total || '—' }}</strong>
@@ -250,14 +244,9 @@ async function handleLogout() {
         <p>Livros lidos pelo clube</p>
       </div>
     </div>
-  </section>
+  </SectionCard>
 
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Segurança</p>
-      <h2>Trocar senha</h2>
-    </div>
-
+  <SectionCard label="Segurança" title="Trocar senha">
     <form class="stack-form" @submit.prevent="changePassword">
       <label>
         Senha atual
@@ -274,14 +263,9 @@ async function handleLogout() {
         {{ isChangingPassword ? 'Alterando...' : 'Alterar senha' }}
       </BaseButton>
     </form>
-  </section>
+  </SectionCard>
 
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Conta</p>
-      <h2>Sessão e acessos</h2>
-    </div>
-
+  <SectionCard label="Conta" title="Sessão e acessos">
     <div class="action-stack">
       <RouterLink v-if="authStore.isAdmin" class="text-link" to="/admin">
         Abrir painel do admin
@@ -291,5 +275,5 @@ async function handleLogout() {
         Sair da conta
       </BaseButton>
     </div>
-  </section>
+  </SectionCard>
 </template>

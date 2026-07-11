@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import BookCover from '../components/ui/BookCover.vue'
+import DetailHeader from '../components/ui/DetailHeader.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import ReviewList from '../components/ui/ReviewList.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
 import StarRating from '../components/ui/StarRating.vue'
-import { isStandaloneChapterTitle } from '../utils/chapters'
-import { useRoute, useRouter } from 'vue-router'
+import UserAvatar from '../components/ui/UserAvatar.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import type { ChapterCommentReactionType } from '../types/platform'
+import { isStandaloneChapterTitle } from '../utils/chapters'
+import { formatMonthYear, formatRating } from '../utils/format'
+import { reactionEmoji } from '../utils/reactions'
 
 const route = useRoute()
-const router = useRouter()
 const platformStore = usePlatformStore()
-
-const reactionEmoji: Record<ChapterCommentReactionType, string> = {
-  GOSTEI: '🙂',
-  SOFRI: '😟',
-  SURPRESO: '😮',
-  SUSPEITO: '🤨',
-  DISCUTIR: '💬'
-}
 
 const book = computed(() => {
   const bookId = String(route.params.bookId)
@@ -26,20 +24,10 @@ const book = computed(() => {
 
 const averageLabel = computed(() => {
   const average = book.value?.reviewSummary.average
-  return average == null ? null : average.toFixed(1).replace('.', ',')
+  return average == null ? null : formatRating(average)
 })
 
-const finishedLabel = computed(() => {
-  if (!book.value?.finishedAt) {
-    return 'Finalizado'
-  }
-
-  const label = new Date(book.value.finishedAt).toLocaleDateString('pt-BR', {
-    month: 'long',
-    year: 'numeric'
-  })
-  return label.charAt(0).toUpperCase() + label.slice(1)
-})
+const finishedLabel = computed(() => formatMonthYear(book.value?.finishedAt))
 
 onMounted(() => {
   if (!platformStore.history.length) {
@@ -50,36 +38,17 @@ onMounted(() => {
 function reactionEntries(reactions: Partial<Record<ChapterCommentReactionType, number>>) {
   return Object.entries(reactions) as Array<[ChapterCommentReactionType, number]>
 }
-
-function goBack() {
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-
-  void router.push('/history')
-}
 </script>
 
 <template>
-  <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="goBack"><ArrowLeft :size="20" /></button>
-    <h2>{{ book?.book.title ?? 'Livro lido' }}</h2>
-  </header>
+  <DetailHeader :title="book?.book.title ?? 'Livro lido'" fallback="/history" />
 
-  <div v-if="platformStore.isLoading && !book" class="empty-state">
-    <p>Carregando livro...</p>
-  </div>
+  <EmptyState v-if="platformStore.isLoading && !book" message="Carregando livro..." />
 
   <template v-else-if="book">
-    <section class="flow-card glass-panel history-card">
+    <SectionCard class="history-card">
       <div class="history-head">
-        <div v-if="book.book.coverUrl" class="history-cover">
-          <img :src="book.book.coverUrl" :alt="`Capa de ${book.book.title}`" />
-        </div>
-        <div v-else class="history-cover history-cover--empty" aria-hidden="true">
-          {{ book.book.title[0] }}
-        </div>
+        <BookCover :title="book.book.title" :cover-url="book.book.coverUrl" />
 
         <div class="history-info">
           <p class="section-label">{{ finishedLabel }}</p>
@@ -103,41 +72,26 @@ function goBack() {
       <RouterLink class="text-link" :to="`/books/${book.id}/ratings`">
         Ver avaliação por capítulo
       </RouterLink>
-    </section>
+    </SectionCard>
 
-    <section v-if="book.reviews.length" class="flow-card glass-panel">
-      <div class="flow-heading">
-        <p class="section-label">Resenhas</p>
-        <h2>O que o clube achou</h2>
-      </div>
+    <SectionCard v-if="book.reviews.length" label="Resenhas" title="O que o clube achou">
+      <ReviewList :reviews="book.reviews" />
+    </SectionCard>
 
-      <ol class="review-list">
-        <li v-for="review in book.reviews" :key="review.id">
-          <div class="review-head">
-            <div class="avatar">{{ review.user.displayName?.[0] || review.user.login[0] }}</div>
-            <div>
-              <strong>{{ review.user.displayName || review.user.login }}</strong>
-              <StarRating :value="review.rating" :size="16" />
-            </div>
-          </div>
-          <p v-if="review.review" class="comment-body">{{ review.review }}</p>
-        </li>
-      </ol>
-    </section>
-
-    <section v-if="book.stats.comments" class="flow-card glass-panel">
-      <div class="flow-heading">
-        <p class="section-label">Memória da leitura</p>
-        <h2>Comentários por capítulo</h2>
-      </div>
-
+    <SectionCard
+      v-if="book.stats.comments"
+      label="Memória da leitura"
+      title="Comentários por capítulo"
+    >
       <div v-for="chapter in book.chapters" :key="chapter.id" class="history-chapter">
         <template v-if="chapter.comments.length">
-          <p class="chapter-kicker">{{ isStandaloneChapterTitle(chapter.title) ? chapter.title : `Capítulo ${chapter.number} — ${chapter.title}` }}</p>
+          <p class="chapter-kicker">
+            {{ isStandaloneChapterTitle(chapter.title) ? chapter.title : `Capítulo ${chapter.number} — ${chapter.title}` }}
+          </p>
           <ol class="comment-list">
             <li v-for="comment in chapter.comments" :key="comment.id">
               <div class="comment-author">
-                <div class="avatar">{{ comment.user.displayName?.[0] || comment.user.login[0] }}</div>
+                <UserAvatar :display-name="comment.user.displayName" :login="comment.user.login" />
                 <div>
                   <strong>{{ comment.user.displayName || comment.user.login }}</strong>
                   <p>{{ new Date(comment.createdAt).toLocaleDateString('pt-BR') }}</p>
@@ -146,20 +100,18 @@ function goBack() {
               <p class="comment-body">{{ comment.body }}</p>
               <div v-if="comment.reactionTotal" class="history-reactions">
                 <span v-for="[type, count] in reactionEntries(comment.reactions)" :key="type">
-                  {{ reactionEmoji[type] }} {{ count }}
+                  {{ reactionEmoji(type) }} {{ count }}
                 </span>
               </div>
             </li>
           </ol>
         </template>
       </div>
-    </section>
+    </SectionCard>
   </template>
 
-  <section v-else class="flow-card glass-panel">
-    <div class="empty-state">
-      <p>Livro não encontrado no histórico do clube.</p>
-    </div>
+  <SectionCard v-else>
+    <EmptyState message="Livro não encontrado no histórico do clube." />
     <RouterLink class="text-link" to="/history">Voltar para livros lidos</RouterLink>
-  </section>
+  </SectionCard>
 </template>

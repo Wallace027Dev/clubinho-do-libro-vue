@@ -1,29 +1,24 @@
 <script setup lang="ts">
-import { ArrowLeft, SendHorizontal } from 'lucide-vue-next'
+import { SendHorizontal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
-import StarRating from '../components/ui/StarRating.vue'
+import DetailHeader from '../components/ui/DetailHeader.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import RatingInput from '../components/ui/RatingInput.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import { useUiStore } from '../stores/uiStore'
-import type { Chapter, ChapterComment, ChapterCommentReactionType } from '../types/platform'
+import type { Chapter, ChapterComment } from '../types/platform'
 import { chapterTag } from '../utils/chapters'
+import { reactionEmoji, reactionLabel } from '../utils/reactions'
 
 const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const platformStore = usePlatformStore()
 const uiStore = useUiStore()
-
-const reactionOptions: Array<{ type: ChapterCommentReactionType; emoji: string; label: string }> = [
-  { type: 'GOSTEI', emoji: '🙂', label: 'gostei' },
-  { type: 'SOFRI', emoji: '😟', label: 'sofri' },
-  { type: 'SURPRESO', emoji: '😮', label: 'surpresa' },
-  { type: 'SUSPEITO', emoji: '🤨', label: 'suspeito' },
-  { type: 'DISCUTIR', emoji: '💬', label: 'discutir' }
-]
 
 const chapter = computed<Chapter | null>(() => {
   const chapterId = String(route.params.chapterId)
@@ -193,35 +188,14 @@ async function submitComment() {
   }
 }
 
-function reactionEmoji(type: ChapterCommentReactionType) {
-  return reactionOptions.find((reaction) => reaction.type === type)?.emoji ?? '🙂'
-}
-
-function reactionLabel(type: ChapterCommentReactionType) {
-  return reactionOptions.find((reaction) => reaction.type === type)?.label ?? 'reação'
-}
-
-function goBack() {
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-
-  void router.push('/chapters')
-}
 </script>
 
 <template>
-  <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="goBack"><ArrowLeft :size="20" /></button>
-    <h2>{{ chapter ? chapterTag(chapter) : 'Capítulo' }}</h2>
-  </header>
+  <DetailHeader :title="chapter ? chapterTag(chapter) : 'Capítulo'" fallback="/chapters" />
 
-  <div v-if="platformStore.isLoading && !chapter" class="empty-state">
-    <p>Carregando capítulo...</p>
-  </div>
+  <EmptyState v-if="platformStore.isLoading && !chapter" message="Carregando capítulo..." />
 
-  <section v-else-if="chapter" class="flow-card glass-panel activity-detail">
+  <SectionCard v-else-if="chapter" class="activity-detail">
     <div>
       <p class="section-label">{{ platformStore.clubState.currentBook?.book.title }}</p>
       <h2>{{ chapter.title }}</h2>
@@ -252,20 +226,9 @@ function goBack() {
 
       <p class="section-label">Minha nota do capítulo</p>
 
-      <div class="rating-input">
-        <StarRating :value="ratingDraft" :size="26" />
-        <input
-          v-model.number="ratingDraft"
-          type="range"
-          min="1"
-          max="5"
-          step="0.1"
-          aria-label="Nota do capítulo, de 1 a 5"
-        />
+      <RatingInput v-model="ratingDraft" :size="26" v-slot="{ label }">
         <div class="rating-input-row">
-          <span class="rating-value">
-            {{ ratingDraft >= 1 ? `${ratingDraft.toFixed(1).replace('.', ',')}/5` : 'Arraste para dar a nota' }}
-          </span>
+          <span class="rating-value">{{ label }}</span>
           <BaseButton
             class="chapter-action"
             variant="secondary"
@@ -276,7 +239,7 @@ function goBack() {
             {{ myRating ? 'Atualizar nota' : 'Salvar nota' }}
           </BaseButton>
         </div>
-      </div>
+      </RatingInput>
 
       <p v-if="!myRating" class="comment-muted">
         A nota é necessária para avaliar o livro no final; a média do clube aparece na página de
@@ -325,13 +288,11 @@ function goBack() {
     <p v-else class="spoiler-lock">
       Seu comentário deste capítulo abre depois que você concluir a leitura.
     </p>
-  </section>
+  </SectionCard>
 
-  <section v-else class="flow-card glass-panel">
-    <div class="empty-state">
-      <p>Capítulo não encontrado no livro atual.</p>
-    </div>
-  </section>
+  <SectionCard v-else>
+    <EmptyState message="Capítulo não encontrado no livro atual." />
+  </SectionCard>
 
   <div v-if="chapter && status === 'FINISHED'" class="comment-dock-spacer" aria-hidden="true"></div>
 

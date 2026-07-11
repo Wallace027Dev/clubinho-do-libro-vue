@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { ChevronRight } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
-import StarRating from '../components/ui/StarRating.vue'
 import { useRouter } from 'vue-router'
+import BookCover from '../components/ui/BookCover.vue'
+import ClickableCard from '../components/ui/ClickableCard.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
+import StarRating from '../components/ui/StarRating.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import type { FinishedBook } from '../types/platform'
+import { formatMonthYear, formatRating } from '../utils/format'
 
 const router = useRouter()
 const platformStore = usePlatformStore()
@@ -14,75 +19,52 @@ onMounted(() => {
   void platformStore.loadHistory()
 })
 
-function finishedLabel(book: FinishedBook) {
-  if (!book.finishedAt) {
-    return 'Finalizado'
-  }
-
-  const label = new Date(book.finishedAt).toLocaleDateString('pt-BR', {
-    month: 'long',
-    year: 'numeric'
-  })
-  return label.charAt(0).toUpperCase() + label.slice(1)
-}
-
 function openBook(book: FinishedBook) {
   void router.push(`/history/${book.id}`)
 }
 </script>
 
 <template>
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Histórico</p>
-      <h2>Livros lidos</h2>
-      <p>A memória do clube: toque em um livro para ver notas, resenhas e comentários.</p>
-    </div>
+  <SectionCard
+    label="Histórico"
+    title="Livros lidos"
+    subtitle="A memória do clube: toque em um livro para ver notas, resenhas e comentários."
+  >
+    <EmptyState
+      v-if="platformStore.isLoading && !history.length"
+      message="Carregando histórico..."
+    />
 
-    <div v-if="platformStore.isLoading && !history.length" class="empty-state">
-      <p>Carregando histórico...</p>
-    </div>
-
-    <div v-else-if="!history.length" class="empty-state">
-      <p>Nenhum livro finalizado ainda. Quando o clube encerrar um livro, ele aparece aqui.</p>
-    </div>
+    <EmptyState
+      v-else-if="!history.length"
+      message="Nenhum livro finalizado ainda. Quando o clube encerrar um livro, ele aparece aqui."
+    />
 
     <ol v-else class="feed-list">
-      <li
+      <ClickableCard
         v-for="book in history"
         :key="book.id"
-        class="feed-card is-clickable history-item"
-        role="button"
-        tabindex="0"
+        class="history-item"
         :aria-label="`Abrir ${book.book.title}`"
-        @click="openBook(book)"
-        @keydown.enter.prevent="openBook(book)"
-        @keydown.space.prevent="openBook(book)"
+        @activate="openBook(book)"
       >
-        <div v-if="book.book.coverUrl" class="history-cover history-cover--small">
-          <img :src="book.book.coverUrl" :alt="`Capa de ${book.book.title}`" />
-        </div>
-        <div v-else class="history-cover history-cover--small history-cover--empty" aria-hidden="true">
-          {{ book.book.title[0] }}
-        </div>
+        <BookCover :title="book.book.title" :cover-url="book.book.coverUrl" small />
 
         <div class="history-item-info">
           <div class="feed-card-top">
-            <span class="feed-tag">{{ finishedLabel(book) }}</span>
+            <span class="feed-tag">{{ formatMonthYear(book.finishedAt) }}</span>
           </div>
           <strong>{{ book.book.title }}</strong>
           <p v-if="book.book.author">{{ book.book.author }}</p>
           <p v-if="book.reviewSummary.average !== null" class="review-stars">
             <StarRating :value="book.reviewSummary.average" :size="16" />
-            <span class="review-count">
-              {{ book.reviewSummary.average.toFixed(1).replace('.', ',') }}/5
-            </span>
+            <span class="review-count">{{ formatRating(book.reviewSummary.average) }}/5</span>
           </p>
           <p v-else class="comment-muted">Sem avaliações.</p>
         </div>
 
         <ChevronRight class="chapter-chevron" :size="20" aria-hidden="true" />
-      </li>
+      </ClickableCard>
     </ol>
-  </section>
+  </SectionCard>
 </template>

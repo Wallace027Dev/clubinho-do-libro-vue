@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import EmptyState from '../components/ui/EmptyState.vue'
 import { usePlatformStore } from '../stores/platformStore'
+import { formatRating } from '../utils/format'
 
 const platformStore = usePlatformStore()
 const currentBook = computed(() => platformStore.clubState.currentBook)
@@ -13,7 +15,7 @@ const chapterStats = computed(() => {
 
 const averageLabel = computed(() => {
   const average = currentBook.value?.reviewSummary?.average
-  return average == null ? null : average.toFixed(1).replace('.', ',')
+  return average == null ? null : formatRating(average)
 })
 
 onMounted(() => {
@@ -39,9 +41,10 @@ onMounted(() => {
       </p>
     </div>
 
-    <div v-if="platformStore.isLoading && !currentBook" class="empty-state">
-      <p>Carregando o livro do clube...</p>
-    </div>
+    <EmptyState
+      v-if="platformStore.isLoading && !currentBook"
+      message="Carregando o livro do clube..."
+    />
 
     <template v-if="currentBook">
       <div class="home-progress">

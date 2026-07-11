@@ -2,6 +2,9 @@
 import { Search } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import ClickableCard from '../components/ui/ClickableCard.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity } from '../types/platform'
 
@@ -91,13 +94,11 @@ function actorName(activity: Activity) {
 </script>
 
 <template>
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Feed do clube</p>
-      <h2>Atividades da leitura</h2>
-      <p>Toque em uma atividade de comentário para ler e reagir.</p>
-    </div>
-
+  <SectionCard
+    label="Feed do clube"
+    title="Atividades da leitura"
+    subtitle="Toque em uma atividade de comentário para ler e reagir."
+  >
     <div class="feed-toolbar">
       <label class="feed-search">
         <span class="visually-hidden">Pesquisar no feed</span>
@@ -120,22 +121,18 @@ function actorName(activity: Activity) {
       </div>
     </div>
 
-    <div v-if="platformStore.isLoading && !activities.length" class="empty-state">
-      <p>Carregando o feed do clube...</p>
-    </div>
+    <EmptyState
+      v-if="platformStore.isLoading && !activities.length"
+      message="Carregando o feed do clube..."
+    />
 
     <ol v-else-if="filteredActivities.length" class="feed-list">
-      <li
+      <ClickableCard
         v-for="activity in filteredActivities"
         :key="activity.id"
-        class="feed-card"
-        :class="{ 'is-clickable': isCommentActivity(activity) }"
-        :role="isCommentActivity(activity) ? 'button' : undefined"
-        :tabindex="isCommentActivity(activity) ? 0 : undefined"
+        :clickable="isCommentActivity(activity)"
         :aria-label="isCommentActivity(activity) ? `Abrir ${activity.message}` : undefined"
-        @click="openActivity(activity)"
-        @keydown.enter.prevent="openActivity(activity)"
-        @keydown.space.prevent="openActivity(activity)"
+        @activate="openActivity(activity)"
       >
         <div class="feed-card-top">
           <span class="feed-tag">{{ typeLabels[activity.type] ?? 'Atividade' }}</span>
@@ -143,15 +140,14 @@ function actorName(activity: Activity) {
         </div>
         <strong>{{ activity.message }}</strong>
         <p>{{ actorName(activity) }}</p>
-      </li>
+      </ClickableCard>
     </ol>
 
-    <div v-else-if="activities.length" class="empty-state">
-      <p>Nenhuma atividade combina com a busca ou o filtro.</p>
-    </div>
+    <EmptyState
+      v-else-if="activities.length"
+      message="Nenhuma atividade combina com a busca ou o filtro."
+    />
 
-    <div v-else class="empty-state">
-      <p>O feed ainda está vazio.</p>
-    </div>
-  </section>
+    <EmptyState v-else message="O feed ainda está vazio." />
+  </SectionCard>
 </template>

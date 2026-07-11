@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
+import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError } from '../services/apiClient'
 import { usePlatformStore } from '../stores/platformStore'
 import { useUiStore } from '../stores/uiStore'
@@ -8,6 +11,7 @@ import { chapterTag, chapterTagLower } from '../utils/chapters'
 
 const platformStore = usePlatformStore()
 const uiStore = useUiStore()
+const router = useRouter()
 const memberLogin = ref('')
 const memberPassword = ref('')
 const memberDisplayName = ref('')
@@ -211,22 +215,31 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
 </script>
 
 <template>
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Admin</p>
-      <h2>Gerenciar clube</h2>
-      <p>Cadastre membros, controle o livro atual e libere o próximo sorteio.</p>
-    </div>
-
+  <SectionCard
+    label="Admin"
+    title="Gerenciar clube"
+    subtitle="Cadastre membros, controle o livro atual e libere o próximo sorteio."
+  >
     <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
-  </section>
+  </SectionCard>
 
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Membros</p>
-      <h2>Cadastrar usuário</h2>
-    </div>
+  <SectionCard
+    label="Sorteador"
+    title="Sortear o livro do mês"
+    subtitle="Cadastre os candidatos e gire a roleta para escolher o próximo livro."
+  >
+    <BaseButton @click="router.push('/admin/sorteio')">Abrir sorteador</BaseButton>
+  </SectionCard>
 
+  <SectionCard
+    label="Design system"
+    title="Componentes e tokens"
+    subtitle="Veja todos os componentes num só lugar e ajuste o visual (cores, raios, fontes) ao vivo."
+  >
+    <BaseButton variant="secondary" @click="router.push('/design')">Abrir playground</BaseButton>
+  </SectionCard>
+
+  <SectionCard label="Membros" title="Cadastrar usuário">
     <form class="stack-form" @submit.prevent="createMember">
       <label>
         Login
@@ -252,10 +265,11 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
         class="member-item"
         :class="{ 'member-item--inactive': member.deactivatedAt }"
       >
-        <div class="avatar">
-          <img v-if="member.avatarUrl" :src="member.avatarUrl" :alt="`Foto de ${member.login}`" />
-          <template v-else>{{ member.displayName?.[0] || member.login[0] }}</template>
-        </div>
+        <UserAvatar
+          :avatar-url="member.avatarUrl"
+          :display-name="member.displayName"
+          :login="member.login"
+        />
         <div>
           <strong>{{ member.displayName || member.login }}</strong>
           <p>
@@ -285,14 +299,12 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
         </div>
       </li>
     </ul>
-  </section>
+  </SectionCard>
 
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Livro atual</p>
-      <h2>{{ platformStore.clubState.currentBook?.book.title || 'Nenhum livro ativo' }}</h2>
-    </div>
-
+  <SectionCard
+    label="Livro atual"
+    :title="platformStore.clubState.currentBook?.book.title || 'Nenhum livro ativo'"
+  >
     <form v-if="!platformStore.clubState.currentBook" class="stack-form" @submit.prevent="selectBook">
       <label>
         Título
@@ -318,15 +330,14 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
     <BaseButton v-else :loading="pendingAction === 'finish'" @click="finishBook">
       Finalizar livro atual
     </BaseButton>
-  </section>
+  </SectionCard>
 
-  <section v-if="platformStore.clubState.currentBook" class="flow-card glass-panel">
-    <div class="flow-heading">
-      <p class="section-label">Capítulos</p>
-      <h2>Estrutura do livro</h2>
-      <p>Cadastre os capítulos para liberar o progresso individual dos membros.</p>
-    </div>
-
+  <SectionCard
+    v-if="platformStore.clubState.currentBook"
+    label="Capítulos"
+    title="Estrutura do livro"
+    subtitle="Cadastre os capítulos para liberar o progresso individual dos membros."
+  >
     <form class="stack-form" @submit.prevent="createChapter">
       <label>
         Número
@@ -395,5 +406,5 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
         </template>
       </li>
     </ol>
-  </section>
+  </SectionCard>
 </template>

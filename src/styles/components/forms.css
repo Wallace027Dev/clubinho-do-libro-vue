@@ -1,0 +1,132 @@
+/* ============================================================
+   FORMULÁRIOS — campos, labels, mensagens e a doca de comentário.
+   ============================================================ */
+
+.book-form {
+  display: grid;
+  gap: 8px;
+}
+
+.book-form label,
+.stack-form label {
+  color: var(--color-bark-700);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.stack-form {
+  display: grid;
+  gap: 14px;
+}
+
+.stack-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 52px;
+  gap: 10px;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--color-ink);
+  outline: none;
+  padding: 0 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
+  /* 16px+ evita o zoom automático do Safari ao focar o campo. */
+  font-size: 16px;
+}
+
+/* Tira o visual nativo do iOS (cantos/sombras proprios) dos campos.
+   O range fica de fora para preservar o thumb com accent-color. */
+input:not([type='range']),
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type='search']::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+input {
+  min-height: 52px;
+}
+
+textarea {
+  min-height: 92px;
+  resize: vertical;
+  padding-top: 14px;
+  line-height: 1.45;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--color-olive-650);
+  box-shadow: 0 0 0 4px rgba(104, 112, 71, 0.16);
+}
+
+.form-error,
+.form-success {
+  margin: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-size: 0.92rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.form-error {
+  background: rgba(135, 59, 44, 0.12);
+  color: #743528;
+}
+
+.form-success {
+  background: rgba(77, 87, 51, 0.13);
+  color: var(--color-olive-800);
+}
+
+/* Campo de comentario fixo no rodape do detalhe do capitulo (wireframe 04). */
+.comment-dock-spacer {
+  height: 76px;
+}
+
+.comment-dock {
+  position: fixed;
+  right: 0;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  z-index: 25;
+  display: grid;
+  grid-template-columns: 1fr 52px;
+  gap: 8px;
+  align-items: center;
+  width: min(calc(100% - 24px), 520px);
+  margin: 0 auto;
+  padding: 8px;
+  border-radius: 22px;
+}
+
+.comment-dock input {
+  min-height: 46px;
+  border-radius: 16px;
+}
+
+.comment-dock-send {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 46px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
+  color: var(--color-cream-50);
+  font-size: 1.15rem;
+}

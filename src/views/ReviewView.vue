@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
-import StarRating from '../components/ui/StarRating.vue'
+import DetailHeader from '../components/ui/DetailHeader.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import RatingInput from '../components/ui/RatingInput.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
+import { useGoBack } from '../composables/useGoBack'
 import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
@@ -70,27 +73,15 @@ async function submit() {
   }
 }
 
-function cancel() {
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-
-  void router.push('/chapters')
-}
+const cancel = useGoBack('/chapters')
 </script>
 
 <template>
-  <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="cancel"><ArrowLeft :size="20" /></button>
-    <h2>Avaliar o livro</h2>
-  </header>
+  <DetailHeader title="Avaliar o livro" fallback="/chapters" />
 
-  <div v-if="platformStore.isLoading && !currentBook" class="empty-state">
-    <p>Carregando...</p>
-  </div>
+  <EmptyState v-if="platformStore.isLoading && !currentBook" message="Carregando..." />
 
-  <section v-else-if="currentBook && canReview" class="flow-card glass-panel activity-detail">
+  <SectionCard v-else-if="currentBook && canReview" class="activity-detail">
     <div>
       <p class="section-label">{{ currentBook.book.title }}</p>
       <h2>De modo geral, o que você achou do livro?</h2>
@@ -98,20 +89,7 @@ function cancel() {
 
     <form class="stack-form review-form" @submit.prevent="submit">
       <p class="review-form-label">{{ myReview ? 'Editar sua nota' : 'Sua nota' }}</p>
-      <div class="rating-input">
-        <StarRating :value="rating" :size="30" />
-        <input
-          v-model.number="rating"
-          type="range"
-          min="1"
-          max="5"
-          step="0.1"
-          aria-label="Nota de 1 a 5, em passos de 0,1"
-        />
-        <span class="rating-value">
-          {{ rating >= 1 ? `${rating.toFixed(1).replace('.', ',')}/5` : 'Arraste para dar a nota' }}
-        </span>
-      </div>
+      <RatingInput v-model="rating" :size="30" />
 
       <label>
         Resenha (opcional)
@@ -133,15 +111,15 @@ function cancel() {
         </BaseButton>
       </div>
     </form>
-  </section>
+  </SectionCard>
 
-  <section v-else class="flow-card glass-panel">
-    <div class="empty-state">
+  <SectionCard v-else>
+    <EmptyState>
       <p v-if="currentBook">
         Conclua todos os capítulos para dar sua nota e resenha.
       </p>
       <p v-else>Nenhum livro em andamento para avaliar.</p>
-    </div>
+    </EmptyState>
     <RouterLink class="text-link" to="/chapters">Ir para meus capítulos</RouterLink>
-  </section>
+  </SectionCard>
 </template>

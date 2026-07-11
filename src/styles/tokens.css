@@ -1,0 +1,107 @@
+/* ============================================================
+   DESIGN TOKENS — fonte única de verdade do visual.
+   Tudo que é "design" (cor, espaço, raio, fonte, sombra, motion)
+   mora aqui. Mude um valor e ele se propaga por todo o app.
+   A página /design (admin) permite editar muitos destes ao vivo.
+   ============================================================ */
+:root {
+  color-scheme: light;
+
+  /* ---- Paleta base (cores cruas do clube) ---- */
+  --color-olive-950: #30351f;
+  --color-olive-800: #4d5733;
+  --color-olive-650: #687047;
+  --color-olive-400: #9aa77a;
+  --color-sage-300: #b7c4a0;
+  --color-moss-200: #d7ddc5;
+  --color-cream-50: #fbf7ee;
+  --color-beige-100: #f6eedf;
+  --color-beige-200: #efe0c4;
+  --color-caramel-300: #d5a85e;
+  --color-bark-700: #5e4630;
+  --color-ink: #28291f;
+
+  /* Status / feedback */
+  --color-success: #6da85e;
+  --color-success-strong: #4c7c40;
+  --color-danger: #b05a45;
+  --color-danger-strong: #8c4534;
+
+  /* Estrelas de avaliação */
+  --color-star: #f6c343;
+  --color-star-stroke: #d99a1b;
+
+  /* Faixas do heatmap de satisfação (média/5) */
+  --color-band-incrivel: #3f6b35;
+  --color-band-otimo: #79a75f;
+  --color-band-mediano: #d5a85e;
+  --color-band-ruim: #c26d4f;
+  --color-band-pessimo: #8c4534;
+
+  /* ---- Cores semânticas (papéis de uso) ---- */
+  --color-text: var(--color-ink);
+  --color-text-muted: rgba(40, 41, 31, 0.65);
+  --color-heading: var(--color-olive-950);
+  --color-primary: var(--color-olive-800);
+  --color-on-primary: var(--color-cream-50);
+  --color-accent: var(--color-caramel-300);
+
+  /* ---- Superfícies (liquid glass) ---- */
+  --glass-bg: linear-gradient(145deg, rgba(255, 252, 244, 0.72), rgba(246, 238, 223, 0.42));
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-inner-border: rgba(77, 87, 51, 0.1);
+  --surface-soft: rgba(255, 255, 255, 0.32);
+  --surface-soft-border: rgba(255, 255, 255, 0.56);
+
+  /* ---- Sombras ---- */
+  --glass-shadow: 0 24px 80px rgba(48, 53, 31, 0.18), 0 8px 24px rgba(141, 104, 67, 0.1);
+  --shadow-button: 0 14px 28px rgba(77, 87, 51, 0.26);
+  --shadow-sm: 0 6px 14px rgba(48, 53, 31, 0.2);
+  --shadow-md: 0 8px 18px rgba(48, 53, 31, 0.14);
+
+  /* ---- Raios de canto ---- */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-control: 18px;
+  --radius-lg: 20px;
+  --radius-xl: 22px;
+  --radius-panel: 28px;
+  --radius-pill: 999px;
+
+  /* ---- Escala de espaçamento ---- */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 10px;
+  --space-5: 12px;
+  --space-6: 14px;
+  --space-7: 16px;
+  --space-8: 18px;
+  --space-9: 22px;
+  --space-10: 24px;
+
+  /* ---- Tipografia ---- */
+  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-xs: 0.72rem;
+  --font-size-sm: 0.85rem;
+  --font-size-md: 0.94rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.15rem;
+  --font-size-xl: 1.45rem;
+  --font-size-2xl: 2rem;
+  --font-weight-regular: 600;
+  --font-weight-medium: 750;
+  --font-weight-bold: 800;
+  --font-weight-black: 900;
+  --line-height-tight: 1.1;
+  --line-height-normal: 1.5;
+
+  /* ---- Layout ---- */
+  --app-max-width: 520px;
+
+  /* ---- Motion ---- */
+  --transition-fast: 0.12s ease;
+  --transition-base: 0.2s ease;
+  --ease-wheel: cubic-bezier(0.12, 0.78, 0.08, 1);
+}

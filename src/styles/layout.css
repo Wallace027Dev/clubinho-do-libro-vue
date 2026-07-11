@@ -1,0 +1,287 @@
+/* ============================================================
+   LAYOUT — casca do app, painéis de vidro, navegação, toasts,
+   cabeçalho de detalhe e overlay de modal.
+   ============================================================ */
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 520px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  /* Safe areas do iPhone (status bar/notch e bordas em paisagem). */
+  padding: calc(20px + env(safe-area-inset-top, 0px))
+    calc(16px + env(safe-area-inset-right, 0px)) 44px
+    calc(16px + env(safe-area-inset-left, 0px));
+}
+
+.glass-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-panel);
+  background: var(--glass-bg);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(24px) saturate(165%);
+}
+
+.glass-panel::before {
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  border: 1px solid var(--glass-inner-border);
+  border-radius: calc(var(--radius-panel) - 1px);
+  content: "";
+}
+
+.glass-panel::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 36%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 18rem);
+  content: "";
+}
+
+.glass-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero {
+  display: grid;
+  place-items: center;
+  min-height: 112px;
+  padding: 24px 22px;
+  text-align: center;
+}
+
+.app-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 10px;
+}
+
+.app-nav a,
+.app-nav button,
+.text-link {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
+  color: var(--color-olive-800);
+  font-size: 0.9rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.app-nav a,
+.app-nav button {
+  min-height: 40px;
+  padding: 10px 12px;
+}
+
+.app-nav a.router-link-exact-active {
+  background: rgba(77, 87, 51, 0.12);
+  color: var(--color-olive-950);
+}
+
+.app-nav button {
+  margin-left: auto;
+}
+
+.text-link {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 10px 12px;
+}
+
+/* Toast global de feedback (wireframe 06). */
+.toast-region {
+  position: fixed;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  right: 16px;
+  left: 16px;
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.app-toast {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: min(100%, 480px);
+  border-radius: 18px;
+  padding: 14px 18px;
+  background: rgba(251, 247, 238, 0.94);
+  box-shadow: 0 18px 42px rgba(48, 53, 31, 0.24);
+  backdrop-filter: blur(18px) saturate(160%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.app-toast p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: var(--color-ink);
+}
+
+.app-toast__icon {
+  display: grid;
+  flex: 0 0 26px;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.app-toast--success {
+  border: 2px solid #6da85e;
+}
+
+.app-toast--success .app-toast__icon {
+  background: rgba(109, 168, 94, 0.16);
+  color: #4c7c40;
+}
+
+.app-toast--error {
+  border: 2px solid #b05a45;
+}
+
+.app-toast--error .app-toast__icon {
+  background: rgba(176, 90, 69, 0.14);
+  color: #8c4534;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Navegacao inferior (fase 8.8, wireframe 01): 5 abas com botao central. */
+.app-shell--with-tab-bar {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+}
+
+.tab-bar {
+  position: fixed;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  width: min(calc(100% - 24px), 520px);
+  margin: 0 auto;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+  border-radius: 26px;
+  /* O glass-panel corta em overflow: hidden; aqui precisa ficar visivel
+     para o botao central elevado nao ser decepado. */
+  overflow: visible;
+}
+
+.tab-icon svg {
+  display: block;
+}
+
+.tab-item {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  min-height: 52px;
+  padding: 6px 2px;
+  border-radius: 16px;
+  color: var(--color-olive-800);
+  text-decoration: none;
+}
+
+.tab-icon {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.tab-label {
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.tab-item.router-link-exact-active {
+  background: rgba(77, 87, 51, 0.12);
+  color: var(--color-olive-950);
+}
+
+.tab-item--central {
+  position: relative;
+  top: -22px;
+  gap: 4px;
+  min-height: 0;
+  padding: 0;
+  background: transparent !important;
+}
+
+.tab-item--central .tab-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
+  box-shadow: 0 14px 28px rgba(77, 87, 51, 0.32);
+  color: var(--color-cream-50);
+}
+
+.tab-item--central.router-link-exact-active .tab-icon {
+  background: linear-gradient(135deg, var(--color-olive-950), var(--color-olive-800));
+}
+
+/* Pagina de detalhe de atividade (wireframe 03). */
+.detail-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 10px 14px;
+}
+
+.detail-header h2 {
+  overflow: hidden;
+  font-size: 1.05rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.back-button {
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--color-olive-800);
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+}

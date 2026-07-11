@@ -5,6 +5,7 @@ import AdminLoginView from './views/AdminLoginView.vue'
 import AdminView from './views/AdminView.vue'
 import BookRatingsView from './views/BookRatingsView.vue'
 import ChapterDetailView from './views/ChapterDetailView.vue'
+import DesignView from './views/DesignView.vue'
 import ChaptersView from './views/ChaptersView.vue'
 import ReviewView from './views/ReviewView.vue'
 import FeedView from './views/FeedView.vue'
@@ -13,6 +14,7 @@ import HistoryView from './views/HistoryView.vue'
 import HomeView from './views/HomeView.vue'
 import LoginView from './views/LoginView.vue'
 import ProfileView from './views/ProfileView.vue'
+import RaffleView from './views/RaffleView.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -30,6 +32,8 @@ export const router = createRouter({
     { path: '/login/admin', component: AdminLoginView },
     { path: '/admin/login', redirect: '/login/admin' },
     { path: '/admin', component: AdminView, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/sorteio', component: RaffleView, meta: { requiresAuth: true, requiresAdmin: true } },
+    { path: '/design', component: DesignView, meta: { requiresAuth: true, requiresAdmin: true } },
     { path: '/profile', component: ProfileView, meta: { requiresAuth: true } }
   ]
 })

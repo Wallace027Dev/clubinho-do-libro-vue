@@ -3,7 +3,10 @@ import { computed } from 'vue'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import BaseButton from './ui/BaseButton.vue'
+import ReviewList from './ui/ReviewList.vue'
+import SectionCard from './ui/SectionCard.vue'
 import StarRating from './ui/StarRating.vue'
+import { formatRating } from '../utils/format'
 
 const platformStore = usePlatformStore()
 const authStore = useAuthStore()
@@ -34,14 +37,14 @@ const averageLabel = computed(() => {
     return null
   }
 
-  return summary.value.average.toFixed(1).replace('.', ',')
+  return formatRating(summary.value.average)
 })
 
 </script>
 
 <template>
-  <section class="flow-card glass-panel">
-    <div class="flow-heading">
+  <SectionCard>
+    <template #heading>
       <p class="section-label">Avaliação do livro</p>
       <h2>Nota e resenha do clube</h2>
       <p v-if="averageLabel" class="review-stars">
@@ -52,7 +55,7 @@ const averageLabel = computed(() => {
         <span class="review-count">({{ summary.count }} avaliação{{ summary.count === 1 ? '' : 'es' }})</span>
       </p>
       <p v-else>Ainda não há avaliações deste livro.</p>
-    </div>
+    </template>
 
     <div v-if="canReview && unratedCount === 0" class="review-cta">
       <p class="review-form-label">
@@ -84,21 +87,10 @@ const averageLabel = computed(() => {
       Ver avaliação por capítulo
     </RouterLink>
 
-    <ol v-if="reviews.length" class="review-list">
-      <li v-for="item in reviews" :key="item.id">
-        <div class="review-head">
-          <div class="avatar">{{ item.user.displayName?.[0] || item.user.login[0] }}</div>
-          <div>
-            <strong>{{ item.user.displayName || item.user.login }}</strong>
-            <StarRating :value="item.rating" :size="16" />
-          </div>
-        </div>
-        <p v-if="item.review" class="comment-body">{{ item.review }}</p>
-      </li>
-    </ol>
+    <ReviewList v-if="reviews.length" :reviews="reviews" />
 
     <p v-if="reviews.length && !canReview" class="comment-muted">
       As resenhas escritas ficam ocultas até você terminar o livro. As notas já aparecem acima.
     </p>
-  </section>
+  </SectionCard>
 </template>

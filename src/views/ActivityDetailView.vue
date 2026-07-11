@@ -1,25 +1,20 @@
 <script setup lang="ts">
-import { ArrowLeft } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import DetailHeader from '../components/ui/DetailHeader.vue'
+import EmptyState from '../components/ui/EmptyState.vue'
+import SectionCard from '../components/ui/SectionCard.vue'
+import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity, ChapterComment, ChapterCommentReactionType } from '../types/platform'
 import { chapterTagFromMeta } from '../utils/chapters'
+import { reactionOptions } from '../utils/reactions'
 
 const route = useRoute()
-const router = useRouter()
 const authStore = useAuthStore()
 const platformStore = usePlatformStore()
-
-const reactionOptions: Array<{ type: ChapterCommentReactionType; label: string; emoji: string }> = [
-  { type: 'GOSTEI', label: 'gostei', emoji: '🙂' },
-  { type: 'SOFRI', label: 'sofri', emoji: '😟' },
-  { type: 'SURPRESO', label: 'surpresa', emoji: '😮' },
-  { type: 'SUSPEITO', label: 'suspeito', emoji: '🤨' },
-  { type: 'DISCUTIR', label: 'discutir', emoji: '💬' }
-]
 
 const isLoading = ref(true)
 const isLocked = ref(false)
@@ -120,23 +115,12 @@ async function react(type: ChapterCommentReactionType) {
   }
 }
 
-function goBack() {
-  if (window.history.length > 1) {
-    router.back()
-    return
-  }
-
-  void router.push('/feed')
-}
 </script>
 
 <template>
-  <header class="detail-header glass-panel">
-    <button class="back-button" type="button" aria-label="Voltar" @click="goBack"><ArrowLeft :size="20" /></button>
-    <h2>{{ activity?.message ?? 'Atividade' }}</h2>
-  </header>
+  <DetailHeader :title="activity?.message ?? 'Atividade'" fallback="/feed" />
 
-  <section v-if="activity" class="flow-card glass-panel activity-detail">
+  <SectionCard v-if="activity" class="activity-detail">
     <div>
       <p class="detail-meta">
         de <strong>{{ authorName }}</strong>
@@ -158,9 +142,7 @@ function goBack() {
 
     <template v-else-if="comment">
       <div class="comment-author">
-        <div class="avatar">
-          {{ comment.user.displayName?.[0] || comment.user.login[0] }}
-        </div>
+        <UserAvatar :display-name="comment.user.displayName" :login="comment.user.login" />
         <div>
           <strong>{{ comment.user.displayName || comment.user.login }}</strong>
           <p>{{ new Date(comment.createdAt).toLocaleString('pt-BR') }}</p>
@@ -193,11 +175,9 @@ function goBack() {
     <p v-else class="comment-muted">
       {{ authorName }} ainda não deixou comentário no {{ chapterLabelBare }}.
     </p>
-  </section>
+  </SectionCard>
 
-  <section v-else-if="!platformStore.isLoading" class="flow-card glass-panel">
-    <div class="empty-state">
-      <p>Atividade não encontrada. Ela pode ter saido do feed recente do clube.</p>
-    </div>
-  </section>
+  <SectionCard v-else-if="!platformStore.isLoading">
+    <EmptyState message="Atividade não encontrada. Ela pode ter saído do feed recente do clube." />
+  </SectionCard>
 </template>
