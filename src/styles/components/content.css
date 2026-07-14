@@ -484,6 +484,7 @@
 }
 
 .avatar {
+  position: relative;
   display: grid;
   place-items: center;
   width: 42px;
@@ -494,6 +495,7 @@
   color: var(--color-cream-50);
   font-weight: 950;
   text-transform: uppercase;
+  overflow: hidden;
 }
 
 /* Perfil (fase 8 etapa 4): foto, estatisticas. */
@@ -560,7 +562,12 @@
   font-weight: 850;
 }
 
+/* Preenche o círculo por completo. Absoluto (em vez de width/height:100% no
+   grid centralizado) porque ali a altura não se resolvia e uma foto retrato
+   estourava o container, aparecendo "desencaixada". */
 .avatar img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   border-radius: 50%;
