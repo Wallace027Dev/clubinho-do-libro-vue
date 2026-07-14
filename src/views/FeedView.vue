@@ -73,6 +73,12 @@ function isCommentActivity(activity: Activity) {
   return activity.type === 'CHAPTER_COMMENTED' && Boolean(activity.metadata?.chapterId)
 }
 
+// Início/conclusão de leitura viram uma linha simples; comentários e demais
+// atividades mantêm o card completo.
+function isSimpleActivity(activity: Activity) {
+  return activity.type === 'CHAPTER_STARTED' || activity.type === 'CHAPTER_FINISHED'
+}
+
 function openActivity(activity: Activity) {
   if (!isCommentActivity(activity)) {
     return
@@ -127,20 +133,26 @@ function actorName(activity: Activity) {
     />
 
     <ol v-else-if="filteredActivities.length" class="feed-list">
-      <ClickableCard
-        v-for="activity in filteredActivities"
-        :key="activity.id"
-        :clickable="isCommentActivity(activity)"
-        :aria-label="isCommentActivity(activity) ? `Abrir ${activity.message}` : undefined"
-        @activate="openActivity(activity)"
-      >
-        <div class="feed-card-top">
-          <span class="feed-tag">{{ typeLabels[activity.type] ?? 'Atividade' }}</span>
+      <template v-for="activity in filteredActivities" :key="activity.id">
+        <li v-if="isSimpleActivity(activity)" class="feed-simple">
+          <span class="feed-simple-text">{{ activity.message }}</span>
           <time class="feed-date" :datetime="activity.createdAt">{{ activityDate(activity) }}</time>
-        </div>
-        <strong>{{ activity.message }}</strong>
-        <p>{{ actorName(activity) }}</p>
-      </ClickableCard>
+        </li>
+
+        <ClickableCard
+          v-else
+          :clickable="isCommentActivity(activity)"
+          :aria-label="isCommentActivity(activity) ? `Abrir ${activity.message}` : undefined"
+          @activate="openActivity(activity)"
+        >
+          <div class="feed-card-top">
+            <span class="feed-tag">{{ typeLabels[activity.type] ?? 'Atividade' }}</span>
+            <time class="feed-date" :datetime="activity.createdAt">{{ activityDate(activity) }}</time>
+          </div>
+          <strong>{{ activity.message }}</strong>
+          <p>{{ actorName(activity) }}</p>
+        </ClickableCard>
+      </template>
     </ol>
 
     <EmptyState

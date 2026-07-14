@@ -27,6 +27,18 @@ const newPassword = ref('')
 const passwordError = ref('')
 const isChangingPassword = ref(false)
 
+const isAvatarModalOpen = ref(false)
+
+function openAvatarModal() {
+  if (avatarUrl.value) {
+    isAvatarModalOpen.value = true
+  }
+}
+
+function closeAvatarModal() {
+  isAvatarModalOpen.value = false
+}
+
 onMounted(() => {
   void platformStore.loadHome()
   void platformStore.loadHistory()
@@ -58,7 +70,11 @@ function pickPhoto() {
   fileInput.value?.click()
 }
 
-/** Redimensiona a foto para 256px e comprime em JPEG (upload leve, sem storage). */
+/**
+ * Recorta a foto em um quadrado central e a reduz para 256px (JPEG leve, sem
+ * storage). Assim uma imagem retangular vira uma foto de perfil quadrada e
+ * centralizada, sem distorção.
+ */
 async function onFileSelected(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
 
@@ -70,7 +86,7 @@ async function onFileSelected(event: Event) {
   }
 
   try {
-    avatarUrl.value = await resizeToDataUrl(file, 256)
+    avatarUrl.value = await squareCropToDataUrl(file, 256)
     uiStore.notify('Foto pronta! Toque em "Salvar perfil" para confirmar.')
   } catch {
     uiStore.notify('Não foi possível processar a imagem.', 'error')
@@ -79,17 +95,21 @@ async function onFileSelected(event: Event) {
   }
 }
 
-function resizeToDataUrl(file: File, maxSize: number): Promise<string> {
+function squareCropToDataUrl(file: File, size: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const image = new Image()
     const objectUrl = URL.createObjectURL(file)
 
     image.onload = () => {
       URL.revokeObjectURL(objectUrl)
-      const scale = Math.min(1, maxSize / Math.max(image.width, image.height))
+      // Recorte central: pega o maior quadrado que cabe na imagem original.
+      const side = Math.min(image.width, image.height)
+      const sx = (image.width - side) / 2
+      const sy = (image.height - side) / 2
+
       const canvas = document.createElement('canvas')
-      canvas.width = Math.round(image.width * scale)
-      canvas.height = Math.round(image.height * scale)
+      canvas.width = size
+      canvas.height = size
 
       const context = canvas.getContext('2d')
       if (!context) {
@@ -97,7 +117,7 @@ function resizeToDataUrl(file: File, maxSize: number): Promise<string> {
         return
       }
 
-      context.drawImage(image, 0, 0, canvas.width, canvas.height)
+      context.drawImage(image, sx, sy, side, side, 0, 0, size, size)
       resolve(canvas.toDataURL('image/jpeg', 0.85))
     }
 
@@ -186,13 +206,22 @@ async function handleLogout() {
   >
     <form class="stack-form" @submit.prevent="saveProfile">
       <div class="profile-avatar-row">
-        <UserAvatar
-          class="profile-avatar"
-          :avatar-url="avatarUrl"
-          :display-name="authStore.user?.displayName"
-          :login="authStore.user?.login"
-          alt="Sua foto de perfil"
-        />
+        <button
+          type="button"
+          class="avatar-trigger"
+          :class="{ 'avatar-trigger--static': !avatarUrl }"
+          :disabled="!avatarUrl"
+          :aria-label="avatarUrl ? 'Ampliar foto de perfil' : undefined"
+          @click="openAvatarModal"
+        >
+          <UserAvatar
+            class="profile-avatar"
+            :avatar-url="avatarUrl"
+            :display-name="authStore.user?.displayName"
+            :login="authStore.user?.login"
+            alt="Sua foto de perfil"
+          />
+        </button>
 
         <div class="action-stack">
           <BaseButton variant="secondary" @click="pickPhoto">
@@ -276,4 +305,26 @@ async function handleLogout() {
       </BaseButton>
     </div>
   </SectionCard>
+
+  <Teleport to="body">
+    <div
+      v-if="isAvatarModalOpen"
+      class="modal-backdrop avatar-modal-backdrop"
+      role="presentation"
+      @click="closeAvatarModal"
+    >
+      <div
+        class="avatar-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Foto de perfil ampliada"
+        @click.stop
+      >
+        <img :src="avatarUrl" alt="Sua foto de perfil ampliada" />
+        <button type="button" class="avatar-modal-close" aria-label="Fechar" @click="closeAvatarModal">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </Teleport>
 </template>

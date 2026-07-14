@@ -22,6 +22,9 @@ body {
   min-height: 100dvh;
   margin: 0;
   overflow-x: hidden;
+  /* Impede o "efeito elástico" que revela um vão/padding abaixo do conteúdo
+     (e da tab bar fixa) ao rolar para baixo no mobile. */
+  overscroll-behavior-y: none;
   background: linear-gradient(145deg, #fbf7ee 0%, #f1dfbd 42%, #cbd5b2 72%, #7f895e 100%);
   color: var(--color-ink);
   font-family: var(--font-body);

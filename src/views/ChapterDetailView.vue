@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { SendHorizontal } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -42,6 +41,16 @@ const myComment = ref<ChapterComment | null>(null)
 const commentBody = ref('')
 const isLoadingComment = ref(false)
 const isSubmittingComment = ref(false)
+const isEditingComment = ref(false)
+
+// Horário de conclusão informado pelo membro (padrão: agora). Editável antes
+// de concluir o capítulo; usa o fuso local do aparelho.
+function toDatetimeLocal(date: Date): string {
+  const offset = date.getTimezoneOffset() * 60000
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16)
+}
+
+const finishAt = ref(toDatetimeLocal(new Date()))
 
 // Nota do capítulo (opcional na hora; obrigatória em todos os capítulos
 // antes de avaliar o livro).
@@ -94,6 +103,13 @@ watch(
   { immediate: true }
 )
 
+// Ao entrar em "em leitura", propõe o horário atual como padrão de conclusão.
+watch(status, (currentStatus) => {
+  if (currentStatus === 'STARTED') {
+    finishAt.value = toDatetimeLocal(new Date())
+  }
+})
+
 async function loadComment(chapterId: string) {
   isLoadingComment.value = true
 
@@ -104,6 +120,8 @@ async function loadComment(chapterId: string) {
     myComment.value =
       response.comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
     commentBody.value = myComment.value?.body ?? ''
+    // Com comentário salvo, mostramos a leitura; sem ele, o formulário fica aberto.
+    isEditingComment.value = !myComment.value
   } catch {
     // Sem comentário carregado; o formulario continua disponivel.
   } finally {
@@ -137,8 +155,10 @@ function startChapter() {
 function finishChapter() {
   if (!chapter.value) return
   const id = chapter.value.id
+  // Converte o horário local informado para ISO; sem valor, a API usa "agora".
+  const when = finishAt.value ? new Date(finishAt.value).toISOString() : undefined
   void runProgressAction(
-    () => platformStore.finishChapter(id),
+    () => platformStore.finishChapter(id, when),
     'Capítulo concluído!',
     'Não foi possível concluir o capítulo.'
   )
@@ -161,6 +181,16 @@ function reopenChapter() {
   )
 }
 
+function startEditingComment() {
+  commentBody.value = myComment.value?.body ?? ''
+  isEditingComment.value = true
+}
+
+function cancelEditingComment() {
+  commentBody.value = myComment.value?.body ?? ''
+  isEditingComment.value = false
+}
+
 async function submitComment() {
   if (!chapter.value || !commentBody.value.trim()) return
 
@@ -177,6 +207,8 @@ async function submitComment() {
     myComment.value =
       response.comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
     commentBody.value = myComment.value?.body ?? ''
+    // Salvou: fecha o formulário e volta para a leitura do comentário.
+    isEditingComment.value = false
     uiStore.notify('Comentário salvo com sucesso!')
   } catch (error) {
     uiStore.notify(
@@ -212,9 +244,17 @@ async function submitComment() {
         Iniciar leitura
       </BaseButton>
 
-      <BaseButton v-else-if="status === 'STARTED'" :loading="isActing" @click="finishChapter">
-        Concluir capítulo
-      </BaseButton>
+      <template v-else-if="status === 'STARTED'">
+        <label class="finish-time-field">
+          Horário da conclusão
+          <input v-model="finishAt" type="datetime-local" />
+        </label>
+        <p class="comment-muted">Ajuste se terminou antes; o padrão é o horário atual.</p>
+
+        <BaseButton :loading="isActing" @click="finishChapter">
+          Concluir capítulo
+        </BaseButton>
+      </template>
 
       <BaseButton v-else variant="outline" :loading="isActing" @click="reopenChapter">
         Voltar para "em leitura"
@@ -252,7 +292,7 @@ async function submitComment() {
 
       <p v-if="isLoadingComment" class="comment-muted">Carregando seu comentário...</p>
 
-      <template v-else-if="myComment">
+      <template v-else-if="myComment && !isEditingComment">
         <p class="comment-body">{{ myComment.body }}</p>
 
         <div
@@ -277,12 +317,47 @@ async function submitComment() {
         </div>
 
         <p v-else class="comment-muted">Seu comentário ainda não recebeu reações.</p>
+
+        <BaseButton class="chapter-action" variant="secondary" @click="startEditingComment">
+          Editar comentário
+        </BaseButton>
       </template>
 
-      <p v-else class="comment-muted">
-        Você ainda não comentou este capítulo. Escreva abaixo — o comentário aparece no feed para
-        quem já concluiu.
-      </p>
+      <form v-else class="comment-inline-form" @submit.prevent="submitComment">
+        <p v-if="!myComment" class="comment-muted">
+          Você ainda não comentou este capítulo. O comentário aparece no feed para quem já
+          concluiu.
+        </p>
+
+        <label class="visually-hidden" for="chapter-comment-input">Escreva um comentário</label>
+        <textarea
+          id="chapter-comment-input"
+          v-model="commentBody"
+          maxlength="420"
+          rows="3"
+          :placeholder="myComment ? 'Editar meu comentário...' : 'Escreva um comentário...'"
+          required
+        ></textarea>
+
+        <div class="action-stack">
+          <BaseButton
+            type="submit"
+            variant="secondary"
+            :loading="isSubmittingComment"
+            :disabled="!commentBody.trim()"
+          >
+            {{ myComment ? 'Salvar alterações' : 'Publicar comentário' }}
+          </BaseButton>
+          <BaseButton
+            v-if="myComment"
+            type="button"
+            variant="outline"
+            @click="cancelEditingComment"
+          >
+            Cancelar
+          </BaseButton>
+        </div>
+      </form>
     </template>
 
     <p v-else class="spoiler-lock">
@@ -293,25 +368,4 @@ async function submitComment() {
   <SectionCard v-else>
     <EmptyState message="Capítulo não encontrado no livro atual." />
   </SectionCard>
-
-  <div v-if="chapter && status === 'FINISHED'" class="comment-dock-spacer" aria-hidden="true"></div>
-
-  <form v-if="chapter && status === 'FINISHED'" class="comment-dock glass-panel" @submit.prevent="submitComment">
-    <label class="visually-hidden" for="chapter-comment-input">Escreva um comentário</label>
-    <input
-      id="chapter-comment-input"
-      v-model="commentBody"
-      maxlength="420"
-      :placeholder="myComment ? 'Editar meu comentário...' : 'Escreva um comentário...'"
-      required
-    />
-    <button
-      class="comment-dock-send"
-      type="submit"
-      :disabled="isSubmittingComment"
-      aria-label="Salvar comentário"
-    >
-      <SendHorizontal :size="18" />
-    </button>
-  </form>
 </template>

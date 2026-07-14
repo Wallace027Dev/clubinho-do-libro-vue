@@ -1,5 +1,5 @@
 /* ============================================================
-   FORMULÁRIOS — campos, labels, mensagens e a doca de comentário.
+   FORMULÁRIOS — campos, labels, mensagens e o formulário de comentário.
    ============================================================ */
 
 .book-form {
@@ -93,40 +93,29 @@ textarea:focus {
   color: var(--color-olive-800);
 }
 
-/* Campo de comentario fixo no rodape do detalhe do capitulo (wireframe 04). */
-.comment-dock-spacer {
-  height: 76px;
-}
-
-.comment-dock {
-  position: fixed;
-  right: 0;
-  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
-  left: 0;
-  z-index: 25;
+/* Comentario do capitulo: formulario inline (novo ou edicao) no detalhe. */
+.comment-inline-form {
   display: grid;
-  grid-template-columns: 1fr 52px;
-  gap: 8px;
-  align-items: center;
-  width: min(calc(100% - 24px), 520px);
-  margin: 0 auto;
-  padding: 8px;
-  border-radius: 22px;
+  gap: 10px;
 }
 
-.comment-dock input {
+.comment-inline-form textarea {
+  width: 100%;
+  min-height: 84px;
+  border-radius: 16px;
+  resize: vertical;
+}
+
+/* Campo de horario de conclusao do capitulo. */
+.finish-time-field {
+  display: grid;
+  gap: 6px;
+  color: var(--color-bark-700);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.finish-time-field input {
   min-height: 46px;
   border-radius: 16px;
-}
-
-.comment-dock-send {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 46px;
-  border: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
-  color: var(--color-cream-50);
-  font-size: 1.15rem;
 }

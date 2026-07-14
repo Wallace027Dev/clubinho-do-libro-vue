@@ -1,8 +1,30 @@
 import { requireSession } from '../../../_lib/auth.js'
 import { getDefaultClub } from '../../../_lib/club.js'
-import { assertMethod, sendJson } from '../../../_lib/http.js'
+import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
 import { chapterMessageLabel } from '../../../_lib/chapterLabel.js'
 import { prisma } from '../../../_lib/prisma.js'
+
+interface FinishBody {
+  finishedAt?: string
+}
+
+/**
+ * Resolve o horário de conclusão informado pelo membro. Aceita apenas datas
+ * válidas e não futuras; caso contrário, usa o horário atual como padrão.
+ */
+function resolveFinishedAt(raw: string | undefined, now: Date): Date {
+  if (!raw) {
+    return now
+  }
+
+  const parsed = new Date(raw)
+
+  if (Number.isNaN(parsed.getTime()) || parsed.getTime() > now.getTime()) {
+    return now
+  }
+
+  return parsed
+}
 
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {
@@ -33,6 +55,8 @@ export default async function handler(req: any, res: any) {
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   const now = new Date()
+  const body = (req.body ? readBody<FinishBody>(req) : {}) ?? {}
+  const finishedAt = resolveFinishedAt(body.finishedAt, now)
   const progress = await prisma.chapterProgress.upsert({
     where: {
       chapterId_userId: {
@@ -42,14 +66,14 @@ export default async function handler(req: any, res: any) {
     },
     update: {
       status: 'FINISHED',
-      finishedAt: now
+      finishedAt
     },
     create: {
       chapterId: chapter.id,
       userId: session.userId,
       status: 'FINISHED',
-      startedAt: now,
-      finishedAt: now
+      startedAt: finishedAt,
+      finishedAt
     }
   })
 

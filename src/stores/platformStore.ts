@@ -101,8 +101,11 @@ export const usePlatformStore = defineStore('platform', () => {
     await loadHome()
   }
 
-  async function finishChapter(chapterId: string) {
-    await apiRequest(`/api/chapters/${chapterId}/finish`, { method: 'POST' })
+  async function finishChapter(chapterId: string, finishedAt?: string) {
+    await apiRequest(`/api/chapters/${chapterId}/finish`, {
+      method: 'POST',
+      body: JSON.stringify(finishedAt ? { finishedAt } : {})
+    })
     await loadHome()
   }
 
