@@ -629,7 +629,9 @@
   font-size: 0.85rem;
 }
 
-.history-cover--small {
+/* Especificidade dupla para vencer o `.history-cover` base (definido depois
+   no arquivo), senão a capa compacta herda 64x92 e invade o texto do card. */
+.history-cover.history-cover--small {
   width: 48px;
   height: 68px;
   border-radius: 10px;
