@@ -4,7 +4,18 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 const apiPort = process.env.API_PORT ?? '3001'
 
+// Homologação com "banco" em memória no navegador:
+// - VITE_MOCK_API explícito ('true'/'false') sempre vence;
+// - sem ele, liga automaticamente em qualquer deploy de Preview da Vercel
+//   (ex.: a branch `developer`), enquanto produção segue no backend real.
+const useMockApi = process.env.VITE_MOCK_API
+  ? process.env.VITE_MOCK_API === 'true'
+  : process.env.VERCEL_ENV === 'preview'
+
 export default defineConfig({
+  define: {
+    __USE_MOCK_API__: JSON.stringify(useMockApi)
+  },
   server: {
     proxy: {
       '/api': {

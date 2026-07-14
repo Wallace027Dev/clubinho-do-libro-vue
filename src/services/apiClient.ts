@@ -12,6 +12,21 @@ export class ApiError extends Error {
 }
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  // Homologação: em vez do backend real, atende pelo "banco" em memória do
+  // navegador. O import é dinâmico e fica atrás da flag de build, então o
+  // bundle de produção não carrega nada do mock.
+  if (__USE_MOCK_API__) {
+    const { runMock } = await import('./mockApi')
+    const { status, body } = runMock(path, options)
+
+    if (status < 200 || status >= 300) {
+      const errorBody = body as ApiErrorBody
+      throw new ApiError(status, errorBody?.error || 'Erro inesperado.')
+    }
+
+    return body as T
+  }
+
   const response = await fetch(path, {
     credentials: 'include',
     headers: {
