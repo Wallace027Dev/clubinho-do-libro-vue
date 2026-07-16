@@ -6,6 +6,12 @@ import { prisma } from '../../../_lib/prisma.js'
 
 interface FinishBody {
   finishedAt?: string
+  rating?: number
+}
+
+/** Nota fracionada no formato pt-BR: 4.8 -> "4,8". */
+function formatRating(value: number): string {
+  return value.toFixed(1).replace('.', ',')
 }
 
 /**
@@ -57,34 +63,68 @@ export default async function handler(req: any, res: any) {
   const now = new Date()
   const body = (req.body ? readBody<FinishBody>(req) : {}) ?? {}
   const finishedAt = resolveFinishedAt(body.finishedAt, now)
-  const progress = await prisma.chapterProgress.upsert({
-    where: {
-      chapterId_userId: {
-        chapterId: chapter.id,
-        userId: session.userId
-      }
-    },
-    update: {
-      status: 'FINISHED',
-      finishedAt
-    },
-    create: {
-      chapterId: chapter.id,
-      userId: session.userId,
-      status: 'FINISHED',
-      startedAt: finishedAt,
-      finishedAt
-    }
-  })
 
-  await prisma.activity.create({
-    data: {
-      clubId: club.id,
-      actorId: session.userId,
-      type: 'CHAPTER_FINISHED',
-      message: `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)}.`,
-      metadata: { chapterId: chapter.id, chapterNumber: chapter.number, chapterTitle: chapter.title }
-    }
+  // A nota do capítulo passou a ser obrigatória na conclusão (fica registrada
+  // na própria atividade de fim de capítulo).
+  const rating = Math.round(Number(body.rating) * 10) / 10
+
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    sendJson(res, 400, { error: 'Dê uma nota de 1 a 5 ao concluir o capítulo.' })
+    return
+  }
+
+  const { progress } = await prisma.$transaction(async (tx) => {
+    const savedProgress = await tx.chapterProgress.upsert({
+      where: {
+        chapterId_userId: {
+          chapterId: chapter.id,
+          userId: session.userId as string
+        }
+      },
+      update: {
+        status: 'FINISHED',
+        finishedAt
+      },
+      create: {
+        chapterId: chapter.id,
+        userId: session.userId as string,
+        status: 'FINISHED',
+        startedAt: finishedAt,
+        finishedAt
+      }
+    })
+
+    await tx.chapterRating.upsert({
+      where: {
+        chapterId_userId: {
+          chapterId: chapter.id,
+          userId: session.userId as string
+        }
+      },
+      update: { rating },
+      create: {
+        chapterId: chapter.id,
+        userId: session.userId as string,
+        rating
+      }
+    })
+
+    await tx.activity.create({
+      data: {
+        clubId: club.id,
+        actorId: session.userId,
+        type: 'CHAPTER_FINISHED',
+        message: `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)} e deu nota ${formatRating(rating)}.`,
+        metadata: {
+          chapterId: chapter.id,
+          chapterNumber: chapter.number,
+          chapterTitle: chapter.title,
+          rating
+        }
+      }
+    })
+
+    return { progress: savedProgress }
   })
 
   sendJson(res, 200, { progress })

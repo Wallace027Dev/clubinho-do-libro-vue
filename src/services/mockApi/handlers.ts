@@ -649,6 +649,12 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   const chapter = currentChapter(chapterId)
   if (!chapter) return err(404, 'Capítulo atual não encontrado.')
 
+  // Nota obrigatória na conclusão (fica registrada na atividade de fim).
+  const rating = Math.round(Number(body.rating) * 10) / 10
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    return err(400, 'Dê uma nota de 1 a 5 ao concluir o capítulo.')
+  }
+
   const finishedAt = resolveFinishedAt(body.finishedAt)
   const existing = progressFor(chapter.id, current.userId)
 
@@ -669,12 +675,21 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
     getDb().progress.push(progress)
   }
 
+  const existingRating = getDb().ratings.find(
+    (item) => item.chapterId === chapter.id && item.userId === current.userId
+  )
+  if (existingRating) {
+    existingRating.rating = rating
+  } else {
+    getDb().ratings.push({ id: uid(), chapterId: chapter.id, userId: current.userId, rating })
+  }
+
   const user = getDb().users.find((item) => item.id === current.userId)
   addActivity(
     current.userId,
     'CHAPTER_FINISHED',
-    `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)}.`,
-    { chapterId: chapter.id, chapterNumber: chapter.number, chapterTitle: chapter.title }
+    `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)} e deu nota ${rating.toFixed(1).replace('.', ',')}.`,
+    { chapterId: chapter.id, chapterNumber: chapter.number, chapterTitle: chapter.title, rating }
   )
   persist()
 

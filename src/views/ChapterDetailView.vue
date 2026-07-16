@@ -52,10 +52,11 @@ function toDatetimeLocal(date: Date): string {
 
 const finishAt = ref(toDatetimeLocal(new Date()))
 
-// Nota do capítulo (opcional na hora; obrigatória em todos os capítulos
-// antes de avaliar o livro).
+// Nota do capítulo. Agora é obrigatória na conclusão (fica registrada na
+// atividade de fim de capítulo); continua editável depois.
 const myRating = computed(() => chapter.value?.ratings?.[0]?.rating ?? null)
 const ratingDraft = ref(0)
+const finishRating = ref(0)
 const isSavingRating = ref(false)
 
 watch(
@@ -103,12 +104,18 @@ watch(
   { immediate: true }
 )
 
-// Ao entrar em "em leitura", propõe o horário atual como padrão de conclusão.
-watch(status, (currentStatus) => {
-  if (currentStatus === 'STARTED') {
-    finishAt.value = toDatetimeLocal(new Date())
-  }
-})
+// Ao entrar em "em leitura", propõe o horário atual como padrão de conclusão
+// e recupera a nota anterior (caso o capítulo tenha sido reaberto).
+watch(
+  status,
+  (currentStatus) => {
+    if (currentStatus === 'STARTED') {
+      finishAt.value = toDatetimeLocal(new Date())
+      finishRating.value = myRating.value ?? 0
+    }
+  },
+  { immediate: true }
+)
 
 async function loadComment(chapterId: string) {
   isLoadingComment.value = true
@@ -153,12 +160,12 @@ function startChapter() {
 }
 
 function finishChapter() {
-  if (!chapter.value) return
+  if (!chapter.value || finishRating.value < 1) return
   const id = chapter.value.id
   // Converte o horário local informado para ISO; sem valor, a API usa "agora".
   const when = finishAt.value ? new Date(finishAt.value).toISOString() : undefined
   void runProgressAction(
-    () => platformStore.finishChapter(id, when),
+    () => platformStore.finishChapter(id, { rating: finishRating.value, finishedAt: when }),
     'Capítulo concluído!',
     'Não foi possível concluir o capítulo.'
   )
@@ -245,13 +252,19 @@ async function submitComment() {
       </BaseButton>
 
       <template v-else-if="status === 'STARTED'">
+        <p class="section-label">Sua nota do capítulo</p>
+        <RatingInput v-model="finishRating" :size="26" v-slot="{ label }">
+          <span class="rating-value">{{ finishRating >= 1 ? label : 'Toque nas estrelas' }}</span>
+        </RatingInput>
+        <p class="comment-muted">A nota é obrigatória para concluir e aparece no feed do clube.</p>
+
         <label class="finish-time-field">
           Horário da conclusão
           <input v-model="finishAt" type="datetime-local" />
         </label>
         <p class="comment-muted">Ajuste se terminou antes; o padrão é o horário atual.</p>
 
-        <BaseButton :loading="isActing" @click="finishChapter">
+        <BaseButton :loading="isActing" :disabled="finishRating < 1" @click="finishChapter">
           Concluir capítulo
         </BaseButton>
       </template>
