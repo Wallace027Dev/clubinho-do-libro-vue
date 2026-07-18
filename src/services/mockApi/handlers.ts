@@ -181,19 +181,26 @@ function addActivity(
   })
 }
 
-function recentActivities() {
+// Mesma ordem do backend real: data desc com id como desempate estável.
+function sortedActivities() {
   return getDb()
     .activities.slice()
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 30)
-    .map((activity) => ({
-      id: activity.id,
-      type: activity.type,
-      message: activity.message,
-      createdAt: activity.createdAt,
-      actor: actorView(activity.actorId),
-      metadata: activity.metadata
-    }))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+}
+
+function activityView(activity: { id: string; type: string; message: string; createdAt: string; actorId: string | null; metadata: MockActivityMeta | null }) {
+  return {
+    id: activity.id,
+    type: activity.type,
+    message: activity.message,
+    createdAt: activity.createdAt,
+    actor: actorView(activity.actorId),
+    metadata: activity.metadata
+  }
+}
+
+function recentActivities() {
+  return sortedActivities().slice(0, 30).map(activityView)
 }
 
 function chapterForCurrentPayload(chapter: MockChapter, userId: string | null) {
@@ -240,9 +247,15 @@ interface Body {
 }
 
 export function handleMockRequest(method: string, rawPath: string, body: Body): MockResponse {
-  const path = rawPath.split('?')[0]
+  const [path, queryString] = rawPath.split('?')
+  const query = new URLSearchParams(queryString ?? '')
   const seg = path.replace(/^\/api\/?/, '').split('/').filter(Boolean)
   const m = method.toUpperCase()
+
+  // --- Feed paginado --------------------------------------------------------
+  if (path === '/api/activities' && m === 'GET') {
+    return listActivities(query.get('cursor'), query.get('limit'))
+  }
 
   // --- Auth -----------------------------------------------------------------
   if (path === '/api/auth/login' && m === 'POST') return authLogin(body)
@@ -372,6 +385,27 @@ function getCurrent(): MockResponse {
   }
 
   return json(200, { currentBook, activities: recentActivities() })
+}
+
+function listActivities(cursor: string | null, limitRaw: string | null): MockResponse {
+  const current = session()
+  if (!current) return err(401, 'Unauthorized.')
+
+  const parsedLimit = Number(limitRaw)
+  const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 30
+
+  const sorted = sortedActivities()
+  let start = 0
+  if (cursor) {
+    const index = sorted.findIndex((activity) => activity.id === cursor)
+    start = index >= 0 ? index + 1 : sorted.length
+  }
+
+  const page = sorted.slice(start, start + limit)
+  return json(200, {
+    activities: page.map(activityView),
+    hasMore: start + page.length < sorted.length
+  })
 }
 
 function selectCurrent(body: Body): MockResponse {

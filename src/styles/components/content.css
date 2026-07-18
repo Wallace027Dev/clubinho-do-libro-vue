@@ -61,6 +61,17 @@
   padding: 12px 14px;
 }
 
+/* Sentinela do scroll infinito (feed e capítulos): dispara o próximo lote. */
+.list-sentinel {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 8px 0;
+  color: rgba(40, 41, 31, 0.6);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
 /* Linha simples para início/conclusão de leitura (sem card destacado). */
 .feed-simple {
   display: flex;

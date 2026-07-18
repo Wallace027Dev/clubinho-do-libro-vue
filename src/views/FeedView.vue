@@ -5,12 +5,17 @@ import { useRouter } from 'vue-router'
 import ClickableCard from '../components/ui/ClickableCard.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
+import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity } from '../types/platform'
 
 const router = useRouter()
 const platformStore = usePlatformStore()
 const activities = computed(() => platformStore.clubState.activities)
+
+// Scroll infinito: carrega as próximas atividades de 30 em 30.
+const sentinel = ref<HTMLElement | null>(null)
+useInfiniteScroll(sentinel, () => platformStore.loadMoreActivities())
 
 const searchTerm = ref('')
 
@@ -161,5 +166,9 @@ function actorName(activity: Activity) {
     />
 
     <EmptyState v-else message="O feed ainda está vazio." />
+
+    <div v-if="platformStore.activitiesHasMore" ref="sentinel" class="list-sentinel">
+      <span v-if="platformStore.isLoadingMoreActivities">Carregando mais...</span>
+    </div>
   </SectionCard>
 </template>

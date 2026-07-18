@@ -54,7 +54,8 @@ export default async function handler(req: any, res: any) {
     })
     const activities = await prisma.activity.findMany({
       where: { clubId: club.id },
-      orderBy: { createdAt: 'desc' },
+      // Mesma ordem do feed paginado (/api/activities) para o cursor casar.
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 30,
       include: {
         actor: {

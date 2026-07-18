@@ -1,11 +1,19 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiRequest } from '../services/apiClient'
-import type { AuthUser, Chapter, ClubState, FinishedBook } from '../types/platform'
+import type { Activity, AuthUser, Chapter, ClubState, FinishedBook } from '../types/platform'
 
 interface UsersResponse {
   users: AuthUser[]
 }
+
+interface ActivitiesResponse {
+  activities: Activity[]
+  hasMore: boolean
+}
+
+/** Tamanho do lote do feed (deve casar com o take do backend). */
+const ACTIVITIES_PAGE_SIZE = 30
 
 interface UserResponse {
   user: AuthUser
@@ -27,13 +35,54 @@ export const usePlatformStore = defineStore('platform', () => {
   const history = ref<FinishedBook[]>([])
   const isLoading = ref(false)
 
+  // Feed com scroll infinito: o primeiro lote vem no /api/books/current e os
+  // próximos por /api/activities (cursor = id da última atividade carregada).
+  const activitiesHasMore = ref(false)
+  const isLoadingMoreActivities = ref(false)
+
   async function loadHome() {
     isLoading.value = true
 
     try {
       clubState.value = await apiRequest<CurrentBookResponse>('/api/books/current')
+      // Se veio o lote cheio, provavelmente há mais páginas para o feed.
+      activitiesHasMore.value = clubState.value.activities.length >= ACTIVITIES_PAGE_SIZE
     } finally {
       isLoading.value = false
+    }
+  }
+
+  /** Carrega a próxima página do feed. Retorna se ainda há mais para carregar. */
+  async function loadMoreActivities(): Promise<boolean> {
+    if (isLoadingMoreActivities.value || !activitiesHasMore.value) {
+      return false
+    }
+
+    const last = clubState.value.activities[clubState.value.activities.length - 1]
+    if (!last) {
+      activitiesHasMore.value = false
+      return false
+    }
+
+    isLoadingMoreActivities.value = true
+
+    try {
+      const response = await apiRequest<ActivitiesResponse>(
+        `/api/activities?cursor=${encodeURIComponent(last.id)}&limit=${ACTIVITIES_PAGE_SIZE}`
+      )
+
+      const seen = new Set(clubState.value.activities.map((activity) => activity.id))
+      const fresh = response.activities.filter((activity) => !seen.has(activity.id))
+      clubState.value.activities.push(...fresh)
+
+      activitiesHasMore.value = response.hasMore && fresh.length > 0
+      return activitiesHasMore.value
+    } catch {
+      // Falhou a página: para o scroll infinito para não repetir o erro em loop.
+      activitiesHasMore.value = false
+      return false
+    } finally {
+      isLoadingMoreActivities.value = false
     }
   }
 
@@ -154,7 +203,10 @@ export const usePlatformStore = defineStore('platform', () => {
     members,
     history,
     isLoading,
+    activitiesHasMore,
+    isLoadingMoreActivities,
     loadHome,
+    loadMoreActivities,
     loadHistory,
     loadMembers,
     createMember,

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ChevronRight } from 'lucide-vue-next'
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BookReview from '../components/BookReview.vue'
 import ClickableCard from '../components/ui/ClickableCard.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
+import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Chapter } from '../types/platform'
 import { chapterTag, isStandaloneChapterTitle } from '../utils/chapters'
@@ -13,6 +14,27 @@ import { chapterTag, isStandaloneChapterTitle } from '../utils/chapters'
 const router = useRouter()
 const platformStore = usePlatformStore()
 const currentBook = computed(() => platformStore.clubState.currentBook)
+
+// Os capítulos já vêm todos no payload; aqui só renderizamos em janelas de 30
+// com scroll infinito para não montar listas enormes de uma vez.
+const PAGE = 30
+const visibleCount = ref(PAGE)
+const visibleChapters = computed(() => currentBook.value?.chapters.slice(0, visibleCount.value) ?? [])
+const hasMoreChapters = computed(() => (currentBook.value?.chapters.length ?? 0) > visibleCount.value)
+
+// Novo livro (ou recarga) volta a janela para o começo.
+watch(
+  () => currentBook.value?.id,
+  () => {
+    visibleCount.value = PAGE
+  }
+)
+
+const sentinel = ref<HTMLElement | null>(null)
+useInfiniteScroll(sentinel, () => {
+  visibleCount.value += PAGE
+  return hasMoreChapters.value
+})
 
 onMounted(() => {
   void platformStore.loadHome()
@@ -51,7 +73,7 @@ function openChapter(chapter: Chapter) {
   <SectionCard v-if="currentBook" label="Capítulos" title="Seu progresso de leitura">
     <ol v-if="currentBook.chapters.length" class="feed-list">
       <ClickableCard
-        v-for="chapter in currentBook.chapters"
+        v-for="chapter in visibleChapters"
         :key="chapter.id"
         class="chapter-card"
         :aria-label="`Abrir ${chapterTag(chapter)}: ${chapter.title}`"
@@ -75,6 +97,8 @@ function openChapter(chapter: Chapter) {
     </ol>
 
     <EmptyState v-else message="O admin ainda não cadastrou capítulos para este livro." />
+
+    <div v-if="hasMoreChapters" ref="sentinel" class="list-sentinel" aria-hidden="true"></div>
   </SectionCard>
 
   <BookReview v-if="currentBook" />
