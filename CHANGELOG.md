@@ -11,6 +11,13 @@ O projeto ainda é um MVP em evolução, então o versionamento vive na faixa
 Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/);
 datas em AAAA-MM-DD. Cada versão tem uma tag `vX.Y.Z` no commit correspondente.
 
+## [0.9.0] - 2026-07-18
+### Adicionado
+- **Scroll infinito** no feed (`/feed`) e na tela de capítulos (`/chapters`),
+  carregando as atividades/capítulos de 30 em 30.
+- Endpoint paginado `GET /api/activities` (paginação por cursor), que dá acesso
+  a todo o histórico do feed — antes limitado às 30 atividades mais recentes.
+
 ## [0.8.0] - 2026-07-16
 ### Alterado
 - A nota do capítulo passou a ser **obrigatória na conclusão** e agora aparece
@@ -78,6 +85,7 @@ datas em AAAA-MM-DD. Cada versão tem uma tag `vX.Y.Z` no commit correspondente.
 - Fundação técnica: Vue 3 + Vite + PWA, API serverless, Prisma + Postgres
   (Supabase) e ambiente local com Docker.
 
+[0.9.0]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.9.0
 [0.8.0]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.8.0
 [0.7.2]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.7.2
 [0.7.1]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.7.1
