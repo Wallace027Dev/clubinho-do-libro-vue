@@ -7,9 +7,9 @@
   display: grid;
   gap: 10px;
   margin-bottom: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.56);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--color-card-edge);
+  border-radius: var(--radius-md);
+  background: rgba(255, 253, 244, 0.7);
   padding: 14px;
 }
 
@@ -18,8 +18,8 @@
 }
 
 .review-count {
-  color: rgba(40, 41, 31, 0.6);
-  font-weight: 600;
+  color: rgba(46, 43, 30, 0.6);
+  font-weight: var(--font-weight-regular);
 }
 
 .review-form {
@@ -30,7 +30,7 @@
   margin: 0;
   color: var(--color-bark-700);
   font-size: 0.88rem;
-  font-weight: 800;
+  font-weight: var(--font-weight-bold);
 }
 
 /* Estrelas com preenchimento fracionado (nota quebrada, ex.: 4,8). */
@@ -51,8 +51,8 @@
 }
 
 .star-rating__base {
-  color: rgba(77, 87, 51, 0.3);
-  fill: rgba(77, 87, 51, 0.1);
+  color: rgba(94, 70, 48, 0.28);
+  fill: rgba(94, 70, 48, 0.08);
 }
 
 .star-rating__fill {
@@ -62,8 +62,8 @@
 }
 
 .star-rating__active {
-  color: #d99a1b;
-  fill: #f6c343;
+  color: var(--color-star-stroke);
+  fill: var(--color-star);
 }
 
 /* Controle da nota no fluxo de avaliacao. */
@@ -80,13 +80,15 @@
   border: 0;
   background: transparent;
   box-shadow: none;
-  accent-color: var(--color-olive-650);
+  accent-color: var(--color-caramel-300);
 }
 
+/* Valor da nota em serif, como número de página. */
 .rating-value {
   color: var(--color-olive-950);
-  font-size: 1.15rem;
-  font-weight: 900;
+  font-family: var(--font-serif);
+  font-size: 1.375rem;
+  font-weight: var(--font-weight-bold);
 }
 
 .rating-input-row {
@@ -98,12 +100,12 @@
   width: 100%;
 }
 
-/* Heatmap de avaliação por capítulo (referência Mistborn, na paleta do
-   clube). Satisfação = média/5. */
+/* Heatmap de avaliação por capítulo (satisfação = média/5),
+   nas faixas quentes da paleta de papel. */
 .rating-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: 10px;
+  gap: 9px;
   margin-bottom: 18px;
 }
 
@@ -111,66 +113,70 @@
   display: grid;
   gap: 2px;
   place-items: center;
-  min-height: 72px;
-  border-radius: 16px;
+  min-height: 74px;
+  border-radius: var(--radius-sm);
   padding: 10px 6px;
   text-align: center;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 18px rgba(48, 53, 31, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 14px rgba(46, 43, 30, 0.16);
 }
 
 .rating-tile strong {
-  font-size: 0.95rem;
+  font-size: 0.69rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
   line-height: 1;
 }
 
+/* Média do capítulo em serif. */
 .rating-tile span {
-  font-size: 1.05rem;
-  font-weight: 900;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: var(--font-weight-bold);
   line-height: 1;
 }
 
 .rating-tile small {
-  font-size: 0.68rem;
-  font-weight: 800;
+  font-size: 0.6rem;
+  font-weight: var(--font-weight-bold);
   opacity: 0.85;
 }
 
 .rating-tile--incrivel {
-  background: #3f6b35;
-  color: var(--color-cream-50);
+  background: var(--color-band-incrivel);
+  color: #fbf6e9;
 }
 
 .rating-tile--otimo {
-  background: #79a75f;
-  color: #1f2a17;
+  background: var(--color-band-otimo);
+  color: #203014;
 }
 
 .rating-tile--mediano {
-  background: #d5a85e;
+  background: var(--color-band-mediano);
   color: #4a3413;
 }
 
 .rating-tile--ruim {
-  background: #c26d4f;
-  color: #fff4e8;
+  background: var(--color-band-ruim);
+  color: #fff2e6;
 }
 
 .rating-tile--pessimo {
-  background: #8c4534;
+  background: var(--color-band-pessimo);
   color: #ffe9dd;
 }
 
 .rating-tile--empty {
-  border: 1px dashed rgba(77, 87, 51, 0.35);
-  background: rgba(255, 255, 255, 0.25);
-  color: rgba(40, 41, 31, 0.55);
+  border: 1.5px dashed rgba(94, 70, 48, 0.35);
+  background: transparent;
+  color: rgba(46, 43, 30, 0.5);
   box-shadow: none;
 }
 
 .rating-tile--locked {
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  background: rgba(40, 41, 31, 0.1);
-  color: rgba(40, 41, 31, 0.5);
+  border: 0;
+  background: rgba(46, 43, 30, 0.08);
+  color: rgba(46, 43, 30, 0.45);
   box-shadow: none;
 }
 
@@ -186,17 +192,17 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  color: rgba(40, 41, 31, 0.75);
+  color: rgba(46, 43, 30, 0.75);
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-medium);
 }
 
 .rating-legend__swatch {
   display: inline-block;
   flex: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
 }
 
 .rating-legend__range {
@@ -204,7 +210,7 @@
   align-items: center;
   min-width: 58px;
   color: var(--color-olive-950);
-  font-weight: 900;
+  font-weight: var(--font-weight-bold);
 }
 
 .review-list {
@@ -218,9 +224,9 @@
 .review-list li {
   display: grid;
   gap: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.56);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.32);
+  border: 1px solid var(--color-card-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
   padding: 12px;
 }
 
@@ -233,6 +239,6 @@
 
 .review-stars {
   margin: 4px 0 0;
-  color: #d8a13a;
+  color: var(--color-caramel-300);
   letter-spacing: 2px;
 }
