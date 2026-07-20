@@ -7,11 +7,14 @@
   gap: 8px;
 }
 
+/* Labels carimbadas: Karla caps pequenas. */
 .book-form label,
 .stack-form label {
   color: var(--color-bark-700);
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .stack-form {
@@ -33,13 +36,13 @@
 input,
 textarea {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-card-edge);
   border-radius: var(--radius-control);
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--color-card);
   color: var(--color-ink);
   outline: none;
   padding: 0 16px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
+  box-shadow: inset 0 2px 4px rgba(94, 70, 48, 0.06);
   /* 16px+ evita o zoom automático do Safari ao focar o campo. */
   font-size: 16px;
 }
@@ -57,7 +60,7 @@ input[type='search']::-webkit-search-decoration {
 }
 
 input {
-  min-height: 52px;
+  min-height: 48px;
 }
 
 textarea {
@@ -69,27 +72,27 @@ textarea {
 
 input:focus,
 textarea:focus {
-  border-color: var(--color-olive-650);
-  box-shadow: 0 0 0 4px rgba(104, 112, 71, 0.16);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(85, 96, 52, 0.16);
 }
 
 .form-error,
 .form-success {
   margin: 0;
-  border-radius: 16px;
+  border-radius: var(--radius-sm);
   padding: 12px 14px;
   font-size: 0.92rem;
-  font-weight: 750;
+  font-weight: var(--font-weight-medium);
   line-height: 1.4;
 }
 
 .form-error {
-  background: rgba(135, 59, 44, 0.12);
-  color: #743528;
+  background: rgba(176, 90, 69, 0.12);
+  color: var(--color-danger-strong);
 }
 
 .form-success {
-  background: rgba(77, 87, 51, 0.13);
+  background: rgba(85, 96, 52, 0.13);
   color: var(--color-olive-800);
 }
 
@@ -102,7 +105,7 @@ textarea:focus {
 .comment-inline-form textarea {
   width: 100%;
   min-height: 84px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   resize: vertical;
 }
 
@@ -112,10 +115,10 @@ textarea:focus {
   gap: 6px;
   color: var(--color-bark-700);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: var(--font-weight-bold);
 }
 
 .finish-time-field input {
   min-height: 46px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
 }
