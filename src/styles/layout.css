@@ -1,5 +1,5 @@
 /* ============================================================
-   LAYOUT — casca do app, painéis de vidro, navegação, toasts,
+   LAYOUT — casca do app, painéis de papel, navegação, toasts,
    cabeçalho de detalhe e overlay de modal.
    ============================================================ */
 
@@ -16,34 +16,15 @@
     calc(16px + env(safe-area-inset-left, 0px));
 }
 
+/* Painel de papel. A classe mantém o nome "glass-panel" do tema antigo
+   para não tocar nos templates (regra do redesign). */
 .glass-panel {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--color-card-edge);
   border-radius: var(--radius-panel);
-  background: var(--glass-bg);
+  background: var(--color-card);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(24px) saturate(165%);
-}
-
-.glass-panel::before {
-  position: absolute;
-  inset: 1px;
-  pointer-events: none;
-  border: 1px solid var(--glass-inner-border);
-  border-radius: calc(var(--radius-panel) - 1px);
-  content: "";
-}
-
-.glass-panel::after {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.42), transparent 36%),
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 18rem);
-  content: "";
 }
 
 .glass-panel > * {
@@ -54,8 +35,8 @@
 .hero {
   display: grid;
   place-items: center;
-  min-height: 112px;
-  padding: 24px 22px;
+  min-height: 96px;
+  padding: 22px;
   text-align: center;
 }
 
@@ -69,25 +50,20 @@
 }
 
 .app-nav a,
-.app-nav button,
-.text-link {
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.34);
-  color: var(--color-olive-800);
-  font-size: 0.9rem;
-  font-weight: 850;
-  text-decoration: none;
-}
-
-.app-nav a,
 .app-nav button {
   min-height: 40px;
   padding: 10px 12px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  color: var(--color-olive-800);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
 }
 
 .app-nav a.router-link-exact-active {
-  background: rgba(77, 87, 51, 0.12);
+  background: rgba(85, 96, 52, 0.14);
   color: var(--color-olive-950);
 }
 
@@ -95,13 +71,22 @@
   margin-left: auto;
 }
 
+/* Link textual: sublinhado em bark, estilo "nota de rodapé". */
 .text-link {
   display: inline-flex;
-  margin-top: 16px;
-  padding: 10px 12px;
+  margin-top: 14px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-bark-700);
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-bold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(94, 70, 48, 0.45);
 }
 
-/* Toast global de feedback (wireframe 06). */
+/* Toast global de feedback (papel sólido). */
 .toast-region {
   position: fixed;
   top: calc(14px + env(safe-area-inset-top, 0px));
@@ -119,11 +104,10 @@
   gap: 12px;
   align-items: center;
   width: min(100%, 480px);
-  border-radius: 18px;
+  border-radius: var(--radius-md);
   padding: 14px 18px;
-  background: rgba(251, 247, 238, 0.94);
-  box-shadow: 0 18px 42px rgba(48, 53, 31, 0.24);
-  backdrop-filter: blur(18px) saturate(160%);
+  background: var(--color-card);
+  box-shadow: 0 14px 34px rgba(46, 43, 30, 0.18);
   pointer-events: auto;
   cursor: pointer;
 }
@@ -131,7 +115,7 @@
 .app-toast p {
   margin: 0;
   font-size: 0.95rem;
-  font-weight: 750;
+  font-weight: var(--font-weight-bold);
   color: var(--color-ink);
 }
 
@@ -143,26 +127,26 @@
   height: 26px;
   border-radius: 50%;
   font-size: 1rem;
-  font-weight: 950;
+  font-weight: var(--font-weight-bold);
   line-height: 1;
 }
 
 .app-toast--success {
-  border: 2px solid #6da85e;
+  border: 2px solid var(--color-success);
 }
 
 .app-toast--success .app-toast__icon {
   background: rgba(109, 168, 94, 0.16);
-  color: #4c7c40;
+  color: var(--color-success-strong);
 }
 
 .app-toast--error {
-  border: 2px solid #b05a45;
+  border: 2px solid var(--color-terra);
 }
 
 .app-toast--error .app-toast__icon {
   background: rgba(176, 90, 69, 0.14);
-  color: #8c4534;
+  color: var(--color-danger-strong);
 }
 
 .toast-enter-active,
@@ -176,7 +160,7 @@
   transform: translateY(-8px);
 }
 
-/* Navegacao inferior (fase 8.8, wireframe 01): 5 abas com botao central. */
+/* Navegacao inferior: barra de papel com 5 abas e botao central. */
 .app-shell--with-tab-bar {
   padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
 }
@@ -193,8 +177,9 @@
   width: min(calc(100% - 24px), 520px);
   margin: 0 auto;
   padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
-  border-radius: 26px;
-  /* O glass-panel corta em overflow: hidden; aqui precisa ficar visivel
+  border-radius: 22px;
+  box-shadow: 0 -6px 30px rgba(46, 43, 30, 0.12), 0 16px 34px rgba(46, 43, 30, 0.18);
+  /* O painel corta em overflow: hidden; aqui precisa ficar visivel
      para o botao central elevado nao ser decepado. */
   overflow: visible;
 }
@@ -209,8 +194,8 @@
   justify-items: center;
   min-height: 52px;
   padding: 6px 2px;
-  border-radius: 16px;
-  color: var(--color-olive-800);
+  border-radius: var(--radius-md);
+  color: #8a815f;
   text-decoration: none;
 }
 
@@ -221,17 +206,18 @@
 
 .tab-label {
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: var(--font-weight-bold);
 }
 
+/* Aba ativa: só a cor muda (sem fundo de pílula). */
 .tab-item.router-link-exact-active {
-  background: rgba(77, 87, 51, 0.12);
+  background: transparent;
   color: var(--color-olive-950);
 }
 
 .tab-item--central {
   position: relative;
-  top: -22px;
+  top: -24px;
   gap: 4px;
   min-height: 0;
   padding: 0;
@@ -241,20 +227,20 @@
 .tab-item--central .tab-icon {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
-  border: 3px solid rgba(255, 255, 255, 0.8);
+  width: 54px;
+  height: 54px;
+  border: 3px solid var(--color-card);
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-olive-800), var(--color-olive-650));
-  box-shadow: 0 14px 28px rgba(77, 87, 51, 0.32);
+  background: linear-gradient(145deg, var(--color-primary), var(--color-olive-950));
+  box-shadow: 0 10px 22px rgba(58, 64, 35, 0.4);
   color: var(--color-cream-50);
 }
 
 .tab-item--central.router-link-exact-active .tab-icon {
-  background: linear-gradient(135deg, var(--color-olive-950), var(--color-olive-800));
+  background: linear-gradient(145deg, var(--color-olive-950), var(--color-olive-800));
 }
 
-/* Pagina de detalhe de atividade (wireframe 03). */
+/* Cabeçalho das páginas de detalhe. */
 .detail-header {
   display: flex;
   gap: 12px;
@@ -265,7 +251,7 @@
 
 .detail-header h2 {
   overflow: hidden;
-  font-size: 1.05rem;
+  font-size: 1.19rem;
   line-height: 1.3;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -273,15 +259,14 @@
 
 .back-button {
   display: grid;
-  flex: 0 0 42px;
+  flex: 0 0 40px;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-card-edge);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  color: var(--color-olive-800);
+  background: var(--color-card);
+  color: var(--color-bark-700);
   font-size: 1.25rem;
-  font-weight: 900;
   line-height: 1;
 }

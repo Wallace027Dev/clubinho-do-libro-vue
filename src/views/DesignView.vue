@@ -37,27 +37,30 @@ const tokenGroups = reactive<TokenGroup[]>([
   {
     title: 'Cores',
     tokens: [
-      { name: '--color-olive-800', label: 'Primária', kind: 'color', value: '#4d5733', def: '#4d5733' },
-      { name: '--color-olive-650', label: 'Primária clara', kind: 'color', value: '#687047', def: '#687047' },
-      { name: '--color-olive-950', label: 'Títulos', kind: 'color', value: '#30351f', def: '#30351f' },
-      { name: '--color-caramel-300', label: 'Acento', kind: 'color', value: '#d5a85e', def: '#d5a85e' },
-      { name: '--color-cream-50', label: 'Sobre primária', kind: 'color', value: '#fbf7ee', def: '#fbf7ee' },
-      { name: '--color-ink', label: 'Texto', kind: 'color', value: '#28291f', def: '#28291f' },
-      { name: '--color-star', label: 'Estrela', kind: 'color', value: '#f6c343', def: '#f6c343' },
-      { name: '--color-star-stroke', label: 'Estrela (borda)', kind: 'color', value: '#d99a1b', def: '#d99a1b' }
+      { name: '--color-olive-800', label: 'Primária', kind: 'color', value: '#556034', def: '#556034' },
+      { name: '--color-olive-650', label: 'Primária clara', kind: 'color', value: '#6b7541', def: '#6b7541' },
+      { name: '--color-olive-950', label: 'Títulos', kind: 'color', value: '#3a4023', def: '#3a4023' },
+      { name: '--color-caramel-300', label: 'Acento', kind: 'color', value: '#c08d3e', def: '#c08d3e' },
+      { name: '--color-cream-50', label: 'Sobre primária', kind: 'color', value: '#fbf6e9', def: '#fbf6e9' },
+      { name: '--color-ink', label: 'Texto', kind: 'color', value: '#2e2b1e', def: '#2e2b1e' },
+      { name: '--color-paper', label: 'Fundo (papel)', kind: 'color', value: '#f5ecd8', def: '#f5ecd8' },
+      { name: '--color-card', label: 'Cartão', kind: 'color', value: '#fffdf4', def: '#fffdf4' },
+      { name: '--color-card-edge', label: 'Borda do cartão', kind: 'color', value: '#e3d6b6', def: '#e3d6b6' },
+      { name: '--color-star', label: 'Estrela', kind: 'color', value: '#c08d3e', def: '#c08d3e' },
+      { name: '--color-star-stroke', label: 'Estrela (borda)', kind: 'color', value: '#a2742f', def: '#a2742f' }
     ]
   },
   {
     title: 'Raios de canto',
     tokens: [
-      { name: '--radius-panel', label: 'Painel', kind: 'size', value: '28', def: '28', unit: 'px', min: 0, max: 48, step: 1 },
-      { name: '--radius-control', label: 'Controle', kind: 'size', value: '18', def: '18', unit: 'px', min: 0, max: 40, step: 1 }
+      { name: '--radius-panel', label: 'Painel', kind: 'size', value: '18', def: '18', unit: 'px', min: 0, max: 48, step: 1 },
+      { name: '--radius-control', label: 'Controle', kind: 'size', value: '12', def: '12', unit: 'px', min: 0, max: 40, step: 1 }
     ]
   },
   {
     title: 'Tipografia',
     tokens: [
-      { name: '--font-size-xl', label: 'Título (h2)', kind: 'size', value: '1.45', def: '1.45', unit: 'rem', min: 1, max: 2.6, step: 0.05 }
+      { name: '--font-size-xl', label: 'Título (h2)', kind: 'size', value: '1.5', def: '1.5', unit: 'rem', min: 1, max: 2.6, step: 0.05 }
     ]
   }
 ])
@@ -319,7 +322,7 @@ const sampleReviews: BookReview[] = [
 .pg-preview code {
   padding: 1px 5px;
   border-radius: 6px;
-  background: rgba(77, 87, 51, 0.12);
+  background: rgba(85, 96, 52, 0.12);
   font-size: 0.85em;
 }
 
@@ -376,7 +379,7 @@ const sampleReviews: BookReview[] = [
   place-items: center;
   margin-bottom: 14px;
   padding: 18px;
-  border: 1px dashed rgba(77, 87, 51, 0.24);
+  border: 1px dashed rgba(85, 96, 52, 0.24);
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.22);
 }

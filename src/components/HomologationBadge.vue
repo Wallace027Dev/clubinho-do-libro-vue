@@ -41,11 +41,10 @@ function resetData() {
   padding: 6px 8px 6px 12px;
   border: 1px solid rgba(124, 90, 34, 0.4);
   border-radius: 999px;
-  background: rgba(251, 247, 238, 0.94);
-  box-shadow: 0 10px 24px rgba(48, 53, 31, 0.22);
-  backdrop-filter: blur(14px) saturate(160%);
+  background: var(--color-card);
+  box-shadow: 0 10px 24px rgba(46, 43, 30, 0.22);
   font-size: 0.74rem;
-  font-weight: 850;
+  font-weight: 700;
   color: #7c5a22;
 }
 
@@ -66,7 +65,7 @@ function resetData() {
   background: rgba(124, 90, 34, 0.14);
   color: #7c5a22;
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .homolog-badge__reset:hover {

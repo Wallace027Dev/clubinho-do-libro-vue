@@ -16,23 +16,24 @@
   gap: 12px;
   align-items: center;
   min-height: 54px;
-  border: 1px solid rgba(255, 255, 255, 0.58);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.36);
+  border: 1px solid var(--color-card-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
   padding: 10px 10px 10px 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
 
 .book-list span {
-  font-weight: 750;
+  font-weight: var(--font-weight-medium);
 }
 
+/* Título do candidato em serif, como na lombada. */
 .book-list-title,
 .book-title-with-color {
   display: inline-flex;
   gap: 10px;
   align-items: center;
   min-width: 0;
+  font-family: var(--font-serif);
 }
 
 .book-title-with-color {
@@ -44,11 +45,11 @@
   flex: 0 0 18px;
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.84);
+  border: 2px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   box-shadow:
-    0 0 0 1px rgba(48, 53, 31, 0.14),
-    0 6px 14px rgba(48, 53, 31, 0.2);
+    0 0 0 1px rgba(94, 70, 48, 0.16),
+    0 6px 14px rgba(94, 70, 48, 0.2);
 }
 
 .book-list button {
@@ -56,7 +57,7 @@
   background: transparent;
   color: var(--color-bark-700);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: var(--font-weight-bold);
 }
 
 .roulette-step {
@@ -65,16 +66,15 @@
 
 .locked-raffle {
   margin: 0 0 18px;
-  border: 1px solid rgba(77, 87, 51, 0.16);
-  border-radius: 20px;
-  background: rgba(251, 247, 238, 0.62);
+  border: 1px solid var(--color-card-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
   padding: 16px;
   text-align: center;
 }
 
 .locked-raffle h3 {
   margin: 0;
-  color: var(--color-olive-950);
   font-size: 1.2rem;
   line-height: 1.15;
   overflow-wrap: anywhere;
@@ -82,28 +82,29 @@
 
 .locked-raffle p:last-child {
   margin: 8px 0 0;
-  color: rgba(40, 41, 31, 0.68);
+  color: rgba(46, 43, 30, 0.68);
 }
 
 .wheel-wrap {
   position: relative;
   display: grid;
   place-items: center;
-  width: min(82vw, 340px);
+  width: min(72vw, 230px);
   aspect-ratio: 1;
   margin: 10px auto 22px;
 }
 
+/* Ponteiro: triângulo terracota. */
 .wheel-pointer {
   position: absolute;
   top: -4px;
   z-index: 2;
   width: 0;
   height: 0;
-  border-right: 16px solid transparent;
-  border-left: 16px solid transparent;
-  border-top: 32px solid var(--color-olive-950);
-  filter: drop-shadow(0 8px 12px rgba(48, 53, 31, 0.28));
+  border-right: 14px solid transparent;
+  border-left: 14px solid transparent;
+  border-top: 28px solid var(--color-terra);
+  filter: drop-shadow(0 6px 10px rgba(46, 43, 30, 0.28));
 }
 
 .wheel {
@@ -112,25 +113,26 @@
   place-items: center;
   width: 100%;
   height: 100%;
-  border: 12px solid rgba(255, 252, 244, 0.76);
+  border: 6px solid var(--color-card);
   border-radius: 50%;
   box-shadow:
-    inset 0 0 28px rgba(48, 53, 31, 0.2),
-    0 24px 50px rgba(77, 87, 51, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.54);
-  transition: transform 3.6s cubic-bezier(0.12, 0.78, 0.08, 1);
+    inset 0 0 24px rgba(46, 43, 30, 0.18),
+    0 16px 36px rgba(46, 43, 30, 0.25);
+  transition: transform 3.6s var(--ease-wheel);
 }
 
+/* Miolo: disco de papel. */
 .wheel-center {
   display: grid;
   place-items: center;
   width: 34%;
   aspect-ratio: 1;
-  border: 8px solid rgba(255, 255, 255, 0.62);
+  border: 4px solid var(--color-paper);
   border-radius: 50%;
-  background: rgba(251, 247, 238, 0.9);
+  background: var(--color-card);
   color: var(--color-olive-800);
-  font-weight: 900;
+  font-family: var(--font-serif);
+  font-weight: var(--font-weight-bold);
 }
 
 .wheel-legend {
@@ -147,10 +149,10 @@
   align-items: center;
   min-height: 42px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.54);
-  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid var(--color-card-edge);
+  background: var(--color-paper);
   padding: 8px 12px;
-  font-weight: 700;
+  font-weight: var(--font-weight-medium);
 }
 
 .wheel-legend .book-color-dot {
@@ -166,7 +168,7 @@
   display: grid;
   align-items: end;
   padding: 16px;
-  background: rgba(48, 53, 31, 0.42);
+  background: rgba(46, 43, 30, 0.45);
 }
 
 .winner-modal {
@@ -177,5 +179,5 @@
 
 .winner-modal h2 {
   margin-top: 6px;
-  font-size: 2rem;
+  font-size: 1.7rem;
 }

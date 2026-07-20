@@ -1,5 +1,7 @@
 /* ============================================================
    DESIGN TOKENS — fonte única de verdade do visual.
+   Tema "Biblioteca acolhedora": papel sólido, serif literária,
+   paleta oliva/creme quente. (Handoff redesign/biblioteca-acolhedora)
    Tudo que é "design" (cor, espaço, raio, fonte, sombra, motion)
    mora aqui. Mude um valor e ele se propaga por todo o app.
    A página /design (admin) permite editar muitos destes ao vivo.
@@ -8,65 +10,65 @@
   color-scheme: light;
 
   /* ---- Paleta base (cores cruas do clube) ---- */
-  --color-olive-950: #30351f;
-  --color-olive-800: #4d5733;
-  --color-olive-650: #687047;
-  --color-olive-400: #9aa77a;
+  --color-olive-950: #3a4023;
+  --color-olive-800: #556034;
+  --color-olive-650: #6b7541;
+  --color-olive-400: #98a476;
   --color-sage-300: #b7c4a0;
   --color-moss-200: #d7ddc5;
-  --color-cream-50: #fbf7ee;
-  --color-beige-100: #f6eedf;
-  --color-beige-200: #efe0c4;
-  --color-caramel-300: #d5a85e;
+  --color-cream-50: #fbf6e9;
+  --color-beige-100: #f2e8cf;
+  --color-beige-200: #e9dcbd;
+  --color-caramel-300: #c08d3e;
   --color-bark-700: #5e4630;
-  --color-ink: #28291f;
+  --color-ink: #2e2b1e;
+  --color-terra: #b05a45;
+
+  /* ---- Superfícies de papel ---- */
+  --color-paper: #f5ecd8;
+  --color-paper-deep: #efe3c8;
+  --color-card: #fffdf4;
+  --color-card-edge: #e3d6b6;
 
   /* Status / feedback */
   --color-success: #6da85e;
   --color-success-strong: #4c7c40;
-  --color-danger: #b05a45;
-  --color-danger-strong: #8c4534;
+  --color-danger: var(--color-terra);
+  --color-danger-strong: #8a4634;
 
-  /* Estrelas de avaliação */
-  --color-star: #f6c343;
-  --color-star-stroke: #d99a1b;
+  /* Estrelas de avaliação (caramelo) */
+  --color-star: #c08d3e;
+  --color-star-stroke: #a2742f;
 
   /* Faixas do heatmap de satisfação (média/5) */
-  --color-band-incrivel: #3f6b35;
-  --color-band-otimo: #79a75f;
-  --color-band-mediano: #d5a85e;
-  --color-band-ruim: #c26d4f;
-  --color-band-pessimo: #8c4534;
+  --color-band-incrivel: #4a6b35;
+  --color-band-otimo: #7fa05b;
+  --color-band-mediano: #d0a15c;
+  --color-band-ruim: #bd6b4c;
+  --color-band-pessimo: #8a4634;
 
   /* ---- Cores semânticas (papéis de uso) ---- */
   --color-text: var(--color-ink);
-  --color-text-muted: rgba(40, 41, 31, 0.65);
+  --color-text-muted: rgba(46, 43, 30, 0.66);
   --color-heading: var(--color-olive-950);
   --color-primary: var(--color-olive-800);
   --color-on-primary: var(--color-cream-50);
   --color-accent: var(--color-caramel-300);
 
-  /* ---- Superfícies (liquid glass) ---- */
-  --glass-bg: linear-gradient(145deg, rgba(255, 252, 244, 0.72), rgba(246, 238, 223, 0.42));
-  --glass-border: rgba(255, 255, 255, 0.72);
-  --glass-inner-border: rgba(77, 87, 51, 0.1);
-  --surface-soft: rgba(255, 255, 255, 0.32);
-  --surface-soft-border: rgba(255, 255, 255, 0.56);
+  /* ---- Sombras (quentes, discretas) ---- */
+  --glass-shadow: 0 10px 26px rgba(94, 70, 48, 0.1); /* sombra do painel de papel */
+  --shadow-button: 0 8px 18px rgba(85, 96, 52, 0.32);
+  --shadow-sm: 0 4px 10px rgba(94, 70, 48, 0.12);
+  --shadow-md: 0 8px 20px rgba(94, 70, 48, 0.08);
 
-  /* ---- Sombras ---- */
-  --glass-shadow: 0 24px 80px rgba(48, 53, 31, 0.18), 0 8px 24px rgba(141, 104, 67, 0.1);
-  --shadow-button: 0 14px 28px rgba(77, 87, 51, 0.26);
-  --shadow-sm: 0 6px 14px rgba(48, 53, 31, 0.2);
-  --shadow-md: 0 8px 18px rgba(48, 53, 31, 0.14);
-
-  /* ---- Raios de canto ---- */
+  /* ---- Raios de canto (mais "impressos") ---- */
   --radius-xs: 8px;
   --radius-sm: 12px;
   --radius-md: 16px;
-  --radius-control: 18px;
-  --radius-lg: 20px;
-  --radius-xl: 22px;
-  --radius-panel: 28px;
+  --radius-control: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+  --radius-panel: 18px;
   --radius-pill: 999px;
 
   /* ---- Escala de espaçamento ---- */
@@ -82,19 +84,20 @@
   --space-10: 24px;
 
   /* ---- Tipografia ---- */
-  --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: "Libre Caslon Text", Georgia, serif;
+  --font-body: Karla, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-size-xs: 0.72rem;
   --font-size-sm: 0.85rem;
   --font-size-md: 0.94rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.15rem;
-  --font-size-xl: 1.45rem;
+  --font-size-xl: 1.5rem;
   --font-size-2xl: 2rem;
-  --font-weight-regular: 600;
-  --font-weight-medium: 750;
-  --font-weight-bold: 800;
-  --font-weight-black: 900;
-  --line-height-tight: 1.1;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  --font-weight-black: 700;
+  --line-height-tight: 1.15;
   --line-height-normal: 1.5;
 
   /* ---- Layout ---- */
