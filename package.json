@@ -10,6 +10,9 @@
     "postinstall": "prisma generate",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "check:api": "tsc -p tsconfig.api.json",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
@@ -29,17 +32,21 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.0",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.11",
     "concurrently": "^10.0.3",
     "dotenv-cli": "^11.0.0",
     "express": "^5.2.1",
+    "jsdom": "^29.1.1",
     "prisma": "^6.19.3",
     "tsx": "^4.23.0",
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
     "vite-plugin-pwa": "^1.0.2",
+    "vitest": "^4.1.10",
     "vue-tsc": "^3.0.4"
   }
 }
