@@ -1,0 +1,46 @@
+name: CI
+
+# Portão de qualidade: roda em toda PR e nos pushes para as branches
+# principais. Marque o job "Build, typecheck e testes" como check obrigatório
+# na branch protection da master para barrar PRs que quebrem o projeto.
+
+on:
+  pull_request:
+  push:
+    branches: [master, developer]
+
+permissions:
+  contents: read
+
+jobs:
+  qualidade:
+    name: Build, typecheck e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build (vue-tsc + vite)
+        run: npm run build
+      - name: Typecheck da API
+        run: npm run check:api
+      - name: Testes (unit + integração)
+        run: npm test
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Instala o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Testes E2E
+        run: npm run test:e2e
