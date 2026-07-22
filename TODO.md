@@ -8,11 +8,12 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
 
 ## 🔴 Fundação técnica (protege todo o resto)
 
-- [x] **Testes automatizados (Vitest) — base + integração.** Feito: project
-      `unit` (utils + regras/segurança do mock) e project `integration`
-      (stores auth/platform e componentes via jsdom + `@vue/test-utils`).
-      59 testes. **Falta:** camada de topo E2E (Playwright, formalizando os
-      scripts de screenshot), cobrir `raffleStore` e mais componentes/telas.
+- [x] **Testes automatizados — pirâmide completa.** Feito: **unit** (utils +
+      regras/segurança do mock), **integração** (stores auth/platform e
+      componentes via jsdom + `@vue/test-utils`) e **E2E** (Playwright dirige o
+      app real com o mock: login e jornada do membro). 59 testes de
+      unit/integração + 3 E2E. **Ampliar aos poucos:** `raffleStore`, mais
+      telas e mais fluxos E2E (admin, anti-spoiler entre membros).
 - [ ] **CI de qualidade.** Workflow que roda `build` + `check:api` + testes
       (+ lint) em toda PR, complementando `proteger-master.yml`. Hoje nada
       barra uma PR que quebra o build.

@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "check:api": "tsc -p tsconfig.api.json",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
@@ -31,6 +32,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.0",
     "@vitejs/plugin-vue": "^6.0.1",
