@@ -14,9 +14,10 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       app real com o mock: login e jornada do membro). 59 testes de
       unit/integração + 3 E2E. **Ampliar aos poucos:** `raffleStore`, mais
       telas e mais fluxos E2E (admin, anti-spoiler entre membros).
-- [ ] **CI de qualidade.** Workflow que roda `build` + `check:api` + testes
-      (+ lint) em toda PR, complementando `proteger-master.yml`. Hoje nada
-      barra uma PR que quebra o build.
+- [x] **CI de qualidade.** `ci.yml` roda `build` + `check:api` + `npm test`
+      (job "qualidade") e o E2E (job "e2e") em toda PR e nos pushes de
+      master/developer. **Falta:** marcar o check "Build, typecheck e testes"
+      como obrigatório na branch protection da master (e opcionalmente o E2E).
 - [ ] **Rate limiting no login.** `/api/auth/login` e `/api/admin/login` não
       têm limite de tentativas — admin entra só com `ADMIN_PASSWORD`, exposto a
       força bruta. Adicionar limitador simples (por IP/janela).
