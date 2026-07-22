@@ -8,11 +8,11 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
 
 ## 🔴 Fundação técnica (protege todo o resto)
 
-- [ ] ✅ **Testes automatizados (Vitest).** _Em andamento._ Cobrir primeiro a
-      **segurança**: autenticação, autorização (rotas admin), anti-spoiler e
-      gates (nota obrigatória, avaliar livro só com tudo concluído/notado),
-      validação de entrada. Depois: `raffleStore`, utils (`format`,
-      `chapters`, `reactions`), `composables`, e paginação do feed.
+- [x] **Testes automatizados (Vitest) — base + integração.** Feito: project
+      `unit` (utils + regras/segurança do mock) e project `integration`
+      (stores auth/platform e componentes via jsdom + `@vue/test-utils`).
+      59 testes. **Falta:** camada de topo E2E (Playwright, formalizando os
+      scripts de screenshot), cobrir `raffleStore` e mais componentes/telas.
 - [ ] **CI de qualidade.** Workflow que roda `build` + `check:api` + testes
       (+ lint) em toda PR, complementando `proteger-master.yml`. Hoje nada
       barra uma PR que quebra o build.
