@@ -1,0 +1,51 @@
+name: Proteger master
+
+# A master só pode receber merge a partir da branch `developer`.
+#
+# Roda em `pull_request_target` para que a checagem venha sempre da versão do
+# workflow na base (master), independentemente da branch de origem, e para
+# reportar o status de forma confiável. O job não faz checkout do código da PR
+# nem usa segredos — apenas compara o nome da branch de origem — então rodar em
+# pull_request_target é seguro aqui.
+#
+# Para virar regra de fato (bloquear o merge), marque este check como
+# obrigatório em Settings → Branches → branch protection da `master`
+# (ver instruções no fim deste arquivo).
+
+on:
+  pull_request_target:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  somente-developer:
+    name: Somente developer pode mergear na master
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exigir origem 'developer'
+        env:
+          # Passado por env para evitar injeção de script no shell.
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          echo "PR: '$HEAD_REF' -> '$BASE_REF'"
+          if [ "$HEAD_REF" != "developer" ]; then
+            echo "::error::A master só aceita merge a partir da branch 'developer'. Origem desta PR: '$HEAD_REF'."
+            exit 1
+          fi
+          echo "Origem é a 'developer' — liberado."
+
+# ---------------------------------------------------------------------------
+# Como tornar obrigatório (uma vez, no GitHub):
+#   Settings → Branches → Add branch ruleset (ou Branch protection rule) para
+#   a branch `master`, e habilite:
+#     - "Require a pull request before merging"  (bloqueia push direto)
+#     - "Require status checks to pass before merging" e selecione o check
+#       "Somente developer pode mergear na master"
+#     - (opcional) "Do not allow bypassing the above settings"
+#
+# Efeito: a master passa a só aceitar merge via PR, e a PR só passa se a
+# branch de origem for a `developer`.
+# ---------------------------------------------------------------------------
