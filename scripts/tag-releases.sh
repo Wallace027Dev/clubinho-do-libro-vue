@@ -30,6 +30,7 @@ tag v0.7.1 d4d7d57 "0.7.1 - Correção da capa no histórico"
 tag v0.7.2 65415b6 "0.7.2 - Correção da foto de perfil"
 tag v0.8.0 bc64c8b "0.8.0 - Nota obrigatória na conclusão e exibida no feed"
 tag v0.9.0 dfbd9c8 "0.9.0 - Scroll infinito no feed e nos capítulos"
+tag v0.10.0 55a7fed "0.10.0 - Redesign visual (tema Biblioteca acolhedora)"
 
 echo "Enviando tags para o origin..."
 git push origin --tags

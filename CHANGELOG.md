@@ -11,6 +11,18 @@ O projeto ainda é um MVP em evolução, então o versionamento vive na faixa
 Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/);
 datas em AAAA-MM-DD. Cada versão tem uma tag `vX.Y.Z` no commit correspondente.
 
+## [0.10.0] - 2026-07-20
+### Alterado
+- **Redesign visual completo — tema "Biblioteca acolhedora"** (PR #2): nova
+  paleta papel/oliva quente e tipografia serif literária; fundo de papel com
+  textura de linho (sem o degradê animado); painéis de papel no lugar do
+  efeito _glass_, tab bar sólida, cards com sombra suave e etiquetas
+  carimbadas; "fita de leitura" listrada com marcador de página; heatmap em
+  faixas quentes; roleta do sorteio com borda de papel e ponteiro terracota;
+  botões sólidos/fantasma, chips tracejados e inputs de papel. Também
+  atualiza as cores do manifest PWA, o selo de homologação e os defaults do
+  playground de design.
+
 ## [0.9.0] - 2026-07-18
 ### Adicionado
 - **Scroll infinito** no feed (`/feed`) e na tela de capítulos (`/chapters`),
@@ -85,6 +97,7 @@ datas em AAAA-MM-DD. Cada versão tem uma tag `vX.Y.Z` no commit correspondente.
 - Fundação técnica: Vue 3 + Vite + PWA, API serverless, Prisma + Postgres
   (Supabase) e ambiente local com Docker.
 
+[0.10.0]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.10.0
 [0.9.0]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.9.0
 [0.8.0]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.8.0
 [0.7.2]: https://github.com/Wallace027Dev/clubinho-do-libro-vue/releases/tag/v0.7.2
