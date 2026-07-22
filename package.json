@@ -10,6 +10,8 @@
     "postinstall": "prisma generate",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "check:api": "tsc -p tsconfig.api.json",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
@@ -40,6 +42,7 @@
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
     "vite-plugin-pwa": "^1.0.2",
+    "vitest": "^4.1.10",
     "vue-tsc": "^3.0.4"
   }
 }
