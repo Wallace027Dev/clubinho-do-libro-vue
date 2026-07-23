@@ -18,6 +18,7 @@ import {
   type ReactionType,
   type MockSession
 } from './db'
+import { clearAttempts, isRateLimited, recordFailure } from './rateLimit'
 
 export interface MockResponse {
   status: number
@@ -304,14 +305,31 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
 // Auth.
 // ---------------------------------------------------------------------------
 
+function rateLimitError(key: string): MockResponse | null {
+  const limit = isRateLimited(key)
+  if (limit.limited) {
+    return err(429, `Muitas tentativas. Tente novamente em ${limit.retryAfterSec}s.`)
+  }
+  return null
+}
+
 function authLogin(body: Body): MockResponse {
   const login = typeof body.login === 'string' ? body.login.trim() : ''
   const password = typeof body.password === 'string' ? body.password : ''
 
   if (!login || !password) return err(400, 'Login e senha são obrigatórios.')
 
+  const rateKey = `login:${login}`
+  const limited = rateLimitError(rateKey)
+  if (limited) return limited
+
   const user = getDb().users.find((item) => item.login === login)
-  if (!user || user.password !== password) return err(401, 'Credenciais inválidas.')
+  if (!user || user.password !== password) {
+    recordFailure(rateKey)
+    return err(401, 'Credenciais inválidas.')
+  }
+
+  clearAttempts(rateKey)
   if (user.deactivatedAt) return err(403, 'Conta desativada. Fale com o administrador do clube.')
 
   getDb().session = { userId: user.id, role: user.role }
@@ -320,7 +338,15 @@ function authLogin(body: Body): MockResponse {
 }
 
 function adminLogin(body: Body): MockResponse {
-  if (body.password !== ADMIN_PASSWORD) return err(401, 'Senha administrativa inválida.')
+  const limited = rateLimitError('admin')
+  if (limited) return limited
+
+  if (body.password !== ADMIN_PASSWORD) {
+    recordFailure('admin')
+    return err(401, 'Senha administrativa inválida.')
+  }
+
+  clearAttempts('admin')
   getDb().session = { userId: null, role: 'ADMIN' }
   persist()
   return json(200, { user: { id: null, login: 'admin', role: 'ADMIN', displayName: 'Admin' } })

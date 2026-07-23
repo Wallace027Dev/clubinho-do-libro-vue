@@ -36,9 +36,12 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       }
       JSON
       ```
-- [ ] **Rate limiting no login.** `/api/auth/login` e `/api/admin/login` não
-      têm limite de tentativas — admin entra só com `ADMIN_PASSWORD`, exposto a
-      força bruta. Adicionar limitador simples (por IP/janela).
+- [x] **Rate limiting no login.** `/api/auth/login` (por IP) e
+      `/api/admin/login` bloqueiam com **429** após 5 tentativas falhas por
+      minuto; login correto zera o contador. Espelhado no mock + testes.
+      **Caveat:** o contador é em memória do processo — em serverless é
+      best-effort (some no cold start). **Upgrade:** mover o contador para
+      Postgres/Redis para garantia forte entre instâncias.
 - [ ] **Extrair camada de domínio.** Regras de negócio vivem dentro dos
       handlers HTTP (`api/_routes/*`) e estão **duplicadas** no mock de
       homologação (`src/services/mockApi/handlers.ts`, ~1100 linhas). Extrair

@@ -10,6 +10,8 @@
  * volta ao seed inicial.
  */
 
+import { resetRateLimits } from './rateLimit'
+
 export type Role = 'ADMIN' | 'MEMBER'
 export type ClubBookStatus = 'CURRENT' | 'FINISHED'
 export type ProgressStatus = 'STARTED' | 'FINISHED'
@@ -245,6 +247,7 @@ export function getDb(): MockDb {
 /** Restaura o seed inicial (usado pelo botão "resetar" da homologação). */
 export function resetMockDb() {
   db = seed()
+  resetRateLimits()
   persist()
 }
 
