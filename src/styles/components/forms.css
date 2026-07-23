@@ -89,21 +89,36 @@ textarea:focus {
 .password-toggle {
   position: absolute;
   top: 50%;
-  right: 8px;
+  right: 6px;
+  transform: translateY(-50%);
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-bark-700);
-  opacity: 0.7;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), background var(--transition-fast);
 }
 
 .password-toggle:hover {
-  opacity: 1;
+  background: var(--color-paper-deep);
+  color: var(--color-bark-700);
+}
+
+.password-toggle:active {
+  background: var(--color-beige-200);
+}
+
+/* Estado "mostrando" (aria-pressed): destaca na cor primária. */
+.password-toggle[aria-pressed="true"] {
+  color: var(--color-primary);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid rgba(85, 96, 52, 0.5);
+  outline-offset: 2px;
 }
 
 .form-error,
