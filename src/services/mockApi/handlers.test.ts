@@ -107,6 +107,20 @@ describe('rate limiting no login (anti força-bruta)', () => {
   })
 })
 
+describe('username normalizado para minúsculo', () => {
+  it('login aceita username em maiúsculas/espacos (casa com o minúsculo)', () => {
+    expect(loginMember('JOAO', '123456').status).toBe(200)
+    expect(loginMember('  Maria  ', '123456').status).toBe(200)
+  })
+
+  it('admin cria membro com o login em minúsculo', () => {
+    loginAdmin()
+    const created = req('POST', '/api/admin/users', { login: 'Pedro', password: '123456' })
+    expect(created.status).toBe(201)
+    expect(created.body.user.login).toBe('pedro')
+  })
+})
+
 describe('autorização — rotas de admin exigem papel ADMIN', () => {
   beforeEach(() => {
     seedBook(1)

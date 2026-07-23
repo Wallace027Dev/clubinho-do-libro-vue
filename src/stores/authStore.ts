@@ -34,7 +34,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(loginValue: string, password: string) {
     const response = await apiRequest<LoginResponse>('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ login: loginValue, password })
+      // Username é sempre minúsculo (normaliza aqui e também no backend).
+      body: JSON.stringify({ login: loginValue.trim().toLowerCase(), password })
     })
 
     user.value = response.user

@@ -314,7 +314,7 @@ function rateLimitError(key: string): MockResponse | null {
 }
 
 function authLogin(body: Body): MockResponse {
-  const login = typeof body.login === 'string' ? body.login.trim() : ''
+  const login = typeof body.login === 'string' ? body.login.trim().toLowerCase() : ''
   const password = typeof body.password === 'string' ? body.password : ''
 
   if (!login || !password) return err(400, 'Login e senha são obrigatórios.')
@@ -932,7 +932,7 @@ function createUser(body: Body): MockResponse {
   const guard = requireAdmin()
   if (isResponse(guard)) return guard
 
-  const login = typeof body.login === 'string' ? body.login.trim() : ''
+  const login = typeof body.login === 'string' ? body.login.trim().toLowerCase() : ''
   const password = typeof body.password === 'string' ? body.password : ''
 
   if (!login || password.length < 6) {

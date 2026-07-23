@@ -76,6 +76,36 @@ textarea:focus {
   box-shadow: 0 0 0 4px rgba(85, 96, 52, 0.16);
 }
 
+/* Campo de senha com botão de olho (mostrar/ocultar). */
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  /* Espaço para o botão não cobrir o texto digitado. */
+  padding-right: 48px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-bark-700);
+  opacity: 0.7;
+}
+
+.password-toggle:hover {
+  opacity: 1;
+}
+
 .form-error,
 .form-success {
   margin: 0;

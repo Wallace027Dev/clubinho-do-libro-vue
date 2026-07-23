@@ -15,7 +15,8 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = readBody<LoginBody>(req)
-  const login = body.login?.trim()
+  // Username é sempre minúsculo: normaliza antes de procurar o usuário.
+  const login = body.login?.trim().toLowerCase()
   const password = body.password ?? ''
 
   if (!login || !password) {
