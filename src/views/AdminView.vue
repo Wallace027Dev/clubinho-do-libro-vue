@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import PasswordInput from '../components/ui/PasswordInput.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError } from '../services/apiClient'
@@ -247,7 +248,7 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
       </label>
       <label>
         Senha temporaria
-        <input v-model="memberPassword" minlength="6" required type="password" />
+        <PasswordInput v-model="memberPassword" minlength="6" required />
       </label>
       <label>
         Apelido inicial

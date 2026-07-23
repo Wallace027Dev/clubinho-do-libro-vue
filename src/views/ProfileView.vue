@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import PasswordInput from '../components/ui/PasswordInput.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError, apiRequest } from '../services/apiClient'
@@ -279,11 +280,11 @@ async function handleLogout() {
     <form class="stack-form" @submit.prevent="changePassword">
       <label>
         Senha atual
-        <input v-model="currentPassword" autocomplete="current-password" required type="password" />
+        <PasswordInput v-model="currentPassword" autocomplete="current-password" required />
       </label>
       <label>
         Nova senha
-        <input v-model="newPassword" autocomplete="new-password" minlength="6" required type="password" />
+        <PasswordInput v-model="newPassword" autocomplete="new-password" minlength="6" required />
       </label>
 
       <p v-if="passwordError" class="form-error">{{ passwordError }}</p>

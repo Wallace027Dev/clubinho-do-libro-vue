@@ -80,6 +80,47 @@ describe('autenticação e sessão', () => {
   })
 })
 
+describe('rate limiting no login (anti força-bruta)', () => {
+  it('bloqueia o membro com 429 após 5 tentativas de senha errada', () => {
+    for (let i = 0; i < 5; i++) {
+      expect(loginMember('joao', 'errada').status).toBe(401)
+    }
+    expect(loginMember('joao', 'errada').status).toBe(429)
+    // Mesmo a senha certa fica bloqueada durante a janela.
+    expect(loginMember('joao', '123456').status).toBe(429)
+  })
+
+  it('bloqueia o admin com 429 após 5 tentativas', () => {
+    for (let i = 0; i < 5; i++) {
+      expect(req('POST', '/api/admin/login', { password: 'errada' }).status).toBe(401)
+    }
+    expect(req('POST', '/api/admin/login', { password: 'errada' }).status).toBe(429)
+  })
+
+  it('login correto zera o contador', () => {
+    for (let i = 0; i < 4; i++) loginMember('joao', 'errada')
+    expect(loginMember('joao', '123456').status).toBe(200)
+    // Depois do sucesso, 4 erros de novo não bloqueiam (contador zerado).
+    for (let i = 0; i < 4; i++) {
+      expect(loginMember('joao', 'errada').status).toBe(401)
+    }
+  })
+})
+
+describe('username normalizado para minúsculo', () => {
+  it('login aceita username em maiúsculas/espacos (casa com o minúsculo)', () => {
+    expect(loginMember('JOAO', '123456').status).toBe(200)
+    expect(loginMember('  Maria  ', '123456').status).toBe(200)
+  })
+
+  it('admin cria membro com o login em minúsculo', () => {
+    loginAdmin()
+    const created = req('POST', '/api/admin/users', { login: 'Pedro', password: '123456' })
+    expect(created.status).toBe(201)
+    expect(created.body.user.login).toBe('pedro')
+  })
+})
+
 describe('autorização — rotas de admin exigem papel ADMIN', () => {
   beforeEach(() => {
     seedBook(1)

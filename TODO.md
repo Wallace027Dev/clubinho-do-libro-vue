@@ -18,9 +18,30 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       (job "qualidade") e o E2E (job "e2e") em toda PR e nos pushes de
       master/developer. **Falta:** marcar o check "Build, typecheck e testes"
       como obrigatório na branch protection da master (e opcionalmente o E2E).
-- [ ] **Rate limiting no login.** `/api/auth/login` e `/api/admin/login` não
-      têm limite de tentativas — admin entra só com `ADMIN_PASSWORD`, exposto a
-      força bruta. Adicionar limitador simples (por IP/janela).
+- [ ] **Tornar os checks obrigatórios na `master`** (passo manual no GitHub —
+      sem isso a proteção não bloqueia de fato). Em *Settings → Branches*
+      exigir os checks **"Build, typecheck e testes"** e **"Somente developer
+      pode mergear na master"**, ou via API:
+      ```bash
+      gh api -X PUT repos/Wallace027Dev/clubinho-do-libro-vue/branches/master/protection \
+        --input - <<'JSON'
+      {
+        "required_status_checks": {
+          "strict": true,
+          "contexts": ["Build, typecheck e testes", "Somente developer pode mergear na master"]
+        },
+        "enforce_admins": true,
+        "required_pull_request_reviews": { "required_approving_review_count": 0 },
+        "restrictions": null
+      }
+      JSON
+      ```
+- [x] **Rate limiting no login.** `/api/auth/login` (por IP) e
+      `/api/admin/login` bloqueiam com **429** após 5 tentativas falhas por
+      minuto; login correto zera o contador. Espelhado no mock + testes.
+      **Caveat:** o contador é em memória do processo — em serverless é
+      best-effort (some no cold start). **Upgrade:** mover o contador para
+      Postgres/Redis para garantia forte entre instâncias.
 - [ ] **Extrair camada de domínio.** Regras de negócio vivem dentro dos
       handlers HTTP (`api/_routes/*`) e estão **duplicadas** no mock de
       homologação (`src/services/mockApi/handlers.ts`, ~1100 linhas). Extrair

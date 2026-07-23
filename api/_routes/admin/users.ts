@@ -40,7 +40,8 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = readBody<CreateUserBody>(req)
-  const login = body.login?.trim()
+  // Username sempre minúsculo, para casar com o login (que normaliza igual).
+  const login = body.login?.trim().toLowerCase()
   const password = body.password ?? ''
 
   if (!login || password.length < 6) {

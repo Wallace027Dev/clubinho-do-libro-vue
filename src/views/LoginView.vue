@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '../components/ui/BaseButton.vue'
+import PasswordInput from '../components/ui/PasswordInput.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
 import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
@@ -42,7 +43,7 @@ async function handleSubmit() {
 
       <label>
         Senha
-        <input v-model="password" autocomplete="current-password" required type="password" />
+        <PasswordInput v-model="password" autocomplete="current-password" required />
       </label>
 
       <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
