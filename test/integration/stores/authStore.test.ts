@@ -49,4 +49,22 @@ describe('authStore', () => {
     await auth.logout()
     expect(auth.isAuthenticated).toBe(false)
   })
+
+  it('updateProfile reflete o usuário atualizado no estado', async () => {
+    const auth = useAuthStore()
+    await auth.login('joao', '123456')
+    await auth.updateProfile({ displayName: 'João Novo', avatarUrl: '' })
+    expect(auth.user?.displayName).toBe('João Novo')
+  })
+
+  it('changePassword troca a senha e a nova passa a valer', async () => {
+    const auth = useAuthStore()
+    await auth.login('joao', '123456')
+    await auth.changePassword('123456', 'novasenha')
+    await auth.logout()
+
+    await expect(auth.login('joao', '123456')).rejects.toBeInstanceOf(ApiError)
+    await auth.login('joao', 'novasenha')
+    expect(auth.isAuthenticated).toBe(true)
+  })
 })

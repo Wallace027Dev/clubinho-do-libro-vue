@@ -1,7 +1,16 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { apiRequest } from '../services/apiClient'
-import type { Activity, AuthUser, Chapter, ClubState, FinishedBook } from '../types/platform'
+import type {
+  Activity,
+  AuthUser,
+  BookRatings,
+  Chapter,
+  ChapterComment,
+  ChapterCommentReactionType,
+  ClubState,
+  FinishedBook
+} from '../types/platform'
 
 interface UsersResponse {
   users: AuthUser[]
@@ -198,6 +207,38 @@ export const usePlatformStore = defineStore('platform', () => {
     }
   }
 
+  /** Comentários de um capítulo (anti-spoiler: 403 se não concluído). */
+  async function loadChapterComments(chapterId: string): Promise<ChapterComment[]> {
+    const response = await apiRequest<{ comments: ChapterComment[] }>(
+      `/api/chapters/${chapterId}/comments`
+    )
+    return response.comments
+  }
+
+  /** Cria/edita o comentário do membro no capítulo; devolve a lista atualizada. */
+  async function submitChapterComment(chapterId: string, body: string): Promise<ChapterComment[]> {
+    const response = await apiRequest<{ comments: ChapterComment[] }>(
+      `/api/chapters/${chapterId}/comments`,
+      { method: 'POST', body: JSON.stringify({ body }) }
+    )
+    return response.comments
+  }
+
+  async function reactToComment(
+    commentId: string,
+    type: ChapterCommentReactionType
+  ): Promise<void> {
+    await apiRequest(`/api/comments/${commentId}/reaction`, {
+      method: 'POST',
+      body: JSON.stringify({ type })
+    })
+  }
+
+  /** Heatmap de avaliação por capítulo de um livro (atual ou finalizado). */
+  async function loadBookRatings(clubBookId: string): Promise<BookRatings> {
+    return apiRequest<BookRatings>(`/api/books/${clubBookId}/ratings`)
+  }
+
   return {
     clubState,
     members,
@@ -220,6 +261,10 @@ export const usePlatformStore = defineStore('platform', () => {
     reopenChapter,
     rateChapter,
     finishCurrentBook,
-    submitReview
+    submitReview,
+    loadChapterComments,
+    submitChapterComment,
+    reactToComment,
+    loadBookRatings
   }
 })

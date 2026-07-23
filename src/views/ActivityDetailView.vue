@@ -5,7 +5,7 @@ import DetailHeader from '../components/ui/DetailHeader.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
-import { ApiError, apiRequest } from '../services/apiClient'
+import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity, ChapterComment, ChapterCommentReactionType } from '../types/platform'
@@ -78,11 +78,8 @@ async function loadComment() {
   errorMessage.value = ''
 
   try {
-    const response = await apiRequest<{ comments: ChapterComment[] }>(
-      `/api/chapters/${chapterId}/comments`
-    )
-    comment.value =
-      response.comments.find((item) => item.user.id === activity.value?.actor?.id) ?? null
+    const comments = await platformStore.loadChapterComments(chapterId)
+    comment.value = comments.find((item) => item.user.id === activity.value?.actor?.id) ?? null
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) {
       isLocked.value = true
@@ -103,10 +100,7 @@ async function react(type: ChapterCommentReactionType) {
   isReacting.value = true
 
   try {
-    await apiRequest(`/api/comments/${comment.value.id}/reaction`, {
-      method: 'POST',
-      body: JSON.stringify({ type })
-    })
+    await platformStore.reactToComment(comment.value.id, type)
     await loadComment()
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Não foi possível reagir.'

@@ -58,9 +58,10 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
 - [ ] **Upload de capa de livro** (hoje só por URL) — complementa o storage.
 - [ ] **Notificações (web push):** novo livro do mês, novo capítulo, comentário
       no seu capítulo.
-- [ ] **Padronizar camada de dados nas views.** 4 telas furam a store e chamam
-      `apiRequest` direto (`ChapterDetailView`, `ProfileView`, `BookRatingsView`,
-      `ActivityDetailView`). Passar tudo pela store.
+- [x] **Padronizar camada de dados nas views.** As 4 telas que chamavam
+      `apiRequest` direto agora passam por ações de store: comentários/reação/
+      ratings na `platformStore`; perfil/senha na `authStore`. Nenhuma view
+      importa `apiRequest`. Coberto por testes de integração das novas ações.
 - [ ] **Dividir o `platformStore`** (livro + membros + histórico + feed + admin)
       antes de virar "god store" — ex.: `adminStore`, `feedStore`.
 

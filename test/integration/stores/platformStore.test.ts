@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { ApiError } from '../../../src/services/apiClient'
 import { getDb, persist, resetMockDb } from '../../../src/services/mockApi/db'
 import { useAuthStore } from '../../../src/stores/authStore'
 import { usePlatformStore } from '../../../src/stores/platformStore'
@@ -75,5 +76,36 @@ describe('platformStore', () => {
 
     const ids = platform.clubState.activities.map((a) => a.id)
     expect(new Set(ids).size).toBe(35)
+  })
+
+  it('comentário do capítulo via store: gate, criar, reagir e recarregar', async () => {
+    const [chapterId] = await seedBook(1)
+    await useAuthStore().login('joao', '123456')
+    const platform = usePlatformStore()
+
+    // Sem concluir: anti-spoiler bloqueia (403 → ApiError).
+    await expect(platform.loadChapterComments(chapterId)).rejects.toBeInstanceOf(ApiError)
+
+    await platform.startChapter(chapterId)
+    await platform.finishChapter(chapterId, { rating: 5 })
+
+    const comments = await platform.submitChapterComment(chapterId, 'Comentário via store')
+    expect(comments[0]?.body).toBe('Comentário via store')
+
+    await platform.reactToComment(comments[0].id, 'GOSTEI')
+    const reloaded = await platform.loadChapterComments(chapterId)
+    expect(reloaded).toHaveLength(1)
+    expect(reloaded[0].reactionTotal).toBe(1)
+  })
+
+  it('loadBookRatings devolve o heatmap do livro atual', async () => {
+    await seedBook(1)
+    await useAuthStore().login('joao', '123456')
+    const platform = usePlatformStore()
+    await platform.loadHome()
+
+    const clubBookId = platform.clubState.currentBook!.id
+    const ratings = await platform.loadBookRatings(clubBookId)
+    expect(ratings.chapters).toHaveLength(1)
   })
 })

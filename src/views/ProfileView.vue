@@ -5,11 +5,10 @@ import BaseButton from '../components/ui/BaseButton.vue'
 import PasswordInput from '../components/ui/PasswordInput.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
-import { ApiError, apiRequest } from '../services/apiClient'
+import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import { useUiStore } from '../stores/uiStore'
-import type { AuthUser } from '../types/platform'
 
 const authStore = useAuthStore()
 const platformStore = usePlatformStore()
@@ -140,15 +139,10 @@ async function saveProfile() {
   isSaving.value = true
 
   try {
-    const response = await apiRequest<{ user: AuthUser }>('/api/profile', {
-      method: 'PATCH',
-      body: JSON.stringify({
-        displayName: displayName.value,
-        avatarUrl: avatarUrl.value
-      })
+    await authStore.updateProfile({
+      displayName: displayName.value,
+      avatarUrl: avatarUrl.value
     })
-
-    authStore.setUser(response.user)
     uiStore.notify('Perfil atualizado com sucesso!')
   } catch (error) {
     errorMessage.value = error instanceof ApiError ? error.message : 'Não foi possível salvar.'
@@ -168,13 +162,7 @@ async function changePassword() {
   isChangingPassword.value = true
 
   try {
-    await apiRequest('/api/profile/password', {
-      method: 'POST',
-      body: JSON.stringify({
-        currentPassword: currentPassword.value,
-        newPassword: newPassword.value
-      })
-    })
+    await authStore.changePassword(currentPassword.value, newPassword.value)
 
     currentPassword.value = ''
     newPassword.value = ''
