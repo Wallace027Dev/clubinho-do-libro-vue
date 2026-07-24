@@ -63,7 +63,11 @@ copiada no handler real e no mock? Extraia para `src/domain/` e ligue os dois.
   duplicada entre backend e mock.
 - Camada de dados nas views passa por **ações de store**, nunca `apiRequest`
   direto (ver TODO/AGENT).
-- `master` é protegida: só recebe merge da `developer`. Desenvolva na
-  `developer`.
+- **Fluxo de git (habilidade `git-flow`, obrigatória):** toda feature/alteração
+  vive numa **branch de tarefa** criada a partir da `developer` — **nunca**
+  commite direto em `master` nem em `developer`. Tarefa concluída e **testada**
+  → merge na `developer`. A `master` só recebe mudança por **Pull Request**
+  (nunca merge direto). Invoque `git-flow` antes de criar branch, commitar,
+  mergear ou abrir PR.
 - Antes de concluir qualquer tarefa de código: `npm test` verde (e, quando fizer
   sentido, `npm run build` / `npm run check:api`).
