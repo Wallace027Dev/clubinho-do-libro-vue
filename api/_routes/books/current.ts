@@ -3,9 +3,11 @@ import { getDefaultClub } from '../../_lib/club.js'
 import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
 import { prisma } from '../../_lib/prisma.js'
 import { getClubBookReviews, userFinishedAllChapters } from '../../_lib/reviews.js'
+import type { ActivityType } from '@prisma/client'
 import { selectBookRepository } from '../../_lib/repositories/adminBookRepository.js'
 import { selectBook } from '../../../src/domain/services/adminBook.js'
 import { notifyBookSelected } from '../../_lib/push.js'
+import { FEED_ACTIVITY_TYPES } from '../../../src/domain/activities.js'
 
 interface SelectBookBody {
   title?: string
@@ -56,7 +58,8 @@ export default async function handler(req: any, res: any) {
       }
     })
     const activities = await prisma.activity.findMany({
-      where: { clubId: club.id },
+      // Só o canal "feed" (descoberta) — igual ao /api/activities.
+      where: { clubId: club.id, type: { in: [...FEED_ACTIVITY_TYPES] as ActivityType[] } },
       // Mesma ordem do feed paginado (/api/activities) para o cursor casar.
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 30,

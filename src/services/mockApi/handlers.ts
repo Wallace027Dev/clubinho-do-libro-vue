@@ -53,6 +53,7 @@ import {
   chapterFinishedNotification
 } from '../../domain/notifications'
 import { simulateLocalPush } from './pushSim'
+import { isBellActivity, isFeedActivity } from '../../domain/activities'
 
 export interface MockResponse {
   status: number
@@ -207,10 +208,11 @@ function addActivity(
 }
 
 // Mesma ordem do backend real: data desc com id como desempate estável.
-function sortedActivities() {
-  return getDb()
+function sortedActivities(keep?: (type: string) => boolean) {
+  const all = getDb()
     .activities.slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+  return keep ? all.filter((activity) => keep(activity.type)) : all
 }
 
 function activityView(activity: { id: string; type: string; message: string; createdAt: string; actorId: string | null; metadata: MockActivityMeta | null }) {
@@ -225,7 +227,7 @@ function activityView(activity: { id: string; type: string; message: string; cre
 }
 
 function recentActivities() {
-  return sortedActivities().slice(0, 30).map(activityView)
+  return sortedActivities(isFeedActivity).slice(0, 30).map(activityView)
 }
 
 function chapterForCurrentPayload(chapter: MockChapter, userId: string | null) {
@@ -270,6 +272,11 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
   // --- Feed paginado --------------------------------------------------------
   if (path === '/api/activities' && m === 'GET') {
     return listActivities(query.get('cursor'), query.get('limit'))
+  }
+
+  // --- Sininho (notificações acionáveis) ------------------------------------
+  if (path === '/api/notifications' && m === 'GET') {
+    return listNotifications(query.get('cursor'), query.get('limit'))
   }
 
   // --- Auth -----------------------------------------------------------------
@@ -438,7 +445,7 @@ function listActivities(cursor: string | null, limitRaw: string | null): MockRes
   const parsedLimit = Number(limitRaw)
   const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 30
 
-  const sorted = sortedActivities()
+  const sorted = sortedActivities(isFeedActivity)
   let start = 0
   if (cursor) {
     const index = sorted.findIndex((activity) => activity.id === cursor)
@@ -448,6 +455,28 @@ function listActivities(cursor: string | null, limitRaw: string | null): MockRes
   const page = sorted.slice(start, start + limit)
   return json(200, {
     activities: page.map(activityView),
+    hasMore: start + page.length < sorted.length
+  })
+}
+
+/** Sininho: atividades acionáveis (comentários), paginadas como o feed. */
+function listNotifications(cursor: string | null, limitRaw: string | null): MockResponse {
+  const current = session()
+  if (!current) return err(401, 'Unauthorized.')
+
+  const parsedLimit = Number(limitRaw)
+  const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 30
+
+  const sorted = sortedActivities(isBellActivity)
+  let start = 0
+  if (cursor) {
+    const index = sorted.findIndex((activity) => activity.id === cursor)
+    start = index >= 0 ? index + 1 : sorted.length
+  }
+
+  const page = sorted.slice(start, start + limit)
+  return json(200, {
+    notifications: page.map(activityView),
     hasMore: start + page.length < sorted.length
   })
 }

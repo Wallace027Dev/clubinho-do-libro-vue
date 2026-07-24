@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import ClickableCard from '../components/ui/ClickableCard.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
@@ -9,7 +8,6 @@ import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity } from '../types/platform'
 
-const router = useRouter()
 const platformStore = usePlatformStore()
 const activities = computed(() => platformStore.clubState.activities)
 
@@ -25,10 +23,11 @@ interface FeedFilter {
   types: string[] | null
 }
 
+// Comentários agora vivem no sininho (/notifications) e "iniciou capítulo" saiu
+// do feed; aqui fica só a descoberta: progresso e marcos do clube.
 const filters: FeedFilter[] = [
   { key: 'all', label: 'Tudo', types: null },
-  { key: 'comments', label: 'Comentários', types: ['CHAPTER_COMMENTED'] },
-  { key: 'chapters', label: 'Capítulos', types: ['CHAPTER_STARTED', 'CHAPTER_FINISHED'] },
+  { key: 'chapters', label: 'Capítulos', types: ['CHAPTER_FINISHED'] },
   { key: 'book', label: 'Livro', types: ['BOOK_SELECTED', 'BOOK_FINISHED', 'BOOK_REVIEWED'] },
   { key: 'members', label: 'Membros', types: ['MEMBER_CREATED', 'PROFILE_UPDATED'] }
 ]
@@ -36,8 +35,6 @@ const filters: FeedFilter[] = [
 const activeFilter = ref('all')
 
 const typeLabels: Record<string, string> = {
-  CHAPTER_COMMENTED: 'Comentário',
-  CHAPTER_STARTED: 'Capítulo',
   CHAPTER_FINISHED: 'Capítulo',
   BOOK_SELECTED: 'Livro',
   BOOK_FINISHED: 'Livro',
@@ -74,22 +71,10 @@ onMounted(() => {
   void platformStore.loadHome()
 })
 
-function isCommentActivity(activity: Activity) {
-  return activity.type === 'CHAPTER_COMMENTED' && Boolean(activity.metadata?.chapterId)
-}
-
-// Início/conclusão de leitura viram uma linha simples; comentários e demais
-// atividades mantêm o card completo.
+// Conclusão de capítulo vira uma linha simples; marcos do clube (livro/membros)
+// mantêm o card completo.
 function isSimpleActivity(activity: Activity) {
-  return activity.type === 'CHAPTER_STARTED' || activity.type === 'CHAPTER_FINISHED'
-}
-
-function openActivity(activity: Activity) {
-  if (!isCommentActivity(activity)) {
-    return
-  }
-
-  void router.push(`/activity/${activity.id}`)
+  return activity.type === 'CHAPTER_FINISHED'
 }
 
 function activityDate(activity: Activity) {
@@ -107,8 +92,8 @@ function actorName(activity: Activity) {
 <template>
   <SectionCard
     label="Feed do clube"
-    title="Atividades da leitura"
-    subtitle="Toque em uma atividade de comentário para ler e reagir."
+    title="Descobertas da leitura"
+    subtitle="O progresso dos membros e os marcos do clube. Comentários ficam no sininho."
   >
     <div class="feed-toolbar">
       <label class="feed-search">
@@ -144,12 +129,7 @@ function actorName(activity: Activity) {
           <time class="feed-date" :datetime="activity.createdAt">{{ activityDate(activity) }}</time>
         </li>
 
-        <ClickableCard
-          v-else
-          :clickable="isCommentActivity(activity)"
-          :aria-label="isCommentActivity(activity) ? `Abrir ${activity.message}` : undefined"
-          @activate="openActivity(activity)"
-        >
+        <ClickableCard v-else :clickable="false">
           <div class="feed-card-top">
             <span class="feed-tag">{{ typeLabels[activity.type] ?? 'Atividade' }}</span>
             <time class="feed-date" :datetime="activity.createdAt">{{ activityDate(activity) }}</time>
