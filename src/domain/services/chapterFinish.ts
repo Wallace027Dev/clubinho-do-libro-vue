@@ -12,9 +12,9 @@
  * Então a regra de negócio (o valioso, antes duplicado) vive uma vez aqui, e a
  * gravação fica atrás do repositório, no idioma de cada lado.
  */
-import { chapterMessageLabel } from '../chapterLabel'
-import { resolveFinishedAt } from '../chapterProgress'
-import { formatRating, normalizeRating } from '../rating'
+import { chapterMessageLabel } from '../chapterLabel.js'
+import { resolveFinishedAt } from '../chapterProgress.js'
+import { formatRating, normalizeRating } from '../rating.js'
 
 /** Valor que pode vir pronto (mock) ou como promessa (Prisma). */
 export type Awaitable<T> = T | Promise<T>
