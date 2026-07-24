@@ -8,7 +8,7 @@
  * assíncrono (`submitBookReview`) para o backend real. O mock reusa o núcleo
  * direto e permanece síncrono.
  */
-import { formatRating, normalizeRating } from '../rating'
+import { formatRating, normalizeRating } from '../rating.js'
 
 /** Valor que pode vir pronto (mock) ou como promessa (Prisma). */
 export type Awaitable<T> = T | Promise<T>

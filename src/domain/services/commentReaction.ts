@@ -6,7 +6,7 @@
  * `CommentReactionRepository`; orquestrador assíncrono para o backend real. O
  * mock reusa o núcleo direto e permanece síncrono.
  */
-import { isValidReactionType, type ReactionType } from '../reactions'
+import { isValidReactionType, type ReactionType } from '../reactions.js'
 
 /** Valor que pode vir pronto (mock) ou como promessa (Prisma). */
 export type Awaitable<T> = T | Promise<T>

@@ -7,7 +7,7 @@
  * a serialização da lista (que muda por lado); orquestradores assíncronos para
  * o backend real. O mock reusa o núcleo direto e permanece síncrono.
  */
-import { chapterMessageLabel } from '../chapterLabel'
+import { chapterMessageLabel } from '../chapterLabel.js'
 
 /** Valor que pode vir pronto (mock) ou como promessa (Prisma). */
 export type Awaitable<T> = T | Promise<T>
