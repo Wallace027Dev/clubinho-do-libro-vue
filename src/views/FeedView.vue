@@ -29,7 +29,7 @@ const filters: FeedFilter[] = [
   { key: 'all', label: 'Tudo', types: null },
   { key: 'chapters', label: 'Capítulos', types: ['CHAPTER_FINISHED'] },
   { key: 'book', label: 'Livro', types: ['BOOK_SELECTED', 'BOOK_FINISHED', 'BOOK_REVIEWED'] },
-  { key: 'members', label: 'Membros', types: ['MEMBER_CREATED', 'PROFILE_UPDATED'] }
+  { key: 'members', label: 'Membros', types: ['MEMBER_CREATED'] }
 ]
 
 const activeFilter = ref('all')
@@ -39,8 +39,7 @@ const typeLabels: Record<string, string> = {
   BOOK_SELECTED: 'Livro',
   BOOK_FINISHED: 'Livro',
   BOOK_REVIEWED: 'Avaliação',
-  MEMBER_CREATED: 'Membro',
-  PROFILE_UPDATED: 'Perfil'
+  MEMBER_CREATED: 'Membro'
 }
 
 function normalize(text: string) {

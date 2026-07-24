@@ -15,13 +15,12 @@ export type ActivityChannel = 'feed' | 'bell' | 'hidden'
 /** Notificações acionáveis (sininho). */
 export const BELL_ACTIVITY_TYPES = ['CHAPTER_COMMENTED'] as const
 
-/** Ruído: não entra no feed nem no sininho. */
-export const HIDDEN_ACTIVITY_TYPES = ['CHAPTER_STARTED'] as const
+/** Ruído: não entra no feed nem no sininho (ex.: "iniciou capítulo", perfil). */
+export const HIDDEN_ACTIVITY_TYPES = ['CHAPTER_STARTED', 'PROFILE_UPDATED'] as const
 
 /** Feed de descoberta: progresso dos membros e marcos do clube. */
 export const FEED_ACTIVITY_TYPES = [
   'MEMBER_CREATED',
-  'PROFILE_UPDATED',
   'BOOK_SELECTED',
   'BOOK_FINISHED',
   'BOOK_REVIEWED',
