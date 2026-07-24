@@ -1,6 +1,7 @@
 import { requireSession } from '../../../_lib/auth.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
 import { chapterFinishRepository } from '../../../_lib/repositories/chapterFinishRepository.js'
+import { notifyChapterFinished } from '../../../_lib/push.js'
 import { finishChapter } from '../../../../src/domain/services/chapterFinish.js'
 
 interface FinishBody {
@@ -31,6 +32,12 @@ export default async function handler(req: any, res: any) {
   if (!result.ok) {
     sendJson(res, result.status, { error: result.error })
     return
+  }
+
+  try {
+    await notifyChapterFinished(session.userId, req.query.chapterId as string)
+  } catch {
+    // Push best-effort: nunca quebra a conclusão do capítulo.
   }
 
   sendJson(res, 200, { progress: result.progress })

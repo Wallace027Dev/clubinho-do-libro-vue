@@ -36,6 +36,11 @@ export function activeMemberIds(
     .map((member) => member.id)
 }
 
+/** Remove um usuário (ex.: quem disparou o evento) de uma lista de ids. */
+export function excludeUser(userIds: readonly string[], excludeUserId?: string | null): string[] {
+  return userIds.filter((id) => id !== excludeUserId)
+}
+
 /** Novo livro do mês → todos os membros ativos. */
 export function bookSelectedNotification(bookTitle: string): NotificationPayload {
   return {
@@ -43,5 +48,48 @@ export function bookSelectedNotification(bookTitle: string): NotificationPayload
     body: `${bookTitle} virou o livro atual do clube. Bora ler!`,
     url: '/',
     tag: 'book-selected'
+  }
+}
+
+/**
+ * Membro concluiu um capítulo → demais membros ativos. `chapterLabel` já vem
+ * pronto (ex.: "o capítulo 3", "o prólogo").
+ */
+export function chapterFinishedNotification(
+  actorName: string,
+  chapterLabel: string
+): NotificationPayload {
+  return {
+    title: 'Avanço na leitura 📚',
+    body: `${actorName} terminou ${chapterLabel}.`,
+    url: '/feed',
+    tag: 'chapter-finished'
+  }
+}
+
+/** Clube finalizou o livro → todos os membros ativos. */
+export function bookFinishedNotification(bookTitle: string): NotificationPayload {
+  return {
+    title: 'Livro finalizado 🎉',
+    body: `O clube terminou ${bookTitle}!`,
+    url: '/history',
+    tag: 'book-finished'
+  }
+}
+
+/**
+ * Novo comentário num capítulo → apenas quem **já concluiu** aquele capítulo
+ * (anti-spoiler), menos o autor. A regra de "quem concluiu" é resolvida na
+ * borda; o conteúdo mora aqui.
+ */
+export function chapterCommentNotification(
+  actorName: string,
+  chapterLabel: string
+): NotificationPayload {
+  return {
+    title: 'Novo comentário 💬',
+    body: `${actorName} comentou ${chapterLabel}.`,
+    url: '/feed',
+    tag: 'chapter-comment'
   }
 }

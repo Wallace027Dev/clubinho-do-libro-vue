@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { activeMemberIds, bookSelectedNotification } from './notifications'
+import {
+  activeMemberIds,
+  bookFinishedNotification,
+  bookSelectedNotification,
+  chapterCommentNotification,
+  chapterFinishedNotification,
+  excludeUser
+} from './notifications'
 
 describe('activeMemberIds (alvo das notificações)', () => {
   const members = [
@@ -17,12 +24,37 @@ describe('activeMemberIds (alvo das notificações)', () => {
   })
 })
 
-describe('bookSelectedNotification', () => {
-  it('monta título, corpo e destino do novo livro', () => {
+describe('excludeUser', () => {
+  it('remove o autor da lista de alvos', () => {
+    expect(excludeUser(['a', 'b', 'c'], 'b')).toEqual(['a', 'c'])
+    expect(excludeUser(['a', 'b'])).toEqual(['a', 'b'])
+  })
+})
+
+describe('conteúdo das notificações', () => {
+  it('novo livro do mês', () => {
     const payload = bookSelectedNotification('Mistborn')
-    expect(payload.title).toContain('Novo livro')
     expect(payload.body).toContain('Mistborn')
     expect(payload.url).toBe('/')
     expect(payload.tag).toBe('book-selected')
+  })
+
+  it('capítulo concluído', () => {
+    const payload = chapterFinishedNotification('João', 'o capítulo 3')
+    expect(payload.body).toBe('João terminou o capítulo 3.')
+    expect(payload.tag).toBe('chapter-finished')
+  })
+
+  it('livro finalizado', () => {
+    const payload = bookFinishedNotification('Mistborn')
+    expect(payload.body).toContain('Mistborn')
+    expect(payload.url).toBe('/history')
+    expect(payload.tag).toBe('book-finished')
+  })
+
+  it('novo comentário', () => {
+    const payload = chapterCommentNotification('Maria', 'o prólogo')
+    expect(payload.body).toBe('Maria comentou o prólogo.')
+    expect(payload.tag).toBe('chapter-comment')
   })
 })

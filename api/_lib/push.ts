@@ -6,9 +6,14 @@
  */
 import webpush from 'web-push'
 import { prisma } from './prisma.js'
+import { chapterMessageLabel } from '../../src/domain/chapterLabel.js'
 import {
   activeMemberIds,
+  bookFinishedNotification,
   bookSelectedNotification,
+  chapterCommentNotification,
+  chapterFinishedNotification,
+  excludeUser,
   type NotificationPayload
 } from '../../src/domain/notifications.js'
 
@@ -71,11 +76,93 @@ export async function sendPushToUsers(
   )
 }
 
+/** Nome de exibição do ator para as mensagens de push. */
+async function actorName(actorId: string | null): Promise<string> {
+  if (!actorId) {
+    return 'Um membro'
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: actorId },
+    select: { displayName: true, login: true }
+  })
+
+  return user?.displayName || user?.login || 'Um membro'
+}
+
+async function activeMembers() {
+  return prisma.user.findMany({ select: { id: true, deactivatedAt: true } })
+}
+
 /** Novo livro do mês: notifica os membros ativos (menos quem selecionou). */
 export async function notifyBookSelected(
   actorId: string | null,
   bookTitle: string
 ): Promise<void> {
-  const members = await prisma.user.findMany({ select: { id: true, deactivatedAt: true } })
-  await sendPushToUsers(activeMemberIds(members, actorId), bookSelectedNotification(bookTitle))
+  await sendPushToUsers(
+    activeMemberIds(await activeMembers(), actorId),
+    bookSelectedNotification(bookTitle)
+  )
+}
+
+/** Capítulo concluído: notifica os demais membros ativos. */
+export async function notifyChapterFinished(
+  actorId: string | null,
+  chapterId: string
+): Promise<void> {
+  const chapter = await prisma.chapter.findUnique({
+    where: { id: chapterId },
+    select: { number: true, title: true }
+  })
+
+  if (!chapter) {
+    return
+  }
+
+  await sendPushToUsers(
+    activeMemberIds(await activeMembers(), actorId),
+    chapterFinishedNotification(await actorName(actorId), chapterMessageLabel(chapter))
+  )
+}
+
+/** Livro finalizado pelo clube: notifica os demais membros ativos. */
+export async function notifyBookFinished(
+  actorId: string | null,
+  bookTitle: string
+): Promise<void> {
+  await sendPushToUsers(
+    activeMemberIds(await activeMembers(), actorId),
+    bookFinishedNotification(bookTitle)
+  )
+}
+
+/**
+ * Novo comentário num capítulo: anti-spoiler — só quem **já concluiu** aquele
+ * capítulo recebe, menos o autor do comentário.
+ */
+export async function notifyChapterComment(
+  actorId: string | null,
+  chapterId: string
+): Promise<void> {
+  const chapter = await prisma.chapter.findUnique({
+    where: { id: chapterId },
+    select: { number: true, title: true }
+  })
+
+  if (!chapter) {
+    return
+  }
+
+  const finishers = await prisma.chapterProgress.findMany({
+    where: { chapterId, status: 'FINISHED' },
+    select: { userId: true }
+  })
+
+  await sendPushToUsers(
+    excludeUser(
+      finishers.map((progress) => progress.userId),
+      actorId
+    ),
+    chapterCommentNotification(await actorName(actorId), chapterMessageLabel(chapter))
+  )
 }

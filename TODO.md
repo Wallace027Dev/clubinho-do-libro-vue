@@ -75,15 +75,15 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
 - [ ] **Busca do feed no servidor.** Hoje o filtro/busca roda no cliente só
       sobre o que já carregou; buscar todo o histórico pede endpoint.
 - [ ] **Upload de capa de livro** (hoje só por URL) — complementa o storage.
-- [~] **Notificações (web push).** Infra pronta (fatia 1): modelo
+- [x] **Notificações (web push).** Infra + eventos ligados. Base: modelo
       `PushSubscription`, chaves VAPID, `web-push` no backend, rotas
       `/api/push/(un)subscribe`, service worker (`public/push-sw.js` via
       `workbox.importScripts`), serviço no front (`pushService`) e toggle no
       perfil. Conteúdo/alvo no domínio (`src/domain/notifications.ts`, testado).
-      **Evento ligado:** novo livro do mês (notifica todos os membros; simulado
-      localmente na homologação). **Faltam os eventos:** capítulo concluído,
-      livro finalizado e comentário (anti-spoiler: só quem concluiu o capítulo)
-      — cada um é uma regra de alvo + um gancho, reusando a infra.
+      **Eventos:** novo livro do mês, capítulo concluído e livro finalizado
+      (todos os membros ativos, menos o autor); novo comentário (anti-spoiler:
+      só quem já concluiu aquele capítulo). Simulados localmente na homologação.
+      **Config em produção:** gerar VAPID e rodar `prisma db push` (ver README).
 - [x] **Padronizar camada de dados nas views.** As 4 telas que chamavam
       `apiRequest` direto agora passam por ações de store: comentários/reação/
       ratings na `platformStore`; perfil/senha na `authStore`. Nenhuma view
