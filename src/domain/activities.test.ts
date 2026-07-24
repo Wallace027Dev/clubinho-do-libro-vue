@@ -7,10 +7,12 @@ describe('canais de atividade', () => {
     expect(isBellActivity('CHAPTER_COMMENTED')).toBe(true)
   })
 
-  it('"iniciou capítulo" é ruído: não entra em feed nem sininho', () => {
-    expect(activityChannel('CHAPTER_STARTED')).toBe('hidden')
-    expect(isFeedActivity('CHAPTER_STARTED')).toBe(false)
-    expect(isBellActivity('CHAPTER_STARTED')).toBe(false)
+  it('ruído fica oculto: "iniciou capítulo" e atualização de perfil', () => {
+    for (const type of ['CHAPTER_STARTED', 'PROFILE_UPDATED']) {
+      expect(activityChannel(type)).toBe('hidden')
+      expect(isFeedActivity(type)).toBe(false)
+      expect(isBellActivity(type)).toBe(false)
+    }
   })
 
   it('progresso e marcos do clube ficam no feed', () => {
