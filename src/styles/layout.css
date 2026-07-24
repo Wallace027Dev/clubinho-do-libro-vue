@@ -160,7 +160,7 @@
   transform: translateY(-8px);
 }
 
-/* Navegacao inferior: barra de papel com 5 abas e botao central. */
+/* Navegacao inferior: barra de papel com 6 abas e botao central. */
 .app-shell--with-tab-bar {
   padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
 }
@@ -172,7 +172,7 @@
   left: 0;
   z-index: 30;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   align-items: end;
   width: min(calc(100% - 24px), 520px);
   margin: 0 auto;

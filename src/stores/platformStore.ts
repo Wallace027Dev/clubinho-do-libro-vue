@@ -1,7 +1,16 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { apiRequest } from '../services/apiClient'
-import type { Activity, AuthUser, Chapter, ClubState, FinishedBook } from '../types/platform'
+import type {
+  Activity,
+  AuthUser,
+  BookRatings,
+  Chapter,
+  ChapterComment,
+  ChapterCommentReactionType,
+  ClubState,
+  FinishedBook
+} from '../types/platform'
 
 interface UsersResponse {
   users: AuthUser[]
@@ -12,8 +21,24 @@ interface ActivitiesResponse {
   hasMore: boolean
 }
 
+interface NotificationsResponse {
+  notifications: Activity[]
+  hasMore: boolean
+}
+
 /** Tamanho do lote do feed (deve casar com o take do backend). */
 const ACTIVITIES_PAGE_SIZE = 30
+
+/** Marca até quando o sininho já foi visto (badge de não lidas). */
+const NOTIFICATIONS_SEEN_KEY = 'clubinho:notifications-seen'
+
+function loadNotificationsSeen(): string {
+  try {
+    return localStorage.getItem(NOTIFICATIONS_SEEN_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
 
 interface UserResponse {
   user: AuthUser
@@ -39,6 +64,17 @@ export const usePlatformStore = defineStore('platform', () => {
   // próximos por /api/activities (cursor = id da última atividade carregada).
   const activitiesHasMore = ref(false)
   const isLoadingMoreActivities = ref(false)
+
+  // Sininho: notificações acionáveis (comentários), separadas do feed.
+  const notifications = ref<Activity[]>([])
+  const notificationsHasMore = ref(false)
+  const isLoadingMoreNotifications = ref(false)
+  const notificationsSeenAt = ref(loadNotificationsSeen())
+
+  // Não lidas = mais novas do que a última vez que o sininho foi aberto.
+  const unreadNotificationsCount = computed(
+    () => notifications.value.filter((item) => item.createdAt > notificationsSeenAt.value).length
+  )
 
   async function loadHome() {
     isLoading.value = true
@@ -83,6 +119,63 @@ export const usePlatformStore = defineStore('platform', () => {
       return false
     } finally {
       isLoadingMoreActivities.value = false
+    }
+  }
+
+  /** Carrega o primeiro lote do sininho. */
+  async function loadNotifications() {
+    const response = await apiRequest<NotificationsResponse>(
+      `/api/notifications?limit=${ACTIVITIES_PAGE_SIZE}`
+    )
+    notifications.value = response.notifications
+    notificationsHasMore.value = response.hasMore
+  }
+
+  /** Próxima página do sininho. Retorna se ainda há mais. */
+  async function loadMoreNotifications(): Promise<boolean> {
+    if (isLoadingMoreNotifications.value || !notificationsHasMore.value) {
+      return false
+    }
+
+    const last = notifications.value[notifications.value.length - 1]
+    if (!last) {
+      notificationsHasMore.value = false
+      return false
+    }
+
+    isLoadingMoreNotifications.value = true
+
+    try {
+      const response = await apiRequest<NotificationsResponse>(
+        `/api/notifications?cursor=${encodeURIComponent(last.id)}&limit=${ACTIVITIES_PAGE_SIZE}`
+      )
+
+      const seen = new Set(notifications.value.map((item) => item.id))
+      const fresh = response.notifications.filter((item) => !seen.has(item.id))
+      notifications.value.push(...fresh)
+
+      notificationsHasMore.value = response.hasMore && fresh.length > 0
+      return notificationsHasMore.value
+    } catch {
+      notificationsHasMore.value = false
+      return false
+    } finally {
+      isLoadingMoreNotifications.value = false
+    }
+  }
+
+  /** Marca o sininho como visto (zera o badge de não lidas). */
+  function markNotificationsSeen() {
+    const newest = notifications.value[0]?.createdAt
+    if (!newest) {
+      return
+    }
+
+    notificationsSeenAt.value = newest
+    try {
+      localStorage.setItem(NOTIFICATIONS_SEEN_KEY, newest)
+    } catch {
+      // Sem localStorage (ex.: navegação privada): o badge some só na sessão.
     }
   }
 
@@ -198,6 +291,38 @@ export const usePlatformStore = defineStore('platform', () => {
     }
   }
 
+  /** Comentários de um capítulo (anti-spoiler: 403 se não concluído). */
+  async function loadChapterComments(chapterId: string): Promise<ChapterComment[]> {
+    const response = await apiRequest<{ comments: ChapterComment[] }>(
+      `/api/chapters/${chapterId}/comments`
+    )
+    return response.comments
+  }
+
+  /** Cria/edita o comentário do membro no capítulo; devolve a lista atualizada. */
+  async function submitChapterComment(chapterId: string, body: string): Promise<ChapterComment[]> {
+    const response = await apiRequest<{ comments: ChapterComment[] }>(
+      `/api/chapters/${chapterId}/comments`,
+      { method: 'POST', body: JSON.stringify({ body }) }
+    )
+    return response.comments
+  }
+
+  async function reactToComment(
+    commentId: string,
+    type: ChapterCommentReactionType
+  ): Promise<void> {
+    await apiRequest(`/api/comments/${commentId}/reaction`, {
+      method: 'POST',
+      body: JSON.stringify({ type })
+    })
+  }
+
+  /** Heatmap de avaliação por capítulo de um livro (atual ou finalizado). */
+  async function loadBookRatings(clubBookId: string): Promise<BookRatings> {
+    return apiRequest<BookRatings>(`/api/books/${clubBookId}/ratings`)
+  }
+
   return {
     clubState,
     members,
@@ -205,8 +330,15 @@ export const usePlatformStore = defineStore('platform', () => {
     isLoading,
     activitiesHasMore,
     isLoadingMoreActivities,
+    notifications,
+    notificationsHasMore,
+    isLoadingMoreNotifications,
+    unreadNotificationsCount,
     loadHome,
     loadMoreActivities,
+    loadNotifications,
+    loadMoreNotifications,
+    markNotificationsSeen,
     loadHistory,
     loadMembers,
     createMember,
@@ -220,6 +352,10 @@ export const usePlatformStore = defineStore('platform', () => {
     reopenChapter,
     rateChapter,
     finishCurrentBook,
-    submitReview
+    submitReview,
+    loadChapterComments,
+    submitChapterComment,
+    reactToComment,
+    loadBookRatings
   }
 })

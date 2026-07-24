@@ -1,7 +1,9 @@
+import type { ActivityType } from '@prisma/client'
 import { requireSession } from '../_lib/auth.js'
 import { getDefaultClub } from '../_lib/club.js'
 import { assertMethod, sendJson } from '../_lib/http.js'
 import { prisma } from '../_lib/prisma.js'
+import { FEED_ACTIVITY_TYPES } from '../../src/domain/activities.js'
 
 /**
  * Feed paginado do clube (scroll infinito). Ordena por data desc com o id
@@ -30,7 +32,9 @@ export default async function handler(req: any, res: any) {
     Number.isInteger(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, MAX_LIMIT) : DEFAULT_LIMIT
 
   const activities = await prisma.activity.findMany({
-    where: { clubId: club.id },
+    // Feed = descoberta: só os tipos do canal "feed" (sem comentários nem
+    // "iniciou capítulo"). Comentários vivem no sininho (/api/notifications).
+    where: { clubId: club.id, type: { in: [...FEED_ACTIVITY_TYPES] as ActivityType[] } },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),

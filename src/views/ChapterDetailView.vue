@@ -6,7 +6,7 @@ import DetailHeader from '../components/ui/DetailHeader.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import RatingInput from '../components/ui/RatingInput.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
-import { ApiError, apiRequest } from '../services/apiClient'
+import { ApiError } from '../services/apiClient'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import { useUiStore } from '../stores/uiStore'
@@ -121,11 +121,8 @@ async function loadComment(chapterId: string) {
   isLoadingComment.value = true
 
   try {
-    const response = await apiRequest<{ comments: ChapterComment[] }>(
-      `/api/chapters/${chapterId}/comments`
-    )
-    myComment.value =
-      response.comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
+    const comments = await platformStore.loadChapterComments(chapterId)
+    myComment.value = comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
     commentBody.value = myComment.value?.body ?? ''
     // Com comentário salvo, mostramos a leitura; sem ele, o formulário fica aberto.
     isEditingComment.value = !myComment.value
@@ -204,15 +201,11 @@ async function submitComment() {
   isSubmittingComment.value = true
 
   try {
-    const response = await apiRequest<{ comments: ChapterComment[] }>(
-      `/api/chapters/${chapter.value.id}/comments`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ body: commentBody.value })
-      }
+    const comments = await platformStore.submitChapterComment(
+      chapter.value.id,
+      commentBody.value
     )
-    myComment.value =
-      response.comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
+    myComment.value = comments.find((comment) => comment.user.id === authStore.user?.id) ?? null
     commentBody.value = myComment.value?.body ?? ''
     // Salvou: fecha o formulário e volta para a leitura do comentário.
     isEditingComment.value = false

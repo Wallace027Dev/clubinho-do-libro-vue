@@ -59,6 +59,25 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = nextUser
   }
 
+  /** Atualiza apelido/foto e reflete o usuário retornado no estado. */
+  async function updateProfile(payload: {
+    displayName: string
+    avatarUrl: string
+  }): Promise<void> {
+    const response = await apiRequest<{ user: AuthUser }>('/api/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    })
+    user.value = response.user
+  }
+
+  async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await apiRequest('/api/profile/password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword })
+    })
+  }
+
   return {
     user,
     isLoading,
@@ -69,6 +88,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     adminLogin,
     logout,
-    setUser
+    setUser,
+    updateProfile,
+    changePassword
   }
 })

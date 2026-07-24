@@ -1,7 +1,7 @@
 import { requireSession } from '../../../_lib/auth.js'
-import { getFinishedChapterForUser } from '../../../_lib/chapterAccess.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
-import { prisma } from '../../../_lib/prisma.js'
+import { chapterRatingRepository } from '../../../_lib/repositories/chapterRatingRepository.js'
+import { rateChapter } from '../../../../src/domain/services/chapterRating.js'
 
 interface RatingBody {
   rating?: number
@@ -10,7 +10,8 @@ interface RatingBody {
 /**
  * Nota do capítulo (1,0 a 5,0, fracionada): uma por membro por capítulo,
  * com upsert. Só quem concluiu o capítulo pode notar, e avaliar o livro
- * exige todos os capítulos notados (ver books/review.ts).
+ * exige todos os capítulos notados (ver books/review.ts). Regras no domínio
+ * (`src/domain/services/chapterRating.ts`).
  */
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {
@@ -23,36 +24,18 @@ export default async function handler(req: any, res: any) {
     return
   }
 
-  const chapterId = req.query.chapterId as string
-  const access = await getFinishedChapterForUser(chapterId, session.userId)
-
-  if (!access) {
-    sendJson(res, 403, { error: 'Conclua o capítulo antes de dar a sua nota.' })
-    return
-  }
-
   const body = readBody<RatingBody>(req)
-  const rating = Math.round(Number(body.rating) * 10) / 10
 
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-    sendJson(res, 400, { error: 'A nota deve ser um número entre 1 e 5.' })
-    return
-  }
-
-  const saved = await prisma.chapterRating.upsert({
-    where: {
-      chapterId_userId: {
-        chapterId: access.chapter.id,
-        userId: session.userId
-      }
-    },
-    update: { rating },
-    create: {
-      chapterId: access.chapter.id,
-      userId: session.userId,
-      rating
-    }
+  const result = await rateChapter(chapterRatingRepository(), {
+    chapterId: req.query.chapterId as string,
+    userId: session.userId,
+    rawRating: body.rating
   })
 
-  sendJson(res, 200, { rating: saved })
+  if (!result.ok) {
+    sendJson(res, result.status, { error: result.error })
+    return
+  }
+
+  sendJson(res, 200, { rating: result.rating })
 }

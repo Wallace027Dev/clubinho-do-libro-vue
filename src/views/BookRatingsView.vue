@@ -7,12 +7,14 @@ import DetailHeader from '../components/ui/DetailHeader.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
 import StarRating from '../components/ui/StarRating.vue'
-import { ApiError, apiRequest } from '../services/apiClient'
+import { ApiError } from '../services/apiClient'
+import { usePlatformStore } from '../stores/platformStore'
 import type { BookRatings, ChapterRatingSummary } from '../types/platform'
 import { chapterShortTag, chapterTag } from '../utils/chapters'
 import { formatRating } from '../utils/format'
 
 const route = useRoute()
+const platformStore = usePlatformStore()
 
 const data = ref<BookRatings | null>(null)
 const errorMessage = ref('')
@@ -29,7 +31,7 @@ const bands = [
 
 onMounted(async () => {
   try {
-    data.value = await apiRequest<BookRatings>(`/api/books/${route.params.clubBookId}/ratings`)
+    data.value = await platformStore.loadBookRatings(String(route.params.clubBookId))
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError ? error.message : 'Não foi possível carregar as avaliações.'

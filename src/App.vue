@@ -1,10 +1,26 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, watch } from 'vue'
 import AppTabBar from './components/ui/AppTabBar.vue'
 import AppToast from './components/ui/AppToast.vue'
+import { syncPush } from './services/pushService'
 import { useAuthStore } from './stores/authStore'
+import { usePlatformStore } from './stores/platformStore'
 
 const authStore = useAuthStore()
+const platformStore = usePlatformStore()
+
+// Ao autenticar (sessão restaurada ou login novo): reconcilia a assinatura de
+// push e carrega o sininho (para o badge de não lidas).
+watch(
+  () => authStore.isAuthenticated,
+  (isAuthenticated) => {
+    if (isAuthenticated) {
+      void syncPush()
+      void platformStore.loadNotifications()
+    }
+  },
+  { immediate: true }
+)
 
 // Só existe em homologação; o import fica atrás da flag para não entrar no
 // bundle de produção.

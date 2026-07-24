@@ -153,6 +153,12 @@ src/
    - `DATABASE_URL`: a URL do **pooler**, com `?pgbouncer=true` (serverless
      abre muitas conexoes; a URL direta esgota o banco).
    - `ADMIN_PASSWORD` e `SESSION_SECRET`.
+   - **Notificacoes (Web Push, opcional):** gere um par VAPID uma vez com
+     `npx web-push generate-vapid-keys` e configure `VAPID_PUBLIC_KEY`,
+     `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (ex.: `mailto:voce@exemplo.com`) e
+     `VITE_VAPID_PUBLIC_KEY` (mesma chave publica, exposta ao front no build).
+     Sem elas o app funciona normal, so nao envia push. Depois de configurar,
+     aplique o schema (passo 3) para criar a tabela `PushSubscription`.
 3. Aplique o schema no banco de producao usando a URL **direta**, da sua
    maquina:
 

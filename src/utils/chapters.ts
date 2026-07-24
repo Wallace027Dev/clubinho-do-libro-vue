@@ -1,12 +1,9 @@
-/**
- * Capítulos "avulsos" (Prólogo/Epílogo) não levam numeração na
- * interface: o número existe só para ordenar (0 = prólogo, último =
- * epílogo) e o nome é exibido no lugar de "Capítulo N".
- */
-export function isStandaloneChapterTitle(title: string) {
-  const normalized = title.trim().toLowerCase()
-  return ['prólogo', 'prologo', 'epílogo', 'epilogo'].includes(normalized)
-}
+// A regra de "capítulo avulso" (Prólogo/Epílogo sem numeração) vive na camada
+// de domínio, fonte única compartilhada com o backend e o mock. Reexportamos
+// aqui para as views/utilitários do frontend continuarem importando de um só
+// lugar.
+export { isStandaloneChapterTitle } from '../domain/chapterLabel'
+import { isStandaloneChapterTitle } from '../domain/chapterLabel'
 
 /** Etiqueta do capítulo: "Prólogo", "Epílogo" ou "Capítulo 3". */
 export function chapterTag(chapter: { number: number; title: string }) {

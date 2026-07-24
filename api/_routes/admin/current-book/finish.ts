@@ -1,7 +1,8 @@
 import { requireAdmin } from '../../../_lib/auth.js'
-import { getDefaultClub } from '../../../_lib/club.js'
 import { assertMethod, sendJson } from '../../../_lib/http.js'
-import { prisma } from '../../../_lib/prisma.js'
+import { finishBookRepository } from '../../../_lib/repositories/adminBookRepository.js'
+import { notifyBookFinished } from '../../../_lib/push.js'
+import { finishBook } from '../../../../src/domain/services/adminBook.js'
 
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {
@@ -14,40 +15,18 @@ export default async function handler(req: any, res: any) {
     return
   }
 
-  const club = await getDefaultClub()
-  const currentBook = await prisma.clubBook.findFirst({
-    where: { clubId: club.id, status: 'CURRENT' },
-    include: { book: true }
-  })
+  const result = await finishBook(finishBookRepository(session.userId ?? null))
 
-  if (!currentBook) {
-    sendJson(res, 404, { error: 'Não existe livro atual em andamento.' })
+  if (!result.ok) {
+    sendJson(res, result.status, { error: result.error })
     return
   }
 
-  const finishedBook = await prisma.$transaction(async (tx) => {
-    const updated = await tx.clubBook.update({
-      where: { id: currentBook.id },
-      data: {
-        status: 'FINISHED',
-        finishedAt: new Date(),
-        finishedByUserId: session.userId
-      },
-      include: { book: true }
-    })
+  try {
+    await notifyBookFinished(session.userId ?? null, result.finishedBook.book.title)
+  } catch {
+    // Push best-effort: nunca quebra a finalização do livro.
+  }
 
-    await tx.activity.create({
-      data: {
-        clubId: club.id,
-        actorId: session.userId,
-        type: 'BOOK_FINISHED',
-        message: `${currentBook.book.title} foi finalizado pelo clube.`,
-        metadata: { bookId: currentBook.bookId }
-      }
-    })
-
-    return updated
-  })
-
-  sendJson(res, 200, { finishedBook })
+  sendJson(res, 200, { finishedBook: result.finishedBook })
 }

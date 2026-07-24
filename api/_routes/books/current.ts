@@ -3,6 +3,11 @@ import { getDefaultClub } from '../../_lib/club.js'
 import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
 import { prisma } from '../../_lib/prisma.js'
 import { getClubBookReviews, userFinishedAllChapters } from '../../_lib/reviews.js'
+import type { ActivityType } from '@prisma/client'
+import { selectBookRepository } from '../../_lib/repositories/adminBookRepository.js'
+import { selectBook } from '../../../src/domain/services/adminBook.js'
+import { notifyBookSelected } from '../../_lib/push.js'
+import { FEED_ACTIVITY_TYPES } from '../../../src/domain/activities.js'
 
 interface SelectBookBody {
   title?: string
@@ -53,7 +58,8 @@ export default async function handler(req: any, res: any) {
       }
     })
     const activities = await prisma.activity.findMany({
-      where: { clubId: club.id },
+      // Só o canal "feed" (descoberta) — igual ao /api/activities.
+      where: { clubId: club.id, type: { in: [...FEED_ACTIVITY_TYPES] as ActivityType[] } },
       // Mesma ordem do feed paginado (/api/activities) para o cursor casar.
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: 30,
@@ -93,53 +99,23 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = readBody<SelectBookBody>(req)
-  const title = body.title?.trim()
+  const result = await selectBook(selectBookRepository(session.userId ?? null), {
+    rawTitle: body.title,
+    rawAuthor: body.author,
+    rawDescription: body.description
+  })
 
-  if (!title) {
-    sendJson(res, 400, { error: 'Título do livro é obrigatório.' })
+  if (!result.ok) {
+    sendJson(res, result.status, { error: result.error })
     return
   }
 
-  const club = await getDefaultClub()
-  const existingCurrent = await prisma.clubBook.findFirst({
-    where: { clubId: club.id, status: 'CURRENT' }
-  })
-
-  if (existingCurrent) {
-    sendJson(res, 409, { error: 'Já existe um livro atual em andamento.' })
-    return
+  // Push best-effort: uma falha de notificação nunca quebra a seleção do livro.
+  try {
+    await notifyBookSelected(session.userId ?? null, result.currentBook.book.title)
+  } catch {
+    // Silencioso: sem VAPID/assinaturas, é no-op.
   }
 
-  const clubBook = await prisma.$transaction(async (tx) => {
-    const book = await tx.book.create({
-      data: {
-        title,
-        author: body.author?.trim() || null,
-        description: body.description?.trim() || null
-      }
-    })
-
-    const selected = await tx.clubBook.create({
-      data: {
-        clubId: club.id,
-        bookId: book.id,
-        selectedByUserId: session.userId
-      },
-      include: { book: true }
-    })
-
-    await tx.activity.create({
-      data: {
-        clubId: club.id,
-        actorId: session.userId,
-        type: 'BOOK_SELECTED',
-        message: `${book.title} virou o livro atual do clube.`,
-        metadata: { bookId: book.id }
-      }
-    })
-
-    return selected
-  })
-
-  sendJson(res, 201, { currentBook: clubBook })
+  sendJson(res, 201, { currentBook: result.currentBook })
 }

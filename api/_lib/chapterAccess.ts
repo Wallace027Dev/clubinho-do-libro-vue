@@ -1,5 +1,6 @@
 import { getDefaultClub } from './club.js'
 import { prisma } from './prisma.js'
+import { isChapterUnlocked } from '../../src/domain/chapterProgress.js'
 
 export async function getFinishedChapterForUser(chapterId: string, userId: string) {
   const club = await getDefaultClub()
@@ -16,11 +17,16 @@ export async function getFinishedChapterForUser(chapterId: string, userId: strin
     }
   })
 
-  if (!chapter || chapter.clubBook.clubId !== club.id || chapter.clubBook.status !== 'CURRENT') {
+  if (!chapter || chapter.clubBook.clubId !== club.id) {
     return null
   }
 
-  if (chapter.progress[0]?.status !== 'FINISHED') {
+  if (
+    !isChapterUnlocked({
+      clubBookStatus: chapter.clubBook.status,
+      progressStatus: chapter.progress[0]?.status
+    })
+  ) {
     return null
   }
 
@@ -43,11 +49,13 @@ export async function userCanReadComment(commentId: string, userId: string) {
     }
   })
 
-  if (!comment || comment.chapter.clubBook.status !== 'CURRENT') {
-    return null
-  }
-
-  if (comment.chapter.progress[0]?.status !== 'FINISHED') {
+  if (
+    !comment ||
+    !isChapterUnlocked({
+      clubBookStatus: comment.chapter.clubBook.status,
+      progressStatus: comment.chapter.progress[0]?.status
+    })
+  ) {
     return null
   }
 

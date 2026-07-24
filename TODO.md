@@ -42,11 +42,30 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       **Caveat:** o contador é em memória do processo — em serverless é
       best-effort (some no cold start). **Upgrade:** mover o contador para
       Postgres/Redis para garantia forte entre instâncias.
-- [ ] **Extrair camada de domínio.** Regras de negócio vivem dentro dos
-      handlers HTTP (`api/_routes/*`) e estão **duplicadas** no mock de
-      homologação (`src/services/mockApi/handlers.ts`, ~1100 linhas). Extrair
-      serviços de domínio testáveis que o backend real **e** o mock consumam
-      elimina a duplicação e destrava testes unitários da lógica real.
+- [x] **Extrair camada de domínio (regras puras).** As regras de negócio puras
+      agora vivem em `src/domain/` (fonte única): nota (`rating.ts` — faixa,
+      normalização, formato, média), progresso/anti-spoiler (`chapterProgress.ts`
+      — `isChapterUnlocked`, conclusão, horário) e rótulos (`chapterLabel.ts`).
+      O backend real (`api/`) e o mock importam do mesmo lugar — fim da
+      duplicação do gate anti-spoiler e da validação de nota. Cobertas por
+      testes unitários no próprio domínio (`src/domain/*.test.ts`); padrão na
+      habilidade `dominio`.
+- [x] **Abstração de repositório (fluxos de escrita).** Padrão implantado em
+      `src/domain/services/chapterFinish.ts`: núcleo puro que decide + comando,
+      porta `ChapterFinishRepository` e adaptadores (Prisma em
+      `api/_lib/repositories/`, commit síncrono no mock). O handler real ficou
+      fino (orquestrador `finishChapter`); o mock reusa o mesmo núcleo e
+      permanece síncrono (preserva a suíte de segurança). Já aplicado à **nota
+      de capítulo** (`services/chapterRating.ts`), à **avaliação do livro**
+      (`services/bookReview.ts`) e a **comentário/reação**
+      (`services/chapterComment.ts` + `services/commentReaction.ts`, com a lista
+      canônica de reações em `domain/reactions.ts`), todos com adaptadores
+      Prisma. Também migradas as ações de **admin**: capítulos
+      (`services/adminChapters.ts`), membros (`services/adminMembers.ts`) e
+      ciclo do livro (`services/adminBook.ts`). Todos os fluxos de escrita da
+      API agora passam por um serviço de domínio + repositório. De quebra, o
+      backend real passou a responder **409** (como o mock) em número de
+      capítulo e login duplicados, em vez do 500 por violação de unique.
 
 ## 🟡 Produto e escala
 
@@ -56,11 +75,38 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
 - [ ] **Busca do feed no servidor.** Hoje o filtro/busca roda no cliente só
       sobre o que já carregou; buscar todo o histórico pede endpoint.
 - [ ] **Upload de capa de livro** (hoje só por URL) — complementa o storage.
-- [ ] **Notificações (web push):** novo livro do mês, novo capítulo, comentário
-      no seu capítulo.
-- [ ] **Padronizar camada de dados nas views.** 4 telas furam a store e chamam
-      `apiRequest` direto (`ChapterDetailView`, `ProfileView`, `BookRatingsView`,
-      `ActivityDetailView`). Passar tudo pela store.
+- [x] **Notificações (web push).** Infra + eventos ligados. Base: modelo
+      `PushSubscription`, chaves VAPID, `web-push` no backend, rotas
+      `/api/push/(un)subscribe`, service worker (`public/push-sw.js` via
+      `workbox.importScripts`), serviço no front (`pushService`) e toggle no
+      perfil. Conteúdo/alvo no domínio (`src/domain/notifications.ts`, testado).
+      **Eventos:** novo livro do mês, capítulo concluído e livro finalizado
+      (todos os membros ativos, menos o autor); novo comentário (anti-spoiler:
+      só quem já concluiu aquele capítulo). Simulados localmente na homologação.
+      **Config em produção:** gerar VAPID e rodar `prisma db push` (ver README).
+- [ ] **Ativar push em produção (ops).** Passo manual na conta Vercel (não dá
+      pra fazer da sandbox — sem CLI/token/link): registrar/logar o **Vercel
+      CLI** (`vercel login` + `vercel link`), **gerar as chaves VAPID**
+      (`npx web-push generate-vapid-keys`), setar `VAPID_PUBLIC_KEY`,
+      `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` e `VITE_VAPID_PUBLIC_KEY`
+      (`vercel env add ... production`), rodar `prisma db push` (URL direta)
+      para criar a tabela `PushSubscription` e fazer `vercel --prod`. Comandos
+      prontos no README/na conversa.
+- [ ] **(opcional) Mute administrativo de push por membro.** Hoje o membro
+      desativa o próprio push no perfil; desativar a conta também corta (efeito
+      colateral). Falta um controle durável: campo `pushEnabled` no `User` que o
+      notificador respeita + toggle no admin (e, se fizer sentido, preferência
+      por tipo de evento).
+- [x] **Padronizar camada de dados nas views.** As 4 telas que chamavam
+      `apiRequest` direto agora passam por ações de store: comentários/reação/
+      ratings na `platformStore`; perfil/senha na `authStore`. Nenhuma view
+      importa `apiRequest`. Coberto por testes de integração das novas ações.
+- [x] **Separar feed e notificações.** O feed (`/feed`) virou descoberta:
+      progresso dos membros e marcos do clube, sem "iniciou capítulo" e sem
+      comentários. Os comentários (acionáveis) foram para o **sininho**
+      (`/notifications`), com badge de não lidas no cabeçalho. Classificação de
+      canal no domínio (`src/domain/activities.ts`, testado); backend (feed
+      filtrado + `GET /api/notifications`) e mock espelhados.
 - [ ] **Dividir o `platformStore`** (livro + membros + histórico + feed + admin)
       antes de virar "god store" — ex.: `adminStore`, `feedStore`.
 

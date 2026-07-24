@@ -2,6 +2,8 @@ import { requireAdmin } from '../../_lib/auth.js'
 import { getDefaultClub } from '../../_lib/club.js'
 import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
 import { prisma } from '../../_lib/prisma.js'
+import { adminChaptersRepository } from '../../_lib/repositories/adminChaptersRepository.js'
+import { createChapter } from '../../../src/domain/services/adminChapters.js'
 
 interface ChapterBody {
   number?: number
@@ -19,18 +21,18 @@ export default async function handler(req: any, res: any) {
     return
   }
 
-  const club = await getDefaultClub()
-  const currentBook = await prisma.clubBook.findFirst({
-    where: { clubId: club.id, status: 'CURRENT' },
-    include: { book: true }
-  })
-
-  if (!currentBook) {
-    sendJson(res, 404, { error: 'Não existe livro atual em andamento.' })
-    return
-  }
-
   if (req.method === 'GET') {
+    const club = await getDefaultClub()
+    const currentBook = await prisma.clubBook.findFirst({
+      where: { clubId: club.id, status: 'CURRENT' },
+      select: { id: true }
+    })
+
+    if (!currentBook) {
+      sendJson(res, 404, { error: 'Não existe livro atual em andamento.' })
+      return
+    }
+
     const chapters = await prisma.chapter.findMany({
       where: { clubBookId: currentBook.id },
       orderBy: { number: 'asc' }
@@ -41,21 +43,15 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = readBody<ChapterBody>(req)
-  const number = Number(body.number)
-  const title = body.title?.trim()
+  const result = await createChapter(adminChaptersRepository(), {
+    rawNumber: body.number,
+    rawTitle: body.title
+  })
 
-  if (!Number.isInteger(number) || number < 0 || !title) {
-    sendJson(res, 400, { error: 'Informe número (0 para prólogo) e título do capítulo.' })
+  if (!result.ok) {
+    sendJson(res, result.status, { error: result.error })
     return
   }
 
-  const chapter = await prisma.chapter.create({
-    data: {
-      clubBookId: currentBook.id,
-      number,
-      title
-    }
-  })
-
-  sendJson(res, 201, { chapter })
+  sendJson(res, 201, { chapter: result.chapter })
 }

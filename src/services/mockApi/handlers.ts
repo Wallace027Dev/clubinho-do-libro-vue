@@ -8,7 +8,6 @@
  */
 import {
   ADMIN_PASSWORD,
-  REACTION_TYPES,
   getDb,
   persist,
   uid,
@@ -19,6 +18,42 @@ import {
   type MockSession
 } from './db'
 import { clearAttempts, isRateLimited, recordFailure } from './rateLimit'
+import { averageRating } from '../../domain/rating'
+import { everyChapterFinished, everyChapterRated, isChapterUnlocked } from '../../domain/chapterProgress'
+import { chapterMessageLabel } from '../../domain/chapterLabel'
+import {
+  resolveChapterFinish,
+  type ChapterFinishCommand
+} from '../../domain/services/chapterFinish'
+import {
+  resolveChapterRating,
+  type ChapterRatingCommand
+} from '../../domain/services/chapterRating'
+import { resolveBookReview, type BookReviewCommand } from '../../domain/services/bookReview'
+import {
+  COMMENT_LOCKED_ERROR,
+  resolveChapterComment,
+  type ChapterCommentCommand
+} from '../../domain/services/chapterComment'
+import {
+  resolveCommentReaction,
+  type CommentReactionCommand
+} from '../../domain/services/commentReaction'
+import {
+  resolveCreateChapter,
+  resolveDeleteChapter,
+  resolveUpdateChapter
+} from '../../domain/services/adminChapters'
+import { normalizeLogin, resolveCreateUser, resolveUpdateUser } from '../../domain/services/adminMembers'
+import { resolveFinishBook, resolveSelectBook } from '../../domain/services/adminBook'
+import {
+  bookFinishedNotification,
+  bookSelectedNotification,
+  chapterCommentNotification,
+  chapterFinishedNotification
+} from '../../domain/notifications'
+import { simulateLocalPush } from './pushSim'
+import { isBellActivity, isFeedActivity } from '../../domain/activities'
 
 export interface MockResponse {
   status: number
@@ -81,15 +116,15 @@ function progressFor(chapterId: string, userId: string | null) {
 
 function userFinishedAllChapters(clubBookId: string, userId: string): boolean {
   const chapters = chaptersOf(clubBookId)
-  if (chapters.length === 0) return false
-  return chapters.every((chapter) => progressFor(chapter.id, userId)?.status === 'FINISHED')
+  return everyChapterFinished(chapters.map((chapter) => progressFor(chapter.id, userId)?.status))
 }
 
 function userRatedAllChapters(clubBookId: string, userId: string): boolean {
   const chapters = chaptersOf(clubBookId)
-  if (chapters.length === 0) return false
-  return chapters.every((chapter) =>
-    getDb().ratings.some((rating) => rating.chapterId === chapter.id && rating.userId === userId)
+  return everyChapterRated(
+    chapters.map((chapter) =>
+      getDb().ratings.some((rating) => rating.chapterId === chapter.id && rating.userId === userId)
+    )
   )
 }
 
@@ -98,20 +133,11 @@ function getFinishedChapterForUser(chapterId: string, userId: string): MockChapt
   const chapter = getDb().chapters.find((item) => item.id === chapterId)
   if (!chapter) return null
   const clubBook = getDb().clubBooks.find((item) => item.id === chapter.clubBookId)
-  if (!clubBook || clubBook.status !== 'CURRENT') return null
-  if (progressFor(chapterId, userId)?.status !== 'FINISHED') return null
-  return chapter
-}
-
-function isStandaloneTitle(title: string): boolean {
-  const normalized = title.trim().toLowerCase()
-  return ['prólogo', 'prologo', 'epílogo', 'epilogo'].includes(normalized)
-}
-
-function chapterMessageLabel(chapter: MockChapter): string {
-  return isStandaloneTitle(chapter.title)
-    ? `o ${chapter.title.trim().toLowerCase()}`
-    : `o capítulo ${chapter.number}`
+  const unlocked = isChapterUnlocked({
+    clubBookStatus: clubBook?.status,
+    progressStatus: progressFor(chapterId, userId)?.status
+  })
+  return unlocked ? chapter : null
 }
 
 function countReactions(types: ReactionType[]): Partial<Record<ReactionType, number>> {
@@ -160,10 +186,9 @@ function reviewsPayload(clubBookId: string) {
       user: actorView(review.userId)
     }))
 
-  const count = reviews.length
-  const average = count ? reviews.reduce((sum, review) => sum + review.rating, 0) / count : null
+  const average = averageRating(reviews.map((review) => review.rating))
 
-  return { reviews, reviewSummary: { average, count } }
+  return { reviews, reviewSummary: { average, count: reviews.length } }
 }
 
 function addActivity(
@@ -183,10 +208,11 @@ function addActivity(
 }
 
 // Mesma ordem do backend real: data desc com id como desempate estável.
-function sortedActivities() {
-  return getDb()
+function sortedActivities(keep?: (type: string) => boolean) {
+  const all = getDb()
     .activities.slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))
+  return keep ? all.filter((activity) => keep(activity.type)) : all
 }
 
 function activityView(activity: { id: string; type: string; message: string; createdAt: string; actorId: string | null; metadata: MockActivityMeta | null }) {
@@ -201,7 +227,7 @@ function activityView(activity: { id: string; type: string; message: string; cre
 }
 
 function recentActivities() {
-  return sortedActivities().slice(0, 30).map(activityView)
+  return sortedActivities(isFeedActivity).slice(0, 30).map(activityView)
 }
 
 function chapterForCurrentPayload(chapter: MockChapter, userId: string | null) {
@@ -219,16 +245,6 @@ function chapterForCurrentPayload(chapter: MockChapter, userId: string | null) {
       : [],
     ratings: rating ? [{ rating: rating.rating }] : []
   }
-}
-
-function resolveFinishedAt(raw: unknown): string {
-  const now = new Date()
-  if (typeof raw !== 'string' || !raw) return now.toISOString()
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime()) || parsed.getTime() > now.getTime()) {
-    return now.toISOString()
-  }
-  return parsed.toISOString()
 }
 
 // ---------------------------------------------------------------------------
@@ -256,6 +272,11 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
   // --- Feed paginado --------------------------------------------------------
   if (path === '/api/activities' && m === 'GET') {
     return listActivities(query.get('cursor'), query.get('limit'))
+  }
+
+  // --- Sininho (notificações acionáveis) ------------------------------------
+  if (path === '/api/notifications' && m === 'GET') {
+    return listNotifications(query.get('cursor'), query.get('limit'))
   }
 
   // --- Auth -----------------------------------------------------------------
@@ -297,6 +318,10 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
   // --- Profile --------------------------------------------------------------
   if (path === '/api/profile' && m === 'PATCH') return updateProfile(body)
   if (path === '/api/profile/password' && m === 'POST') return changePassword(body)
+
+  // --- Push (homologação: sem servidor real; a simulação é local) -----------
+  if (path === '/api/push/subscribe' && m === 'POST') return pushSubscribe()
+  if (path === '/api/push/unsubscribe' && m === 'POST') return pushUnsubscribe()
 
   return err(404, 'Rota não encontrada no mock de homologação.')
 }
@@ -420,7 +445,7 @@ function listActivities(cursor: string | null, limitRaw: string | null): MockRes
   const parsedLimit = Number(limitRaw)
   const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 30
 
-  const sorted = sortedActivities()
+  const sorted = sortedActivities(isFeedActivity)
   let start = 0
   if (cursor) {
     const index = sorted.findIndex((activity) => activity.id === cursor)
@@ -434,21 +459,46 @@ function listActivities(cursor: string | null, limitRaw: string | null): MockRes
   })
 }
 
+/** Sininho: atividades acionáveis (comentários), paginadas como o feed. */
+function listNotifications(cursor: string | null, limitRaw: string | null): MockResponse {
+  const current = session()
+  if (!current) return err(401, 'Unauthorized.')
+
+  const parsedLimit = Number(limitRaw)
+  const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 30
+
+  const sorted = sortedActivities(isBellActivity)
+  let start = 0
+  if (cursor) {
+    const index = sorted.findIndex((activity) => activity.id === cursor)
+    start = index >= 0 ? index + 1 : sorted.length
+  }
+
+  const page = sorted.slice(start, start + limit)
+  return json(200, {
+    notifications: page.map(activityView),
+    hasMore: start + page.length < sorted.length
+  })
+}
+
 function selectCurrent(body: Body): MockResponse {
   const current = session()
   if (!current) return err(401, 'Unauthorized.')
   if (current.role !== 'ADMIN') return err(403, 'Admin access required.')
 
-  const title = typeof body.title === 'string' ? body.title.trim() : ''
-  if (!title) return err(400, 'Título do livro é obrigatório.')
-  if (getCurrentClubBook()) return err(409, 'Já existe um livro atual em andamento.')
+  const decision = resolveSelectBook({
+    hasCurrentBook: Boolean(getCurrentClubBook()),
+    rawTitle: body.title,
+    rawAuthor: body.author,
+    rawDescription: body.description
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
   const book = {
     id: uid(),
-    title,
-    author: typeof body.author === 'string' && body.author.trim() ? body.author.trim() : null,
-    description:
-      typeof body.description === 'string' && body.description.trim() ? body.description.trim() : null,
+    title: decision.command.title,
+    author: decision.command.author,
+    description: decision.command.description,
     coverUrl: null
   }
   getDb().books.push(book)
@@ -464,10 +514,13 @@ function selectCurrent(body: Body): MockResponse {
   }
   getDb().clubBooks.push(clubBook)
 
-  addActivity(current.userId, 'BOOK_SELECTED', `${book.title} virou o livro atual do clube.`, {
+  addActivity(current.userId, decision.command.activity.type, decision.command.activity.message, {
     bookId: book.id
   })
   persist()
+
+  // Homologação: simula o push do novo livro localmente (se houver permissão).
+  simulateLocalPush(bookSelectedNotification(book.title))
 
   return json(201, { currentBook: { ...clubBook, book } })
 }
@@ -478,17 +531,29 @@ function finishCurrentBook(): MockResponse {
   if (current.role !== 'ADMIN') return err(403, 'Admin access required.')
 
   const clubBook = getCurrentClubBook()
-  if (!clubBook) return err(404, 'Não existe livro atual em andamento.')
+  const book = clubBook ? getDb().books.find((item) => item.id === clubBook.bookId) : null
 
-  const book = getDb().books.find((item) => item.id === clubBook.bookId)
-  clubBook.status = 'FINISHED'
-  clubBook.finishedAt = nowIso()
-  clubBook.finishedByUserId = current.userId
-
-  addActivity(current.userId, 'BOOK_FINISHED', `${book?.title ?? 'O livro'} foi finalizado pelo clube.`, {
-    bookId: clubBook.bookId
+  const decision = resolveFinishBook({
+    currentBook: clubBook
+      ? { clubBookId: clubBook.id, bookId: clubBook.bookId, title: book?.title ?? 'O livro' }
+      : null
   })
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  clubBook!.status = 'FINISHED'
+  clubBook!.finishedAt = nowIso()
+  clubBook!.finishedByUserId = current.userId
+
+  addActivity(
+    current.userId,
+    decision.command.activity.type,
+    decision.command.activity.message,
+    decision.command.activity.metadata
+  )
   persist()
+
+  // Homologação: simula o push de livro finalizado localmente.
+  simulateLocalPush(bookFinishedNotification(book?.title ?? 'O livro'))
 
   return json(200, { finishedBook: { ...clubBook, book } })
 }
@@ -600,59 +665,58 @@ function getRatings(clubBookId: string): MockResponse {
   })
 }
 
-function submitReview(body: Body): MockResponse {
-  const current = session()
-  if (!current || !current.userId) return err(401, 'Unauthorized.')
-
-  const clubBook = getCurrentClubBook()
-  if (!clubBook) return err(404, 'Não existe livro atual em andamento.')
-
-  const book = getDb().books.find((item) => item.id === clubBook.bookId)
-  const rating = Math.round(Number(body.rating) * 10) / 10
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-    return err(400, 'A nota deve ser um número entre 1 e 5.')
-  }
-
-  const review = typeof body.review === 'string' && body.review.trim() ? body.review.trim() : null
-  if (review && review.length > 1000) {
-    return err(400, 'A resenha deve ter até 1000 caracteres.')
-  }
-
-  if (!userFinishedAllChapters(clubBook.id, current.userId)) {
-    return err(403, 'Conclua todos os capítulos para avaliar o livro.')
-  }
-  if (!userRatedAllChapters(clubBook.id, current.userId)) {
-    return err(403, 'Dê sua nota a todos os capítulos antes de avaliar o livro.')
-  }
-
+/** Adaptador de gravação do mock: upsert da avaliação + atividade no "banco". */
+function commitMockBookReview(command: BookReviewCommand) {
   const existing = getDb().reviews.find(
-    (item) => item.clubBookId === clubBook.id && item.userId === current.userId
+    (item) => item.clubBookId === command.clubBookId && item.userId === command.userId
   )
 
   let saved
   if (existing) {
-    existing.rating = rating
-    existing.review = review
+    existing.rating = command.rating
+    existing.review = command.review
     saved = existing
   } else {
     saved = {
       id: uid(),
-      clubBookId: clubBook.id,
-      userId: current.userId,
-      rating,
-      review,
+      clubBookId: command.clubBookId,
+      userId: command.userId,
+      rating: command.rating,
+      review: command.review,
       createdAt: nowIso()
     }
     getDb().reviews.push(saved)
   }
 
-  const user = getDb().users.find((item) => item.id === current.userId)
-  addActivity(
-    current.userId,
-    'BOOK_REVIEWED',
-    `${user?.displayName || user?.login || 'Um membro'} avaliou ${book?.title ?? 'o livro'} com ${String(rating).replace('.', ',')}/5.`,
-    { bookId: clubBook.bookId, rating }
-  )
+  addActivity(command.userId, command.activity.type, command.activity.message, command.activity.metadata)
+  return saved
+}
+
+function submitReview(body: Body): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
+
+  // Gates, validação e mensagem vivem no núcleo do domínio; o mock carrega os
+  // dados/flags e grava — sem duplicar a lógica do backend real.
+  const clubBook = getCurrentClubBook()
+  const book = clubBook ? getDb().books.find((item) => item.id === clubBook.bookId) : null
+  const actor = getDb().users.find((item) => item.id === current.userId) ?? null
+
+  const decision = resolveBookReview({
+    currentBook: clubBook
+      ? { clubBookId: clubBook.id, bookId: clubBook.bookId, title: book?.title ?? 'o livro' }
+      : null,
+    actor: actor ? { displayName: actor.displayName, login: actor.login } : null,
+    userId: current.userId,
+    rawRating: body.rating,
+    rawReview: body.review,
+    finishedAllChapters: clubBook ? userFinishedAllChapters(clubBook.id, current.userId) : false,
+    ratedAllChapters: clubBook ? userRatedAllChapters(clubBook.id, current.userId) : false
+  })
+
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  const saved = commitMockBookReview(decision.command)
   persist()
 
   return json(200, { review: saved })
@@ -702,21 +766,10 @@ function startChapter(chapterId: string): MockResponse {
   return json(200, { progress })
 }
 
-function finishChapter(chapterId: string, body: Body): MockResponse {
-  const current = session()
-  if (!current || !current.userId) return err(401, 'Unauthorized.')
-
-  const chapter = currentChapter(chapterId)
-  if (!chapter) return err(404, 'Capítulo atual não encontrado.')
-
-  // Nota obrigatória na conclusão (fica registrada na atividade de fim).
-  const rating = Math.round(Number(body.rating) * 10) / 10
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-    return err(400, 'Dê uma nota de 1 a 5 ao concluir o capítulo.')
-  }
-
-  const finishedAt = resolveFinishedAt(body.finishedAt)
-  const existing = progressFor(chapter.id, current.userId)
+/** Adaptador de gravação do mock: executa o comando do domínio no "banco". */
+function commitMockChapterFinish(command: ChapterFinishCommand) {
+  const finishedAt = command.finishedAt.toISOString()
+  const existing = progressFor(command.chapterId, command.userId)
 
   let progress
   if (existing) {
@@ -726,8 +779,8 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   } else {
     progress = {
       id: uid(),
-      chapterId: chapter.id,
-      userId: current.userId,
+      chapterId: command.chapterId,
+      userId: command.userId,
       status: 'FINISHED' as const,
       startedAt: finishedAt,
       finishedAt
@@ -736,22 +789,52 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   }
 
   const existingRating = getDb().ratings.find(
-    (item) => item.chapterId === chapter.id && item.userId === current.userId
+    (item) => item.chapterId === command.chapterId && item.userId === command.userId
   )
   if (existingRating) {
-    existingRating.rating = rating
+    existingRating.rating = command.rating
   } else {
-    getDb().ratings.push({ id: uid(), chapterId: chapter.id, userId: current.userId, rating })
+    getDb().ratings.push({
+      id: uid(),
+      chapterId: command.chapterId,
+      userId: command.userId,
+      rating: command.rating
+    })
   }
 
-  const user = getDb().users.find((item) => item.id === current.userId)
-  addActivity(
-    current.userId,
-    'CHAPTER_FINISHED',
-    `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)} e deu nota ${rating.toFixed(1).replace('.', ',')}.`,
-    { chapterId: chapter.id, chapterNumber: chapter.number, chapterTitle: chapter.title, rating }
-  )
+  addActivity(command.userId, command.activity.type, command.activity.message, command.activity.metadata)
+  return progress
+}
+
+function finishChapter(chapterId: string, body: Body): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
+
+  // Regras (gates, nota, mensagem, metadados) vivem no núcleo do domínio; o
+  // mock só carrega os dados e grava — sem duplicar a lógica do backend real.
+  const chapter = currentChapter(chapterId)
+  const actor = getDb().users.find((item) => item.id === current.userId) ?? null
+
+  const decision = resolveChapterFinish({
+    chapter: chapter ? { id: chapter.id, number: chapter.number, title: chapter.title } : null,
+    actor: actor ? { displayName: actor.displayName, login: actor.login } : null,
+    userId: current.userId,
+    rawRating: body.rating,
+    rawFinishedAt: body.finishedAt
+  })
+
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  const progress = commitMockChapterFinish(decision.command)
   persist()
+
+  // Homologação: simula o push de capítulo concluído localmente.
+  simulateLocalPush(
+    chapterFinishedNotification(
+      actor?.displayName || actor?.login || 'Um membro',
+      chapterMessageLabel(chapter!)
+    )
+  )
 
   return json(200, { progress })
 }
@@ -775,30 +858,44 @@ function reopenChapter(chapterId: string): MockResponse {
   return json(200, { progress: existing })
 }
 
+/** Adaptador de gravação do mock: upsert da nota no "banco". */
+function commitMockChapterRating(command: ChapterRatingCommand) {
+  const existing = getDb().ratings.find(
+    (item) => item.chapterId === command.chapterId && item.userId === command.userId
+  )
+
+  if (existing) {
+    existing.rating = command.rating
+    return existing
+  }
+
+  const saved = {
+    id: uid(),
+    chapterId: command.chapterId,
+    userId: command.userId,
+    rating: command.rating
+  }
+  getDb().ratings.push(saved)
+  return saved
+}
+
 function rateChapter(chapterId: string, body: Body): MockResponse {
   const current = session()
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
+  // Gate anti-spoiler + validação vivem no núcleo do domínio; o mock só
+  // resolve o capítulo liberado e grava.
   const chapter = getFinishedChapterForUser(chapterId, current.userId)
-  if (!chapter) return err(403, 'Conclua o capítulo antes de dar a sua nota.')
 
-  const rating = Math.round(Number(body.rating) * 10) / 10
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-    return err(400, 'A nota deve ser um número entre 1 e 5.')
-  }
+  const decision = resolveChapterRating({
+    chapter: chapter ? { id: chapter.id } : null,
+    userId: current.userId,
+    rawRating: body.rating
+  })
 
-  const existing = getDb().ratings.find(
-    (item) => item.chapterId === chapter.id && item.userId === current.userId
-  )
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  let saved
-  if (existing) {
-    existing.rating = rating
-    saved = existing
-  } else {
-    saved = { id: uid(), chapterId: chapter.id, userId: current.userId, rating }
-    getDb().ratings.push(saved)
-  }
+  const saved = commitMockChapterRating(decision.command)
   persist()
 
   return json(200, { rating: saved })
@@ -808,11 +905,35 @@ function listComments(chapterId: string): MockResponse {
   const current = session()
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
+  // Gate anti-spoiler no domínio; o mock resolve o capítulo e serializa.
   if (!getFinishedChapterForUser(chapterId, current.userId)) {
-    return err(403, 'Comentários liberam apenas depois de concluir o capítulo.')
+    return err(403, COMMENT_LOCKED_ERROR)
   }
 
   return json(200, { comments: commentsPayload(chapterId, current.userId) })
+}
+
+/** Adaptador de gravação do mock: upsert do comentário + atividade. */
+function commitMockChapterComment(command: ChapterCommentCommand) {
+  const existing = getDb().comments.find(
+    (item) => item.chapterId === command.chapterId && item.userId === command.userId
+  )
+
+  if (existing) {
+    existing.body = command.body
+    existing.updatedAt = nowIso()
+  } else {
+    getDb().comments.push({
+      id: uid(),
+      chapterId: command.chapterId,
+      userId: command.userId,
+      body: command.body,
+      createdAt: nowIso(),
+      updatedAt: nowIso()
+    })
+  }
+
+  addActivity(command.userId, command.activity.type, command.activity.message, command.activity.metadata)
 }
 
 function upsertComment(chapterId: string, body: Body): MockResponse {
@@ -820,68 +941,74 @@ function upsertComment(chapterId: string, body: Body): MockResponse {
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
   const chapter = getFinishedChapterForUser(chapterId, current.userId)
-  if (!chapter) return err(403, 'Comentários liberam apenas depois de concluir o capítulo.')
+  const actor = getDb().users.find((item) => item.id === current.userId) ?? null
 
-  const commentBody = typeof body.body === 'string' ? body.body.trim() : ''
-  if (!commentBody) return err(400, 'Comentário vazio.')
-  if (commentBody.length > 420) return err(400, 'Comentário deve ter até 420 caracteres.')
+  const decision = resolveChapterComment({
+    chapter: chapter ? { id: chapter.id, number: chapter.number, title: chapter.title } : null,
+    actor: actor ? { displayName: actor.displayName, login: actor.login } : null,
+    userId: current.userId,
+    rawBody: body.body
+  })
 
-  const existing = getDb().comments.find(
-    (item) => item.chapterId === chapterId && item.userId === current.userId
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  commitMockChapterComment(decision.command)
+  persist()
+
+  // Homologação: simula o push de novo comentário localmente.
+  simulateLocalPush(
+    chapterCommentNotification(
+      actor?.displayName || actor?.login || 'Um membro',
+      chapterMessageLabel(chapter!)
+    )
+  )
+
+  return json(201, { comments: commentsPayload(chapterId, current.userId) })
+}
+
+/** Adaptador de gravação do mock: upsert da reação. */
+function commitMockCommentReaction(command: CommentReactionCommand) {
+  const existing = getDb().reactions.find(
+    (item) => item.commentId === command.commentId && item.userId === command.userId
   )
 
   if (existing) {
-    existing.body = commentBody
+    existing.type = command.type
     existing.updatedAt = nowIso()
-  } else {
-    getDb().comments.push({
-      id: uid(),
-      chapterId,
-      userId: current.userId,
-      body: commentBody,
-      createdAt: nowIso(),
-      updatedAt: nowIso()
-    })
+    return existing
   }
 
-  const user = getDb().users.find((item) => item.id === current.userId)
-  addActivity(
-    current.userId,
-    'CHAPTER_COMMENTED',
-    `${user?.displayName || user?.login || 'Um membro'} comentou ${chapterMessageLabel(chapter)}.`,
-    { chapterId, chapterNumber: chapter.number, chapterTitle: chapter.title }
-  )
-  persist()
-
-  return json(201, { comments: commentsPayload(chapterId, current.userId) })
+  const reaction = {
+    id: uid(),
+    commentId: command.commentId,
+    userId: command.userId,
+    type: command.type,
+    updatedAt: nowIso()
+  }
+  getDb().reactions.push(reaction)
+  return reaction
 }
 
 function reactToComment(commentId: string, body: Body): MockResponse {
   const current = session()
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
+  // Gate: comentário existe e o capítulo dele está liberado para o membro.
   const comment = getDb().comments.find((item) => item.id === commentId)
-  if (!comment) return err(403, 'Reação liberada apenas para quem concluiu o capítulo.')
-  if (!getFinishedChapterForUser(comment.chapterId, current.userId)) {
-    return err(403, 'Reação liberada apenas para quem concluiu o capítulo.')
-  }
-
-  const type = body.type as ReactionType
-  if (!type || !REACTION_TYPES.includes(type)) return err(400, 'Reação inválida.')
-
-  const existing = getDb().reactions.find(
-    (item) => item.commentId === commentId && item.userId === current.userId
+  const canReact = Boolean(
+    comment && getFinishedChapterForUser(comment.chapterId, current.userId)
   )
 
-  let reaction
-  if (existing) {
-    existing.type = type
-    existing.updatedAt = nowIso()
-    reaction = existing
-  } else {
-    reaction = { id: uid(), commentId, userId: current.userId, type, updatedAt: nowIso() }
-    getDb().reactions.push(reaction)
-  }
+  const decision = resolveCommentReaction({
+    canReact,
+    commentId,
+    userId: current.userId,
+    rawType: body.type
+  })
+
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  const reaction = commitMockCommentReaction(decision.command)
   persist()
 
   return json(200, { reaction })
@@ -932,29 +1059,28 @@ function createUser(body: Body): MockResponse {
   const guard = requireAdmin()
   if (isResponse(guard)) return guard
 
-  const login = typeof body.login === 'string' ? body.login.trim().toLowerCase() : ''
-  const password = typeof body.password === 'string' ? body.password : ''
-
-  if (!login || password.length < 6) {
-    return err(400, 'Informe login e senha com pelo menos 6 caracteres.')
-  }
-  if (getDb().users.some((item) => item.login === login)) {
-    return err(409, 'Já existe um membro com esse login.')
-  }
+  const login = normalizeLogin(body.login)
+  const decision = resolveCreateUser({
+    rawLogin: body.login,
+    rawPassword: body.password,
+    rawDisplayName: body.displayName,
+    loginTaken: Boolean(login) && getDb().users.some((item) => item.login === login)
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
   const user = {
     id: uid(),
-    login,
-    password,
+    login: decision.command.login,
+    password: decision.command.password,
     role: 'MEMBER' as const,
-    displayName: typeof body.displayName === 'string' && body.displayName.trim() ? body.displayName.trim() : null,
+    displayName: decision.command.displayName,
     avatarUrl: null,
     deactivatedAt: null,
     createdAt: nowIso()
   }
   getDb().users.push(user)
 
-  addActivity(null, 'MEMBER_CREATED', `${user.displayName || user.login} entrou no clube.`, {
+  addActivity(null, decision.command.activity.type, decision.command.activity.message, {
     userId: user.id
   })
   persist()
@@ -967,26 +1093,23 @@ function updateUser(userId: string, body: Body): MockResponse {
   if (isResponse(guard)) return guard
 
   const user = getDb().users.find((item) => item.id === userId)
-  if (!user) return err(404, 'Membro não encontrado.')
+  const decision = resolveUpdateUser({
+    userId,
+    userExists: Boolean(user),
+    rawDeactivated: body.deactivated,
+    rawNewPassword: body.newPassword
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  let touched = false
-
-  if (typeof body.deactivated === 'boolean') {
-    user.deactivatedAt = body.deactivated ? nowIso() : null
-    touched = true
+  if (decision.command.changes.deactivated !== undefined) {
+    user!.deactivatedAt = decision.command.changes.deactivated ? nowIso() : null
   }
-
-  if (body.newPassword !== undefined) {
-    const newPassword = typeof body.newPassword === 'string' ? body.newPassword : ''
-    if (newPassword.length < 6) return err(400, 'A nova senha precisa ter pelo menos 6 caracteres.')
-    user.password = newPassword
-    touched = true
+  if (decision.command.changes.newPassword !== undefined) {
+    user!.password = decision.command.changes.newPassword
   }
-
-  if (!touched) return err(400, 'Nada para atualizar.')
 
   persist()
-  return json(200, { user: memberView(user.id) })
+  return json(200, { user: memberView(userId) })
 }
 
 // ---------------------------------------------------------------------------
@@ -1008,19 +1131,20 @@ function createChapter(body: Body): MockResponse {
   if (isResponse(guard)) return guard
 
   const clubBook = getCurrentClubBook()
-  if (!clubBook) return err(404, 'Não existe livro atual em andamento.')
+  const decision = resolveCreateChapter({
+    currentBookId: clubBook?.id ?? null,
+    existingNumbers: clubBook ? chaptersOf(clubBook.id).map((chapter) => chapter.number) : [],
+    rawNumber: body.number,
+    rawTitle: body.title
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  const number = Number(body.number)
-  const title = typeof body.title === 'string' ? body.title.trim() : ''
-
-  if (!Number.isInteger(number) || number < 0 || !title) {
-    return err(400, 'Informe número (0 para prólogo) e título do capítulo.')
+  const chapter = {
+    id: uid(),
+    clubBookId: decision.command.clubBookId,
+    number: decision.command.number,
+    title: decision.command.title
   }
-  if (chaptersOf(clubBook.id).some((chapter) => chapter.number === number)) {
-    return err(409, 'Já existe um capítulo com esse número neste livro.')
-  }
-
-  const chapter = { id: uid(), clubBookId: clubBook.id, number, title }
   getDb().chapters.push(chapter)
   persist()
 
@@ -1032,32 +1156,24 @@ function updateChapter(chapterId: string, body: Body): MockResponse {
   if (isResponse(guard)) return guard
 
   const chapter = currentChapter(chapterId)
-  if (!chapter) return err(404, 'Capítulo atual não encontrado.')
+  const siblingNumbers = chapter
+    ? getDb()
+        .chapters.filter((item) => item.clubBookId === chapter.clubBookId && item.id !== chapter.id)
+        .map((item) => item.number)
+    : []
 
-  let touched = false
+  const decision = resolveUpdateChapter({
+    chapter: chapter
+      ? { id: chapter.id, clubBookId: chapter.clubBookId, number: chapter.number, title: chapter.title }
+      : null,
+    siblingNumbers,
+    rawNumber: body.number,
+    rawTitle: body.title
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  if (body.number !== undefined) {
-    const number = Number(body.number)
-    if (!Number.isInteger(number) || number < 0) return err(400, 'Número de capítulo inválido.')
-    if (
-      getDb().chapters.some(
-        (item) => item.clubBookId === chapter.clubBookId && item.number === number && item.id !== chapter.id
-      )
-    ) {
-      return err(409, 'Já existe um capítulo com esse número neste livro.')
-    }
-    chapter.number = number
-    touched = true
-  }
-
-  if (body.title !== undefined) {
-    const title = typeof body.title === 'string' ? body.title.trim() : ''
-    if (!title) return err(400, 'Título do capítulo não pode ficar vazio.')
-    chapter.title = title
-    touched = true
-  }
-
-  if (!touched) return err(400, 'Nada para atualizar.')
+  if (decision.command.changes.number !== undefined) chapter!.number = decision.command.changes.number
+  if (decision.command.changes.title !== undefined) chapter!.title = decision.command.changes.title
 
   persist()
   return json(200, { chapter })
@@ -1068,15 +1184,20 @@ function deleteChapter(chapterId: string): MockResponse {
   if (isResponse(guard)) return guard
 
   const chapter = currentChapter(chapterId)
-  if (!chapter) return err(404, 'Capítulo atual não encontrado.')
+  const hasMemberActivity = chapter
+    ? getDb().progress.some((item) => item.chapterId === chapter.id) ||
+      getDb().comments.some((item) => item.chapterId === chapter.id)
+    : false
 
-  const hasProgress = getDb().progress.some((item) => item.chapterId === chapter.id)
-  const hasComments = getDb().comments.some((item) => item.chapterId === chapter.id)
-  if (hasProgress || hasComments) {
-    return err(409, 'Este capítulo já tem progresso ou comentários de membros e não pode ser excluído.')
-  }
+  const decision = resolveDeleteChapter({
+    chapter: chapter
+      ? { id: chapter.id, clubBookId: chapter.clubBookId, number: chapter.number, title: chapter.title }
+      : null,
+    hasMemberActivity
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  getDb().chapters = getDb().chapters.filter((item) => item.id !== chapter.id)
+  getDb().chapters = getDb().chapters.filter((item) => item.id !== decision.chapterId)
   persist()
 
   return json(200, { ok: true })
@@ -1123,5 +1244,22 @@ function changePassword(body: Body): MockResponse {
   user.password = newPassword
   persist()
 
+  return json(200, { ok: true })
+}
+
+// ---------------------------------------------------------------------------
+// Push (homologação): sem servidor real; a entrega é simulada localmente no
+// evento (ver simulateLocalPush). Os endpoints só confirmam a "assinatura".
+// ---------------------------------------------------------------------------
+
+function pushSubscribe(): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
+  return json(201, { ok: true })
+}
+
+function pushUnsubscribe(): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
   return json(200, { ok: true })
 }
