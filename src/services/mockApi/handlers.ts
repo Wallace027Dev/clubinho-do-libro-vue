@@ -26,6 +26,10 @@ import {
   resolveChapterFinish,
   type ChapterFinishCommand
 } from '../../domain/services/chapterFinish'
+import {
+  resolveChapterRating,
+  type ChapterRatingCommand
+} from '../../domain/services/chapterRating'
 
 export interface MockResponse {
   status: number
@@ -773,30 +777,44 @@ function reopenChapter(chapterId: string): MockResponse {
   return json(200, { progress: existing })
 }
 
+/** Adaptador de gravação do mock: upsert da nota no "banco". */
+function commitMockChapterRating(command: ChapterRatingCommand) {
+  const existing = getDb().ratings.find(
+    (item) => item.chapterId === command.chapterId && item.userId === command.userId
+  )
+
+  if (existing) {
+    existing.rating = command.rating
+    return existing
+  }
+
+  const saved = {
+    id: uid(),
+    chapterId: command.chapterId,
+    userId: command.userId,
+    rating: command.rating
+  }
+  getDb().ratings.push(saved)
+  return saved
+}
+
 function rateChapter(chapterId: string, body: Body): MockResponse {
   const current = session()
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
+  // Gate anti-spoiler + validação vivem no núcleo do domínio; o mock só
+  // resolve o capítulo liberado e grava.
   const chapter = getFinishedChapterForUser(chapterId, current.userId)
-  if (!chapter) return err(403, 'Conclua o capítulo antes de dar a sua nota.')
 
-  const rating = normalizeRating(body.rating)
-  if (rating === null) {
-    return err(400, 'A nota deve ser um número entre 1 e 5.')
-  }
+  const decision = resolveChapterRating({
+    chapter: chapter ? { id: chapter.id } : null,
+    userId: current.userId,
+    rawRating: body.rating
+  })
 
-  const existing = getDb().ratings.find(
-    (item) => item.chapterId === chapter.id && item.userId === current.userId
-  )
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  let saved
-  if (existing) {
-    existing.rating = rating
-    saved = existing
-  } else {
-    saved = { id: uid(), chapterId: chapter.id, userId: current.userId, rating }
-    getDb().ratings.push(saved)
-  }
+  const saved = commitMockChapterRating(decision.command)
   persist()
 
   return json(200, { rating: saved })

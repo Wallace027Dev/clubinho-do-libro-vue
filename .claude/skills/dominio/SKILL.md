@@ -29,6 +29,8 @@ Módulos atuais:
 - `chapterLabel.ts` — capítulo avulso (Prólogo/Epílogo) e rótulo de mensagem.
 - `services/chapterFinish.ts` — **serviço + repositório** de conclusão de
   capítulo (ver abaixo).
+- `services/chapterRating.ts` — **serviço + repositório** de nota de capítulo
+  (mesmo molde: gate anti-spoiler + validação no núcleo).
 
 ## A regra de ouro
 
