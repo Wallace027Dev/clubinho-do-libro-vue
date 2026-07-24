@@ -46,7 +46,12 @@ import {
 } from '../../domain/services/adminChapters'
 import { normalizeLogin, resolveCreateUser, resolveUpdateUser } from '../../domain/services/adminMembers'
 import { resolveFinishBook, resolveSelectBook } from '../../domain/services/adminBook'
-import { bookSelectedNotification } from '../../domain/notifications'
+import {
+  bookFinishedNotification,
+  bookSelectedNotification,
+  chapterCommentNotification,
+  chapterFinishedNotification
+} from '../../domain/notifications'
 import { simulateLocalPush } from './pushSim'
 
 export interface MockResponse {
@@ -518,6 +523,9 @@ function finishCurrentBook(): MockResponse {
   )
   persist()
 
+  // Homologação: simula o push de livro finalizado localmente.
+  simulateLocalPush(bookFinishedNotification(book?.title ?? 'O livro'))
+
   return json(200, { finishedBook: { ...clubBook, book } })
 }
 
@@ -791,6 +799,14 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   const progress = commitMockChapterFinish(decision.command)
   persist()
 
+  // Homologação: simula o push de capítulo concluído localmente.
+  simulateLocalPush(
+    chapterFinishedNotification(
+      actor?.displayName || actor?.login || 'Um membro',
+      chapterMessageLabel(chapter!)
+    )
+  )
+
   return json(200, { progress })
 }
 
@@ -909,6 +925,14 @@ function upsertComment(chapterId: string, body: Body): MockResponse {
 
   commitMockChapterComment(decision.command)
   persist()
+
+  // Homologação: simula o push de novo comentário localmente.
+  simulateLocalPush(
+    chapterCommentNotification(
+      actor?.displayName || actor?.login || 'Um membro',
+      chapterMessageLabel(chapter!)
+    )
+  )
 
   return json(201, { comments: commentsPayload(chapterId, current.userId) })
 }

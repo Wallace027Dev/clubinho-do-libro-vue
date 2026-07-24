@@ -1,6 +1,7 @@
 import { requireSession } from '../../../_lib/auth.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
 import { chapterCommentRepository } from '../../../_lib/repositories/chapterCommentRepository.js'
+import { notifyChapterComment } from '../../../_lib/push.js'
 import {
   listChapterComments,
   submitChapterComment
@@ -46,6 +47,12 @@ export default async function handler(req: any, res: any) {
   if (!result.ok) {
     sendJson(res, result.status, { error: result.error })
     return
+  }
+
+  try {
+    await notifyChapterComment(session.userId, chapterId)
+  } catch {
+    // Push best-effort: nunca quebra o comentário.
   }
 
   sendJson(res, 201, { comments: result.comments })
