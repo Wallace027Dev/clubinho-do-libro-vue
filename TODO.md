@@ -84,6 +84,19 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       (todos os membros ativos, menos o autor); novo comentário (anti-spoiler:
       só quem já concluiu aquele capítulo). Simulados localmente na homologação.
       **Config em produção:** gerar VAPID e rodar `prisma db push` (ver README).
+- [ ] **Ativar push em produção (ops).** Passo manual na conta Vercel (não dá
+      pra fazer da sandbox — sem CLI/token/link): registrar/logar o **Vercel
+      CLI** (`vercel login` + `vercel link`), **gerar as chaves VAPID**
+      (`npx web-push generate-vapid-keys`), setar `VAPID_PUBLIC_KEY`,
+      `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` e `VITE_VAPID_PUBLIC_KEY`
+      (`vercel env add ... production`), rodar `prisma db push` (URL direta)
+      para criar a tabela `PushSubscription` e fazer `vercel --prod`. Comandos
+      prontos no README/na conversa.
+- [ ] **(opcional) Mute administrativo de push por membro.** Hoje o membro
+      desativa o próprio push no perfil; desativar a conta também corta (efeito
+      colateral). Falta um controle durável: campo `pushEnabled` no `User` que o
+      notificador respeita + toggle no admin (e, se fizer sentido, preferência
+      por tipo de evento).
 - [x] **Padronizar camada de dados nas views.** As 4 telas que chamavam
       `apiRequest` direto agora passam por ações de store: comentários/reação/
       ratings na `platformStore`; perfil/senha na `authStore`. Nenhuma view
