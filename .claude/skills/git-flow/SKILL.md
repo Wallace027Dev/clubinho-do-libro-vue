@@ -111,11 +111,47 @@ produção e testada, abra um **PR** de `developer` para `master`:
 - Verifique se já não existe um PR aberto para essa branch.
 - Título e corpo descrevendo as mudanças (sem template no repo → escreva do
   zero; nunca inclua segredos/tokens no corpo).
+- **Inclua sempre um "Mapa de mudanças"** (ver abaixo): o revisor precisa
+  saber, de bate-pronto, **qual pasta/arquivo mudou e para quê**.
 - Deixe o CI rodar. O merge na master acontece **pelo PR**, com os checks
   verdes — a branch protection (`proteger-master.yml`) garante que só a
   `developer` mergeia na master.
 - **Não** crie um PR sem o usuário pedir; mas quando o trabalho estiver pronto,
   **ofereça** abrir o PR.
+
+#### Mapa de mudanças (obrigatório no corpo do PR)
+
+Além do resumo do "porquê", liste **os arquivos/pastas tocados, agrupados por
+área, cada um com uma frase do que mudou**. É o que deixa a revisão rápida:
+o revisor lê o mapa e já sabe onde olhar. Gere a lista a partir do diff real
+(`git diff --stat origin/master...developer`), não de memória.
+
+Modelo:
+
+```markdown
+## Mapa de mudanças
+
+**Domínio** (`src/domain/`)
+- `activities.ts` — classifica cada atividade em feed/bell/hidden (novo).
+
+**Backend** (`api/`)
+- `_routes/notifications.ts` — endpoint do sininho (novo).
+- `_routes/activities.ts` — feed passa a filtrar o canal "feed".
+
+**Frontend** (`src/`)
+- `views/NotificationsView.vue` — lista do sininho (novo).
+- `components/ui/AppTabBar.vue` — aba "Avisos" + badge de não lidas.
+
+**Testes**
+- `src/domain/activities.test.ts` — canais (novo).
+- `test/integration/stores/platformStore.test.ts` — separação feed/sininho (novo).
+```
+
+Regras do mapa: agrupe por área (domínio, backend, front, testes, infra/config);
+marque **(novo)** / **(removido)** quando for o caso; uma linha por arquivo (ou
+por subpasta, quando forem muitos arquivos do mesmo tipo); some os arquivos
+irrelevantes (lockfile, gerados) numa linha só ou omita. O objetivo é
+**orientar o olhar**, não repetir o diff inteiro.
 
 ## Checklist rápido
 
@@ -124,6 +160,7 @@ produção e testada, abra um **PR** de `developer` para `master`:
 - [ ] `npm test` verde antes de integrar?
 - [ ] Merge na **developer** com `--no-ff` (feature→developer)?
 - [ ] Para a **master**, só **PR** — nunca merge direto?
+- [ ] O corpo do PR tem o **Mapa de mudanças** (pasta/arquivo → o que mudou)?
 
 ## Casos especiais
 
