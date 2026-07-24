@@ -55,11 +55,13 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       porta `ChapterFinishRepository` e adaptadores (Prisma em
       `api/_lib/repositories/`, commit síncrono no mock). O handler real ficou
       fino (orquestrador `finishChapter`); o mock reusa o mesmo núcleo e
-      permanece síncrono (preserva a suíte de segurança). Já aplicado também à
-      **nota de capítulo** (`services/chapterRating.ts`) e à **avaliação do
-      livro** (`services/bookReview.ts`), com adaptadores Prisma. **Referência**
-      para migrar os demais fluxos de escrita (comentário/reação, admin)
-      incrementalmente ao mesmo molde.
+      permanece síncrono (preserva a suíte de segurança). Já aplicado à **nota
+      de capítulo** (`services/chapterRating.ts`), à **avaliação do livro**
+      (`services/bookReview.ts`) e a **comentário/reação**
+      (`services/chapterComment.ts` + `services/commentReaction.ts`, com a lista
+      canônica de reações em `domain/reactions.ts`), todos com adaptadores
+      Prisma. **Falta migrar ao mesmo molde:** as ações de **admin** (criar/
+      editar capítulo, usuários, iniciar/finalizar livro).
 
 ## 🟡 Produto e escala
 

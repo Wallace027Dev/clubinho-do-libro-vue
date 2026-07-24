@@ -15,7 +15,9 @@ import { resetRateLimits } from './rateLimit'
 export type Role = 'ADMIN' | 'MEMBER'
 export type ClubBookStatus = 'CURRENT' | 'FINISHED'
 export type ProgressStatus = 'STARTED' | 'FINISHED'
-export type ReactionType = 'GOSTEI' | 'SOFRI' | 'SURPRESO' | 'SUSPEITO' | 'DISCUTIR'
+// Tipos de reação: fonte única na camada de domínio.
+export type { ReactionType } from '../../domain/reactions'
+import type { ReactionType } from '../../domain/reactions'
 
 export interface MockUser {
   id: string
@@ -136,13 +138,7 @@ export interface MockDb {
 /** Senha do login administrativo em homologação (`/login/admin`). */
 export const ADMIN_PASSWORD = '123456'
 
-export const REACTION_TYPES: ReactionType[] = [
-  'GOSTEI',
-  'SOFRI',
-  'SURPRESO',
-  'SUSPEITO',
-  'DISCUTIR'
-]
+export { REACTION_TYPES } from '../../domain/reactions'
 
 const STORAGE_KEY = 'clubinho_mock_db_v1'
 

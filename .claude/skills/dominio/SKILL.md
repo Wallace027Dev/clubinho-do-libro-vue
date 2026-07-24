@@ -33,6 +33,12 @@ Módulos atuais:
   (mesmo molde: gate anti-spoiler + validação no núcleo).
 - `services/bookReview.ts` — **serviço + repositório** de avaliação do livro
   (gates de livro atual + capítulos concluídos/notados, nota e resenha).
+- `services/chapterComment.ts` — **serviço + repositório** de comentário
+  (gate anti-spoiler + validação do texto; leitura e escrita).
+- `services/commentReaction.ts` — **serviço + repositório** de reação
+  (gate anti-spoiler + tipo de reação válido).
+- `reactions.ts` — lista canônica de reações (`REACTION_TYPES`,
+  `isValidReactionType`), espelhando o enum do Prisma.
 
 ## A regra de ouro
 

@@ -1,14 +1,11 @@
-import { ChapterCommentReactionType } from '@prisma/client'
 import { requireSession } from '../../../_lib/auth.js'
-import { userCanReadComment } from '../../../_lib/chapterAccess.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
-import { prisma } from '../../../_lib/prisma.js'
+import { commentReactionRepository } from '../../../_lib/repositories/commentReactionRepository.js'
+import { reactToComment } from '../../../../src/domain/services/commentReaction.js'
 
 interface ReactionBody {
-  type?: ChapterCommentReactionType
+  type?: string
 }
-
-const allowedReactions = new Set(Object.values(ChapterCommentReactionType))
 
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['POST'])) {
@@ -21,35 +18,18 @@ export default async function handler(req: any, res: any) {
     return
   }
 
-  const commentId = req.query.commentId as string
-  const comment = await userCanReadComment(commentId, session.userId)
-
-  if (!comment) {
-    sendJson(res, 403, { error: 'Reação liberada apenas para quem concluiu o capítulo.' })
-    return
-  }
-
   const body = readBody<ReactionBody>(req)
 
-  if (!body.type || !allowedReactions.has(body.type)) {
-    sendJson(res, 400, { error: 'Reação inválida.' })
+  const result = await reactToComment(commentReactionRepository(), {
+    commentId: req.query.commentId as string,
+    userId: session.userId,
+    rawType: body.type
+  })
+
+  if (!result.ok) {
+    sendJson(res, result.status, { error: result.error })
     return
   }
 
-  const reaction = await prisma.chapterCommentReaction.upsert({
-    where: {
-      commentId_userId: {
-        commentId,
-        userId: session.userId
-      }
-    },
-    update: { type: body.type },
-    create: {
-      commentId,
-      userId: session.userId,
-      type: body.type
-    }
-  })
-
-  sendJson(res, 200, { reaction })
+  sendJson(res, 200, { reaction: result.reaction })
 }

@@ -8,7 +8,6 @@
  */
 import {
   ADMIN_PASSWORD,
-  REACTION_TYPES,
   getDb,
   persist,
   uid,
@@ -31,6 +30,15 @@ import {
   type ChapterRatingCommand
 } from '../../domain/services/chapterRating'
 import { resolveBookReview, type BookReviewCommand } from '../../domain/services/bookReview'
+import {
+  COMMENT_LOCKED_ERROR,
+  resolveChapterComment,
+  type ChapterCommentCommand
+} from '../../domain/services/chapterComment'
+import {
+  resolveCommentReaction,
+  type CommentReactionCommand
+} from '../../domain/services/commentReaction'
 
 export interface MockResponse {
   status: number
@@ -824,11 +832,35 @@ function listComments(chapterId: string): MockResponse {
   const current = session()
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
+  // Gate anti-spoiler no domínio; o mock resolve o capítulo e serializa.
   if (!getFinishedChapterForUser(chapterId, current.userId)) {
-    return err(403, 'Comentários liberam apenas depois de concluir o capítulo.')
+    return err(403, COMMENT_LOCKED_ERROR)
   }
 
   return json(200, { comments: commentsPayload(chapterId, current.userId) })
+}
+
+/** Adaptador de gravação do mock: upsert do comentário + atividade. */
+function commitMockChapterComment(command: ChapterCommentCommand) {
+  const existing = getDb().comments.find(
+    (item) => item.chapterId === command.chapterId && item.userId === command.userId
+  )
+
+  if (existing) {
+    existing.body = command.body
+    existing.updatedAt = nowIso()
+  } else {
+    getDb().comments.push({
+      id: uid(),
+      chapterId: command.chapterId,
+      userId: command.userId,
+      body: command.body,
+      createdAt: nowIso(),
+      updatedAt: nowIso()
+    })
+  }
+
+  addActivity(command.userId, command.activity.type, command.activity.message, command.activity.metadata)
 }
 
 function upsertComment(chapterId: string, body: Body): MockResponse {
@@ -836,68 +868,66 @@ function upsertComment(chapterId: string, body: Body): MockResponse {
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
   const chapter = getFinishedChapterForUser(chapterId, current.userId)
-  if (!chapter) return err(403, 'Comentários liberam apenas depois de concluir o capítulo.')
+  const actor = getDb().users.find((item) => item.id === current.userId) ?? null
 
-  const commentBody = typeof body.body === 'string' ? body.body.trim() : ''
-  if (!commentBody) return err(400, 'Comentário vazio.')
-  if (commentBody.length > 420) return err(400, 'Comentário deve ter até 420 caracteres.')
+  const decision = resolveChapterComment({
+    chapter: chapter ? { id: chapter.id, number: chapter.number, title: chapter.title } : null,
+    actor: actor ? { displayName: actor.displayName, login: actor.login } : null,
+    userId: current.userId,
+    rawBody: body.body
+  })
 
-  const existing = getDb().comments.find(
-    (item) => item.chapterId === chapterId && item.userId === current.userId
-  )
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  if (existing) {
-    existing.body = commentBody
-    existing.updatedAt = nowIso()
-  } else {
-    getDb().comments.push({
-      id: uid(),
-      chapterId,
-      userId: current.userId,
-      body: commentBody,
-      createdAt: nowIso(),
-      updatedAt: nowIso()
-    })
-  }
-
-  const user = getDb().users.find((item) => item.id === current.userId)
-  addActivity(
-    current.userId,
-    'CHAPTER_COMMENTED',
-    `${user?.displayName || user?.login || 'Um membro'} comentou ${chapterMessageLabel(chapter)}.`,
-    { chapterId, chapterNumber: chapter.number, chapterTitle: chapter.title }
-  )
+  commitMockChapterComment(decision.command)
   persist()
 
   return json(201, { comments: commentsPayload(chapterId, current.userId) })
+}
+
+/** Adaptador de gravação do mock: upsert da reação. */
+function commitMockCommentReaction(command: CommentReactionCommand) {
+  const existing = getDb().reactions.find(
+    (item) => item.commentId === command.commentId && item.userId === command.userId
+  )
+
+  if (existing) {
+    existing.type = command.type
+    existing.updatedAt = nowIso()
+    return existing
+  }
+
+  const reaction = {
+    id: uid(),
+    commentId: command.commentId,
+    userId: command.userId,
+    type: command.type,
+    updatedAt: nowIso()
+  }
+  getDb().reactions.push(reaction)
+  return reaction
 }
 
 function reactToComment(commentId: string, body: Body): MockResponse {
   const current = session()
   if (!current || !current.userId) return err(401, 'Unauthorized.')
 
+  // Gate: comentário existe e o capítulo dele está liberado para o membro.
   const comment = getDb().comments.find((item) => item.id === commentId)
-  if (!comment) return err(403, 'Reação liberada apenas para quem concluiu o capítulo.')
-  if (!getFinishedChapterForUser(comment.chapterId, current.userId)) {
-    return err(403, 'Reação liberada apenas para quem concluiu o capítulo.')
-  }
-
-  const type = body.type as ReactionType
-  if (!type || !REACTION_TYPES.includes(type)) return err(400, 'Reação inválida.')
-
-  const existing = getDb().reactions.find(
-    (item) => item.commentId === commentId && item.userId === current.userId
+  const canReact = Boolean(
+    comment && getFinishedChapterForUser(comment.chapterId, current.userId)
   )
 
-  let reaction
-  if (existing) {
-    existing.type = type
-    existing.updatedAt = nowIso()
-    reaction = existing
-  } else {
-    reaction = { id: uid(), commentId, userId: current.userId, type, updatedAt: nowIso() }
-    getDb().reactions.push(reaction)
-  }
+  const decision = resolveCommentReaction({
+    canReact,
+    commentId,
+    userId: current.userId,
+    rawType: body.type
+  })
+
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  const reaction = commitMockCommentReaction(decision.command)
   persist()
 
   return json(200, { reaction })
