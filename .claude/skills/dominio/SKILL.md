@@ -31,6 +31,8 @@ Módulos atuais:
   capítulo (ver abaixo).
 - `services/chapterRating.ts` — **serviço + repositório** de nota de capítulo
   (mesmo molde: gate anti-spoiler + validação no núcleo).
+- `services/bookReview.ts` — **serviço + repositório** de avaliação do livro
+  (gates de livro atual + capítulos concluídos/notados, nota e resenha).
 
 ## A regra de ouro
 

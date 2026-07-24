@@ -19,7 +19,7 @@ import {
   type MockSession
 } from './db'
 import { clearAttempts, isRateLimited, recordFailure } from './rateLimit'
-import { averageRating, formatRating, normalizeRating } from '../../domain/rating'
+import { averageRating } from '../../domain/rating'
 import { everyChapterFinished, everyChapterRated, isChapterUnlocked } from '../../domain/chapterProgress'
 import { chapterMessageLabel } from '../../domain/chapterLabel'
 import {
@@ -30,6 +30,7 @@ import {
   resolveChapterRating,
   type ChapterRatingCommand
 } from '../../domain/services/chapterRating'
+import { resolveBookReview, type BookReviewCommand } from '../../domain/services/bookReview'
 
 export interface MockResponse {
   status: number
@@ -591,59 +592,58 @@ function getRatings(clubBookId: string): MockResponse {
   })
 }
 
-function submitReview(body: Body): MockResponse {
-  const current = session()
-  if (!current || !current.userId) return err(401, 'Unauthorized.')
-
-  const clubBook = getCurrentClubBook()
-  if (!clubBook) return err(404, 'Não existe livro atual em andamento.')
-
-  const book = getDb().books.find((item) => item.id === clubBook.bookId)
-  const rating = normalizeRating(body.rating)
-  if (rating === null) {
-    return err(400, 'A nota deve ser um número entre 1 e 5.')
-  }
-
-  const review = typeof body.review === 'string' && body.review.trim() ? body.review.trim() : null
-  if (review && review.length > 1000) {
-    return err(400, 'A resenha deve ter até 1000 caracteres.')
-  }
-
-  if (!userFinishedAllChapters(clubBook.id, current.userId)) {
-    return err(403, 'Conclua todos os capítulos para avaliar o livro.')
-  }
-  if (!userRatedAllChapters(clubBook.id, current.userId)) {
-    return err(403, 'Dê sua nota a todos os capítulos antes de avaliar o livro.')
-  }
-
+/** Adaptador de gravação do mock: upsert da avaliação + atividade no "banco". */
+function commitMockBookReview(command: BookReviewCommand) {
   const existing = getDb().reviews.find(
-    (item) => item.clubBookId === clubBook.id && item.userId === current.userId
+    (item) => item.clubBookId === command.clubBookId && item.userId === command.userId
   )
 
   let saved
   if (existing) {
-    existing.rating = rating
-    existing.review = review
+    existing.rating = command.rating
+    existing.review = command.review
     saved = existing
   } else {
     saved = {
       id: uid(),
-      clubBookId: clubBook.id,
-      userId: current.userId,
-      rating,
-      review,
+      clubBookId: command.clubBookId,
+      userId: command.userId,
+      rating: command.rating,
+      review: command.review,
       createdAt: nowIso()
     }
     getDb().reviews.push(saved)
   }
 
-  const user = getDb().users.find((item) => item.id === current.userId)
-  addActivity(
-    current.userId,
-    'BOOK_REVIEWED',
-    `${user?.displayName || user?.login || 'Um membro'} avaliou ${book?.title ?? 'o livro'} com ${formatRating(rating)}/5.`,
-    { bookId: clubBook.bookId, rating }
-  )
+  addActivity(command.userId, command.activity.type, command.activity.message, command.activity.metadata)
+  return saved
+}
+
+function submitReview(body: Body): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
+
+  // Gates, validação e mensagem vivem no núcleo do domínio; o mock carrega os
+  // dados/flags e grava — sem duplicar a lógica do backend real.
+  const clubBook = getCurrentClubBook()
+  const book = clubBook ? getDb().books.find((item) => item.id === clubBook.bookId) : null
+  const actor = getDb().users.find((item) => item.id === current.userId) ?? null
+
+  const decision = resolveBookReview({
+    currentBook: clubBook
+      ? { clubBookId: clubBook.id, bookId: clubBook.bookId, title: book?.title ?? 'o livro' }
+      : null,
+    actor: actor ? { displayName: actor.displayName, login: actor.login } : null,
+    userId: current.userId,
+    rawRating: body.rating,
+    rawReview: body.review,
+    finishedAllChapters: clubBook ? userFinishedAllChapters(clubBook.id, current.userId) : false,
+    ratedAllChapters: clubBook ? userRatedAllChapters(clubBook.id, current.userId) : false
+  })
+
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  const saved = commitMockBookReview(decision.command)
   persist()
 
   return json(200, { review: saved })

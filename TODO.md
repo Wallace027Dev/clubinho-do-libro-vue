@@ -56,9 +56,10 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       `api/_lib/repositories/`, commit síncrono no mock). O handler real ficou
       fino (orquestrador `finishChapter`); o mock reusa o mesmo núcleo e
       permanece síncrono (preserva a suíte de segurança). Já aplicado também à
-      **nota de capítulo** (`services/chapterRating.ts` + adaptador Prisma).
-      **Referência** para migrar os demais fluxos de escrita (review, comentário/
-      reação, admin) incrementalmente ao mesmo molde.
+      **nota de capítulo** (`services/chapterRating.ts`) e à **avaliação do
+      livro** (`services/bookReview.ts`), com adaptadores Prisma. **Referência**
+      para migrar os demais fluxos de escrita (comentário/reação, admin)
+      incrementalmente ao mesmo molde.
 
 ## 🟡 Produto e escala
 
