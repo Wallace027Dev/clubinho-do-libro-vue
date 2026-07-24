@@ -49,9 +49,15 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       O backend real (`api/`) e o mock importam do mesmo lugar — fim da
       duplicação do gate anti-spoiler e da validação de nota. Cobertas por
       testes unitários no próprio domínio (`src/domain/*.test.ts`); padrão na
-      habilidade `dominio`. **Falta (evolução):** extrair também a **persistência**
-      (hoje Prisma no backend e `getDb()` no mock seguem separados) via uma
-      abstração de repositório, para o CRUD de domínio rodar contra os dois.
+      habilidade `dominio`.
+- [x] **Abstração de repositório (fluxos de escrita).** Padrão implantado em
+      `src/domain/services/chapterFinish.ts`: núcleo puro que decide + comando,
+      porta `ChapterFinishRepository` e adaptadores (Prisma em
+      `api/_lib/repositories/`, commit síncrono no mock). O handler real ficou
+      fino (orquestrador `finishChapter`); o mock reusa o mesmo núcleo e
+      permanece síncrono (preserva a suíte de segurança). **Referência** para
+      migrar os demais fluxos de escrita (rate/review/comment/reação, admin)
+      incrementalmente ao mesmo molde.
 
 ## 🟡 Produto e escala
 

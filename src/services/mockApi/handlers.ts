@@ -20,13 +20,12 @@ import {
 } from './db'
 import { clearAttempts, isRateLimited, recordFailure } from './rateLimit'
 import { averageRating, formatRating, normalizeRating } from '../../domain/rating'
-import {
-  everyChapterFinished,
-  everyChapterRated,
-  isChapterUnlocked,
-  resolveFinishedAt as resolveFinishedDate
-} from '../../domain/chapterProgress'
+import { everyChapterFinished, everyChapterRated, isChapterUnlocked } from '../../domain/chapterProgress'
 import { chapterMessageLabel } from '../../domain/chapterLabel'
+import {
+  resolveChapterFinish,
+  type ChapterFinishCommand
+} from '../../domain/services/chapterFinish'
 
 export interface MockResponse {
   status: number
@@ -217,11 +216,6 @@ function chapterForCurrentPayload(chapter: MockChapter, userId: string | null) {
       : [],
     ratings: rating ? [{ rating: rating.rating }] : []
   }
-}
-
-/** Horário de conclusão (regra no domínio); o mock persiste como ISO string. */
-function resolveFinishedAt(raw: unknown): string {
-  return resolveFinishedDate(raw).toISOString()
 }
 
 // ---------------------------------------------------------------------------
@@ -695,21 +689,10 @@ function startChapter(chapterId: string): MockResponse {
   return json(200, { progress })
 }
 
-function finishChapter(chapterId: string, body: Body): MockResponse {
-  const current = session()
-  if (!current || !current.userId) return err(401, 'Unauthorized.')
-
-  const chapter = currentChapter(chapterId)
-  if (!chapter) return err(404, 'Capítulo atual não encontrado.')
-
-  // Nota obrigatória na conclusão (fica registrada na atividade de fim).
-  const rating = normalizeRating(body.rating)
-  if (rating === null) {
-    return err(400, 'Dê uma nota de 1 a 5 ao concluir o capítulo.')
-  }
-
-  const finishedAt = resolveFinishedAt(body.finishedAt)
-  const existing = progressFor(chapter.id, current.userId)
+/** Adaptador de gravação do mock: executa o comando do domínio no "banco". */
+function commitMockChapterFinish(command: ChapterFinishCommand) {
+  const finishedAt = command.finishedAt.toISOString()
+  const existing = progressFor(command.chapterId, command.userId)
 
   let progress
   if (existing) {
@@ -719,8 +702,8 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   } else {
     progress = {
       id: uid(),
-      chapterId: chapter.id,
-      userId: current.userId,
+      chapterId: command.chapterId,
+      userId: command.userId,
       status: 'FINISHED' as const,
       startedAt: finishedAt,
       finishedAt
@@ -729,21 +712,43 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   }
 
   const existingRating = getDb().ratings.find(
-    (item) => item.chapterId === chapter.id && item.userId === current.userId
+    (item) => item.chapterId === command.chapterId && item.userId === command.userId
   )
   if (existingRating) {
-    existingRating.rating = rating
+    existingRating.rating = command.rating
   } else {
-    getDb().ratings.push({ id: uid(), chapterId: chapter.id, userId: current.userId, rating })
+    getDb().ratings.push({
+      id: uid(),
+      chapterId: command.chapterId,
+      userId: command.userId,
+      rating: command.rating
+    })
   }
 
-  const user = getDb().users.find((item) => item.id === current.userId)
-  addActivity(
-    current.userId,
-    'CHAPTER_FINISHED',
-    `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)} e deu nota ${formatRating(rating)}.`,
-    { chapterId: chapter.id, chapterNumber: chapter.number, chapterTitle: chapter.title, rating }
-  )
+  addActivity(command.userId, command.activity.type, command.activity.message, command.activity.metadata)
+  return progress
+}
+
+function finishChapter(chapterId: string, body: Body): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
+
+  // Regras (gates, nota, mensagem, metadados) vivem no núcleo do domínio; o
+  // mock só carrega os dados e grava — sem duplicar a lógica do backend real.
+  const chapter = currentChapter(chapterId)
+  const actor = getDb().users.find((item) => item.id === current.userId) ?? null
+
+  const decision = resolveChapterFinish({
+    chapter: chapter ? { id: chapter.id, number: chapter.number, title: chapter.title } : null,
+    actor: actor ? { displayName: actor.displayName, login: actor.login } : null,
+    userId: current.userId,
+    rawRating: body.rating,
+    rawFinishedAt: body.finishedAt
+  })
+
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  const progress = commitMockChapterFinish(decision.command)
   persist()
 
   return json(200, { progress })
