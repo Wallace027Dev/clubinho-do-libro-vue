@@ -87,6 +87,40 @@ export async function enablePush(): Promise<PushStatus> {
   return 'granted'
 }
 
+/**
+ * Reconcilia a assinatura ao autenticar: se a permissão já foi concedida,
+ * garante que a assinatura atual do navegador está registrada no backend para
+ * o usuário logado (cobre novo aparelho, retorno de sessão e rotação do SW).
+ * No-op sem suporte, sem permissão ou na homologação (lá o push é local).
+ */
+export async function syncPush(): Promise<void> {
+  if (!isPushSupported() || __USE_MOCK_API__ || !VAPID_PUBLIC_KEY) {
+    return
+  }
+
+  if (Notification.permission !== 'granted') {
+    return
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready
+    const subscription =
+      (await registration.pushManager.getSubscription()) ??
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      }))
+
+    const json = subscription.toJSON()
+    await apiRequest('/api/push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys })
+    })
+  } catch {
+    // Reconciliação é best-effort; falha aqui não afeta o uso do app.
+  }
+}
+
 /** Cancela a assinatura no navegador e no backend. */
 export async function disablePush(): Promise<void> {
   if (!isPushSupported() || __USE_MOCK_API__) {
