@@ -3,13 +3,12 @@ import { requireSession } from '../_lib/auth.js'
 import { getDefaultClub } from '../_lib/club.js'
 import { assertMethod, sendJson } from '../_lib/http.js'
 import { prisma } from '../_lib/prisma.js'
-import { FEED_ACTIVITY_TYPES } from '../../src/domain/activities.js'
+import { BELL_ACTIVITY_TYPES } from '../../src/domain/activities.js'
 
 /**
- * Feed paginado do clube (scroll infinito). Ordena por data desc com o id
- * como desempate estável, e usa paginação por cursor (id da última atividade
- * já carregada). O primeiro lote vem em GET /api/books/current; as próximas
- * páginas vêm por aqui.
+ * Sininho: atividades acionáveis (comentários; menções no futuro), paginadas
+ * por cursor como o feed. O que precisa de atenção fica aqui, separado do feed
+ * de descoberta (/api/activities).
  */
 const DEFAULT_LIMIT = 30
 const MAX_LIMIT = 50
@@ -32,21 +31,17 @@ export default async function handler(req: any, res: any) {
     Number.isInteger(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, MAX_LIMIT) : DEFAULT_LIMIT
 
   const activities = await prisma.activity.findMany({
-    // Feed = descoberta: só os tipos do canal "feed" (sem comentários nem
-    // "iniciou capítulo"). Comentários vivem no sininho (/api/notifications).
-    where: { clubId: club.id, type: { in: [...FEED_ACTIVITY_TYPES] as ActivityType[] } },
+    where: { clubId: club.id, type: { in: [...BELL_ACTIVITY_TYPES] as ActivityType[] } },
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: limit,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     include: {
-      actor: {
-        select: { id: true, login: true, displayName: true, avatarUrl: true }
-      }
+      actor: { select: { id: true, login: true, displayName: true, avatarUrl: true } }
     }
   })
 
   sendJson(res, 200, {
-    activities: activities.map((activity) => ({
+    notifications: activities.map((activity) => ({
       id: activity.id,
       type: activity.type,
       message: activity.message,
@@ -54,7 +49,6 @@ export default async function handler(req: any, res: any) {
       actor: activity.actor,
       metadata: activity.metadata
     })),
-    // Heurística padrão de cursor: veio o lote cheio, provavelmente há mais.
     hasMore: activities.length === limit
   })
 }

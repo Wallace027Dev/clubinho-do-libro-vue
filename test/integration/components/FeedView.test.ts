@@ -11,11 +11,13 @@ function seedSessionAndActivities(count: number) {
   getDb().session = { userId: joao.id, role: 'MEMBER' }
 
   const start = Date.parse('2026-07-01T12:00:00.000Z')
+  // Tipo do canal "feed" (progresso). Antes usava CHAPTER_STARTED, que passou
+  // a ser oculto do feed; aqui só interessa a paginação/sentinela.
   getDb().activities = Array.from({ length: count }, (_, i) => ({
     id: `a-${String(i).padStart(2, '0')}`,
     actorId: joao.id,
-    type: 'CHAPTER_STARTED',
-    message: `João iniciou o capítulo ${count - i}.`,
+    type: 'CHAPTER_FINISHED',
+    message: `João terminou o capítulo ${count - i}.`,
     metadata: null,
     createdAt: new Date(start - i * 1000).toISOString()
   }))

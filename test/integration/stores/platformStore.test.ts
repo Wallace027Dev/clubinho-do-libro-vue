@@ -52,12 +52,13 @@ describe('platformStore', () => {
   it('loadMoreActivities pagina o feed de 30 em 30, sem duplicatas', async () => {
     await useAuthStore().login('joao', '123456')
 
-    // 35 atividades injetadas direto no "banco" (fixture).
+    // 35 atividades injetadas direto no "banco" (fixture). Tipo do canal
+    // "feed" (CHAPTER_FINISHED); aqui só interessa a paginação.
     const start = Date.parse('2026-07-01T12:00:00.000Z')
     getDb().activities = Array.from({ length: 35 }, (_, i) => ({
       id: `a-${String(i).padStart(2, '0')}`,
       actorId: null,
-      type: 'CHAPTER_STARTED',
+      type: 'CHAPTER_FINISHED',
       message: `atividade ${i}`,
       metadata: null,
       createdAt: new Date(start - i * 1000).toISOString()
@@ -107,5 +108,30 @@ describe('platformStore', () => {
     const clubBookId = platform.clubState.currentBook!.id
     const ratings = await platform.loadBookRatings(clubBookId)
     expect(ratings.chapters).toHaveLength(1)
+  })
+
+  it('separa o feed (progresso) do sininho (comentários)', async () => {
+    await useAuthStore().login('joao', '123456')
+
+    const start = Date.parse('2026-07-01T12:00:00.000Z')
+    getDb().activities = [
+      { id: 'f1', actorId: null, type: 'CHAPTER_FINISHED', message: 'terminou', metadata: null, createdAt: new Date(start).toISOString() },
+      { id: 's1', actorId: null, type: 'CHAPTER_STARTED', message: 'iniciou', metadata: null, createdAt: new Date(start - 1000).toISOString() },
+      { id: 'c1', actorId: null, type: 'CHAPTER_COMMENTED', message: 'comentou', metadata: { chapterId: 'x' }, createdAt: new Date(start - 2000).toISOString() }
+    ]
+    persist()
+
+    const platform = usePlatformStore()
+
+    // Feed = descoberta: tem o progresso, sem "iniciou" nem comentário.
+    await platform.loadHome()
+    const feedTypes = platform.clubState.activities.map((activity) => activity.type)
+    expect(feedTypes).toContain('CHAPTER_FINISHED')
+    expect(feedTypes).not.toContain('CHAPTER_STARTED')
+    expect(feedTypes).not.toContain('CHAPTER_COMMENTED')
+
+    // Sininho = só o comentário (acionável).
+    await platform.loadNotifications()
+    expect(platform.notifications.map((item) => item.type)).toEqual(['CHAPTER_COMMENTED'])
   })
 })
