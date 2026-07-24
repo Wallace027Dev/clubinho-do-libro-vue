@@ -28,7 +28,11 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['pwa-icon.svg'],
+      includeAssets: ['pwa-icon.svg', 'push-sw.js'],
+      // Handlers de Web Push (push/notificationclick) importados pelo SW gerado.
+      workbox: {
+        importScripts: ['push-sw.js']
+      },
       manifest: {
         name: 'Clubinho do Libro',
         short_name: 'Libro',

@@ -32,6 +32,8 @@ import chapterReopen from '../_routes/chapters/[chapterId]/reopen.js'
 import chapterRating from '../_routes/chapters/[chapterId]/rating.js'
 import chapterComments from '../_routes/chapters/[chapterId]/comments.js'
 import commentReaction from '../_routes/comments/[commentId]/reaction.js'
+import pushSubscribe from '../_routes/push/subscribe.js'
+import pushUnsubscribe from '../_routes/push/unsubscribe.js'
 
 export type VercelHandler = (req: any, res: any) => unknown | Promise<unknown>
 
@@ -64,7 +66,9 @@ const routes: Route[] = [
   ['chapters/[chapterId]/reopen', chapterReopen],
   ['chapters/[chapterId]/rating', chapterRating],
   ['chapters/[chapterId]/comments', chapterComments],
-  ['comments/[commentId]/reaction', commentReaction]
+  ['comments/[commentId]/reaction', commentReaction],
+  ['push/subscribe', pushSubscribe],
+  ['push/unsubscribe', pushUnsubscribe]
 ].map(([pattern, handler]) => ({
   pattern: (pattern as string).split('/'),
   handler: handler as VercelHandler

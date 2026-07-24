@@ -6,6 +6,7 @@ import PasswordInput from '../components/ui/PasswordInput.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError } from '../services/apiClient'
+import { disablePush, enablePush, pushStatus, type PushStatus } from '../services/pushService'
 import { useAuthStore } from '../stores/authStore'
 import { usePlatformStore } from '../stores/platformStore'
 import { useUiStore } from '../stores/uiStore'
@@ -29,6 +30,39 @@ const isChangingPassword = ref(false)
 
 const isAvatarModalOpen = ref(false)
 
+const pushState = ref<PushStatus>('unsupported')
+const isTogglingPush = ref(false)
+
+async function enableNotifications() {
+  isTogglingPush.value = true
+
+  try {
+    pushState.value = await enablePush()
+
+    if (pushState.value === 'granted') {
+      uiStore.notify('Notificações ativadas!')
+    } else if (pushState.value === 'denied') {
+      uiStore.notify('As notificações estão bloqueadas no navegador.', 'error')
+    }
+  } catch {
+    uiStore.notify('Não foi possível ativar as notificações.', 'error')
+  } finally {
+    isTogglingPush.value = false
+  }
+}
+
+async function disableNotifications() {
+  isTogglingPush.value = true
+
+  try {
+    await disablePush()
+    pushState.value = 'default'
+    uiStore.notify('Notificações desativadas.')
+  } finally {
+    isTogglingPush.value = false
+  }
+}
+
 function openAvatarModal() {
   if (avatarUrl.value) {
     isAvatarModalOpen.value = true
@@ -42,6 +76,7 @@ function closeAvatarModal() {
 onMounted(() => {
   void platformStore.loadHome()
   void platformStore.loadHistory()
+  pushState.value = pushStatus()
 })
 
 // Estatísticas pessoais calculadas com dados que o front já recebe.
@@ -262,6 +297,31 @@ async function handleLogout() {
         <p>Livros lidos pelo clube</p>
       </div>
     </div>
+  </SectionCard>
+
+  <SectionCard
+    label="Notificações"
+    title="Avisos do clube"
+    subtitle="Receba um aviso quando o clube escolher um novo livro do mês."
+  >
+    <p v-if="pushState === 'unsupported'" class="comment-muted">
+      Seu navegador não suporta notificações push.
+    </p>
+
+    <p v-else-if="pushState === 'denied'" class="comment-muted">
+      As notificações estão bloqueadas. Libere nas configurações do navegador para ativar.
+    </p>
+
+    <div v-else-if="pushState === 'granted'" class="action-stack">
+      <p class="comment-muted">Notificações ativadas neste aparelho.</p>
+      <BaseButton variant="outline" :loading="isTogglingPush" @click="disableNotifications">
+        Desativar notificações
+      </BaseButton>
+    </div>
+
+    <BaseButton v-else variant="secondary" :loading="isTogglingPush" @click="enableNotifications">
+      Ativar notificações
+    </BaseButton>
   </SectionCard>
 
   <SectionCard label="Segurança" title="Trocar senha">

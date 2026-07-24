@@ -46,6 +46,8 @@ import {
 } from '../../domain/services/adminChapters'
 import { normalizeLogin, resolveCreateUser, resolveUpdateUser } from '../../domain/services/adminMembers'
 import { resolveFinishBook, resolveSelectBook } from '../../domain/services/adminBook'
+import { bookSelectedNotification } from '../../domain/notifications'
+import { simulateLocalPush } from './pushSim'
 
 export interface MockResponse {
   status: number
@@ -305,6 +307,10 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
   if (path === '/api/profile' && m === 'PATCH') return updateProfile(body)
   if (path === '/api/profile/password' && m === 'POST') return changePassword(body)
 
+  // --- Push (homologação: sem servidor real; a simulação é local) -----------
+  if (path === '/api/push/subscribe' && m === 'POST') return pushSubscribe()
+  if (path === '/api/push/unsubscribe' && m === 'POST') return pushUnsubscribe()
+
   return err(404, 'Rota não encontrada no mock de homologação.')
 }
 
@@ -478,6 +484,9 @@ function selectCurrent(body: Body): MockResponse {
     bookId: book.id
   })
   persist()
+
+  // Homologação: simula o push do novo livro localmente (se houver permissão).
+  simulateLocalPush(bookSelectedNotification(book.title))
 
   return json(201, { currentBook: { ...clubBook, book } })
 }
@@ -1182,5 +1191,22 @@ function changePassword(body: Body): MockResponse {
   user.password = newPassword
   persist()
 
+  return json(200, { ok: true })
+}
+
+// ---------------------------------------------------------------------------
+// Push (homologação): sem servidor real; a entrega é simulada localmente no
+// evento (ver simulateLocalPush). Os endpoints só confirmam a "assinatura".
+// ---------------------------------------------------------------------------
+
+function pushSubscribe(): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
+  return json(201, { ok: true })
+}
+
+function pushUnsubscribe(): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
   return json(200, { ok: true })
 }

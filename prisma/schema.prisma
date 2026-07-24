@@ -60,6 +60,7 @@ model User {
   chapterCommentReactions ChapterCommentReaction[]
   chapterRatings ChapterRating[]
   bookReviews BookReview[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Club {
@@ -210,4 +211,21 @@ model Activity {
   actor User? @relation(fields: [actorId], references: [id])
 
   @@index([clubId, createdAt])
+}
+
+// Assinatura de Web Push de um membro (um aparelho/navegador = uma linha).
+// O endpoint é único; as chaves p256dh/auth vêm da PushSubscription do
+// navegador. Ao desativar ou expirar (410 do serviço de push), a linha é
+// removida.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
