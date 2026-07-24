@@ -1,8 +1,8 @@
 import { requireAdmin } from '../../_lib/auth.js'
-import { getDefaultClub } from '../../_lib/club.js'
 import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
-import { hashPassword } from '../../_lib/passwords.js'
 import { prisma } from '../../_lib/prisma.js'
+import { adminMembersRepository } from '../../_lib/repositories/adminMembersRepository.js'
+import { createMember } from '../../../src/domain/services/adminMembers.js'
 
 interface CreateUserBody {
   login?: string
@@ -40,41 +40,16 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = readBody<CreateUserBody>(req)
-  // Username sempre minúsculo, para casar com o login (que normaliza igual).
-  const login = body.login?.trim().toLowerCase()
-  const password = body.password ?? ''
+  const result = await createMember(adminMembersRepository(), {
+    rawLogin: body.login,
+    rawPassword: body.password,
+    rawDisplayName: body.displayName
+  })
 
-  if (!login || password.length < 6) {
-    sendJson(res, 400, { error: 'Informe login e senha com pelo menos 6 caracteres.' })
+  if (!result.ok) {
+    sendJson(res, result.status, { error: result.error })
     return
   }
 
-  const club = await getDefaultClub()
-  const user = await prisma.user.create({
-    data: {
-      login,
-      passwordHash: await hashPassword(password),
-      displayName: body.displayName?.trim() || null
-    },
-    select: {
-      id: true,
-      login: true,
-      role: true,
-      displayName: true,
-      avatarUrl: true,
-      deactivatedAt: true,
-      createdAt: true
-    }
-  })
-
-  await prisma.activity.create({
-    data: {
-      clubId: club.id,
-      type: 'MEMBER_CREATED',
-      message: `${user.displayName || user.login} entrou no clube.`,
-      metadata: { userId: user.id }
-    }
-  })
-
-  sendJson(res, 201, { user })
+  sendJson(res, 201, { user: result.user })
 }

@@ -39,6 +39,9 @@ Módulos atuais:
   (gate anti-spoiler + tipo de reação válido).
 - `reactions.ts` — lista canônica de reações (`REACTION_TYPES`,
   `isValidReactionType`), espelhando o enum do Prisma.
+- `services/adminChapters.ts` — criar/editar/excluir capítulo (admin).
+- `services/adminMembers.ts` — criar/editar membro (admin).
+- `services/adminBook.ts` — selecionar/finalizar livro atual (admin).
 
 ## A regra de ouro
 

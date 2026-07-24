@@ -39,6 +39,13 @@ import {
   resolveCommentReaction,
   type CommentReactionCommand
 } from '../../domain/services/commentReaction'
+import {
+  resolveCreateChapter,
+  resolveDeleteChapter,
+  resolveUpdateChapter
+} from '../../domain/services/adminChapters'
+import { normalizeLogin, resolveCreateUser, resolveUpdateUser } from '../../domain/services/adminMembers'
+import { resolveFinishBook, resolveSelectBook } from '../../domain/services/adminBook'
 
 export interface MockResponse {
   status: number
@@ -439,16 +446,19 @@ function selectCurrent(body: Body): MockResponse {
   if (!current) return err(401, 'Unauthorized.')
   if (current.role !== 'ADMIN') return err(403, 'Admin access required.')
 
-  const title = typeof body.title === 'string' ? body.title.trim() : ''
-  if (!title) return err(400, 'Título do livro é obrigatório.')
-  if (getCurrentClubBook()) return err(409, 'Já existe um livro atual em andamento.')
+  const decision = resolveSelectBook({
+    hasCurrentBook: Boolean(getCurrentClubBook()),
+    rawTitle: body.title,
+    rawAuthor: body.author,
+    rawDescription: body.description
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
   const book = {
     id: uid(),
-    title,
-    author: typeof body.author === 'string' && body.author.trim() ? body.author.trim() : null,
-    description:
-      typeof body.description === 'string' && body.description.trim() ? body.description.trim() : null,
+    title: decision.command.title,
+    author: decision.command.author,
+    description: decision.command.description,
     coverUrl: null
   }
   getDb().books.push(book)
@@ -464,7 +474,7 @@ function selectCurrent(body: Body): MockResponse {
   }
   getDb().clubBooks.push(clubBook)
 
-  addActivity(current.userId, 'BOOK_SELECTED', `${book.title} virou o livro atual do clube.`, {
+  addActivity(current.userId, decision.command.activity.type, decision.command.activity.message, {
     bookId: book.id
   })
   persist()
@@ -478,16 +488,25 @@ function finishCurrentBook(): MockResponse {
   if (current.role !== 'ADMIN') return err(403, 'Admin access required.')
 
   const clubBook = getCurrentClubBook()
-  if (!clubBook) return err(404, 'Não existe livro atual em andamento.')
+  const book = clubBook ? getDb().books.find((item) => item.id === clubBook.bookId) : null
 
-  const book = getDb().books.find((item) => item.id === clubBook.bookId)
-  clubBook.status = 'FINISHED'
-  clubBook.finishedAt = nowIso()
-  clubBook.finishedByUserId = current.userId
-
-  addActivity(current.userId, 'BOOK_FINISHED', `${book?.title ?? 'O livro'} foi finalizado pelo clube.`, {
-    bookId: clubBook.bookId
+  const decision = resolveFinishBook({
+    currentBook: clubBook
+      ? { clubBookId: clubBook.id, bookId: clubBook.bookId, title: book?.title ?? 'O livro' }
+      : null
   })
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  clubBook!.status = 'FINISHED'
+  clubBook!.finishedAt = nowIso()
+  clubBook!.finishedByUserId = current.userId
+
+  addActivity(
+    current.userId,
+    decision.command.activity.type,
+    decision.command.activity.message,
+    decision.command.activity.metadata
+  )
   persist()
 
   return json(200, { finishedBook: { ...clubBook, book } })
@@ -978,29 +997,28 @@ function createUser(body: Body): MockResponse {
   const guard = requireAdmin()
   if (isResponse(guard)) return guard
 
-  const login = typeof body.login === 'string' ? body.login.trim().toLowerCase() : ''
-  const password = typeof body.password === 'string' ? body.password : ''
-
-  if (!login || password.length < 6) {
-    return err(400, 'Informe login e senha com pelo menos 6 caracteres.')
-  }
-  if (getDb().users.some((item) => item.login === login)) {
-    return err(409, 'Já existe um membro com esse login.')
-  }
+  const login = normalizeLogin(body.login)
+  const decision = resolveCreateUser({
+    rawLogin: body.login,
+    rawPassword: body.password,
+    rawDisplayName: body.displayName,
+    loginTaken: Boolean(login) && getDb().users.some((item) => item.login === login)
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
   const user = {
     id: uid(),
-    login,
-    password,
+    login: decision.command.login,
+    password: decision.command.password,
     role: 'MEMBER' as const,
-    displayName: typeof body.displayName === 'string' && body.displayName.trim() ? body.displayName.trim() : null,
+    displayName: decision.command.displayName,
     avatarUrl: null,
     deactivatedAt: null,
     createdAt: nowIso()
   }
   getDb().users.push(user)
 
-  addActivity(null, 'MEMBER_CREATED', `${user.displayName || user.login} entrou no clube.`, {
+  addActivity(null, decision.command.activity.type, decision.command.activity.message, {
     userId: user.id
   })
   persist()
@@ -1013,26 +1031,23 @@ function updateUser(userId: string, body: Body): MockResponse {
   if (isResponse(guard)) return guard
 
   const user = getDb().users.find((item) => item.id === userId)
-  if (!user) return err(404, 'Membro não encontrado.')
+  const decision = resolveUpdateUser({
+    userId,
+    userExists: Boolean(user),
+    rawDeactivated: body.deactivated,
+    rawNewPassword: body.newPassword
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  let touched = false
-
-  if (typeof body.deactivated === 'boolean') {
-    user.deactivatedAt = body.deactivated ? nowIso() : null
-    touched = true
+  if (decision.command.changes.deactivated !== undefined) {
+    user!.deactivatedAt = decision.command.changes.deactivated ? nowIso() : null
   }
-
-  if (body.newPassword !== undefined) {
-    const newPassword = typeof body.newPassword === 'string' ? body.newPassword : ''
-    if (newPassword.length < 6) return err(400, 'A nova senha precisa ter pelo menos 6 caracteres.')
-    user.password = newPassword
-    touched = true
+  if (decision.command.changes.newPassword !== undefined) {
+    user!.password = decision.command.changes.newPassword
   }
-
-  if (!touched) return err(400, 'Nada para atualizar.')
 
   persist()
-  return json(200, { user: memberView(user.id) })
+  return json(200, { user: memberView(userId) })
 }
 
 // ---------------------------------------------------------------------------
@@ -1054,19 +1069,20 @@ function createChapter(body: Body): MockResponse {
   if (isResponse(guard)) return guard
 
   const clubBook = getCurrentClubBook()
-  if (!clubBook) return err(404, 'Não existe livro atual em andamento.')
+  const decision = resolveCreateChapter({
+    currentBookId: clubBook?.id ?? null,
+    existingNumbers: clubBook ? chaptersOf(clubBook.id).map((chapter) => chapter.number) : [],
+    rawNumber: body.number,
+    rawTitle: body.title
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  const number = Number(body.number)
-  const title = typeof body.title === 'string' ? body.title.trim() : ''
-
-  if (!Number.isInteger(number) || number < 0 || !title) {
-    return err(400, 'Informe número (0 para prólogo) e título do capítulo.')
+  const chapter = {
+    id: uid(),
+    clubBookId: decision.command.clubBookId,
+    number: decision.command.number,
+    title: decision.command.title
   }
-  if (chaptersOf(clubBook.id).some((chapter) => chapter.number === number)) {
-    return err(409, 'Já existe um capítulo com esse número neste livro.')
-  }
-
-  const chapter = { id: uid(), clubBookId: clubBook.id, number, title }
   getDb().chapters.push(chapter)
   persist()
 
@@ -1078,32 +1094,24 @@ function updateChapter(chapterId: string, body: Body): MockResponse {
   if (isResponse(guard)) return guard
 
   const chapter = currentChapter(chapterId)
-  if (!chapter) return err(404, 'Capítulo atual não encontrado.')
+  const siblingNumbers = chapter
+    ? getDb()
+        .chapters.filter((item) => item.clubBookId === chapter.clubBookId && item.id !== chapter.id)
+        .map((item) => item.number)
+    : []
 
-  let touched = false
+  const decision = resolveUpdateChapter({
+    chapter: chapter
+      ? { id: chapter.id, clubBookId: chapter.clubBookId, number: chapter.number, title: chapter.title }
+      : null,
+    siblingNumbers,
+    rawNumber: body.number,
+    rawTitle: body.title
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  if (body.number !== undefined) {
-    const number = Number(body.number)
-    if (!Number.isInteger(number) || number < 0) return err(400, 'Número de capítulo inválido.')
-    if (
-      getDb().chapters.some(
-        (item) => item.clubBookId === chapter.clubBookId && item.number === number && item.id !== chapter.id
-      )
-    ) {
-      return err(409, 'Já existe um capítulo com esse número neste livro.')
-    }
-    chapter.number = number
-    touched = true
-  }
-
-  if (body.title !== undefined) {
-    const title = typeof body.title === 'string' ? body.title.trim() : ''
-    if (!title) return err(400, 'Título do capítulo não pode ficar vazio.')
-    chapter.title = title
-    touched = true
-  }
-
-  if (!touched) return err(400, 'Nada para atualizar.')
+  if (decision.command.changes.number !== undefined) chapter!.number = decision.command.changes.number
+  if (decision.command.changes.title !== undefined) chapter!.title = decision.command.changes.title
 
   persist()
   return json(200, { chapter })
@@ -1114,15 +1122,20 @@ function deleteChapter(chapterId: string): MockResponse {
   if (isResponse(guard)) return guard
 
   const chapter = currentChapter(chapterId)
-  if (!chapter) return err(404, 'Capítulo atual não encontrado.')
+  const hasMemberActivity = chapter
+    ? getDb().progress.some((item) => item.chapterId === chapter.id) ||
+      getDb().comments.some((item) => item.chapterId === chapter.id)
+    : false
 
-  const hasProgress = getDb().progress.some((item) => item.chapterId === chapter.id)
-  const hasComments = getDb().comments.some((item) => item.chapterId === chapter.id)
-  if (hasProgress || hasComments) {
-    return err(409, 'Este capítulo já tem progresso ou comentários de membros e não pode ser excluído.')
-  }
+  const decision = resolveDeleteChapter({
+    chapter: chapter
+      ? { id: chapter.id, clubBookId: chapter.clubBookId, number: chapter.number, title: chapter.title }
+      : null,
+    hasMemberActivity
+  })
+  if (!decision.ok) return err(decision.status, decision.error)
 
-  getDb().chapters = getDb().chapters.filter((item) => item.id !== chapter.id)
+  getDb().chapters = getDb().chapters.filter((item) => item.id !== decision.chapterId)
   persist()
 
   return json(200, { ok: true })

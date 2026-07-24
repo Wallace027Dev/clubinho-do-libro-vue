@@ -1,7 +1,7 @@
 import { requireAdmin } from '../../../_lib/auth.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
-import { hashPassword } from '../../../_lib/passwords.js'
-import { prisma } from '../../../_lib/prisma.js'
+import { adminMembersRepository } from '../../../_lib/repositories/adminMembersRepository.js'
+import { updateMember } from '../../../../src/domain/services/adminMembers.js'
 
 interface UpdateUserBody {
   deactivated?: boolean
@@ -9,10 +9,10 @@ interface UpdateUserBody {
 }
 
 /**
- * Gestão de um membro pelo admin (fase 8, item 8.2):
- * - deactivated true/false: desativa/reativa (soft delete — o histórico
- *   de comentários, notas e atividades do clube é preservado).
- * - newPassword: redefine a senha provisória de quem esqueceu.
+ * Gestão de um membro pelo admin. Regras no domínio
+ * (`src/domain/services/adminMembers.ts`):
+ * - deactivated true/false: soft delete (preserva histórico).
+ * - newPassword: redefine a senha provisória (mínimo 6 caracteres).
  */
 export default async function handler(req: any, res: any) {
   if (!assertMethod(req, res, ['PATCH'])) {
@@ -25,48 +25,17 @@ export default async function handler(req: any, res: any) {
     return
   }
 
-  const userId = req.query.userId as string
-  const user = await prisma.user.findUnique({ where: { id: userId } })
-
-  if (!user) {
-    sendJson(res, 404, { error: 'Membro não encontrado.' })
-    return
-  }
-
   const body = readBody<UpdateUserBody>(req)
-  const data: { deactivatedAt?: Date | null; passwordHash?: string } = {}
-
-  if (typeof body.deactivated === 'boolean') {
-    data.deactivatedAt = body.deactivated ? new Date() : null
-  }
-
-  if (body.newPassword !== undefined) {
-    if (body.newPassword.length < 6) {
-      sendJson(res, 400, { error: 'A nova senha precisa ter pelo menos 6 caracteres.' })
-      return
-    }
-
-    data.passwordHash = await hashPassword(body.newPassword)
-  }
-
-  if (!Object.keys(data).length) {
-    sendJson(res, 400, { error: 'Nada para atualizar.' })
-    return
-  }
-
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data,
-    select: {
-      id: true,
-      login: true,
-      role: true,
-      displayName: true,
-      avatarUrl: true,
-      deactivatedAt: true,
-      createdAt: true
-    }
+  const result = await updateMember(adminMembersRepository(), {
+    userId: req.query.userId as string,
+    rawDeactivated: body.deactivated,
+    rawNewPassword: body.newPassword
   })
 
-  sendJson(res, 200, { user: updated })
+  if (!result.ok) {
+    sendJson(res, result.status, { error: result.error })
+    return
+  }
+
+  sendJson(res, 200, { user: result.user })
 }

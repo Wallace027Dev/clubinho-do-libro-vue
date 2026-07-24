@@ -60,8 +60,12 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       (`services/bookReview.ts`) e a **comentário/reação**
       (`services/chapterComment.ts` + `services/commentReaction.ts`, com a lista
       canônica de reações em `domain/reactions.ts`), todos com adaptadores
-      Prisma. **Falta migrar ao mesmo molde:** as ações de **admin** (criar/
-      editar capítulo, usuários, iniciar/finalizar livro).
+      Prisma. Também migradas as ações de **admin**: capítulos
+      (`services/adminChapters.ts`), membros (`services/adminMembers.ts`) e
+      ciclo do livro (`services/adminBook.ts`). Todos os fluxos de escrita da
+      API agora passam por um serviço de domínio + repositório. De quebra, o
+      backend real passou a responder **409** (como o mock) em número de
+      capítulo e login duplicados, em vez do 500 por violação de unique.
 
 ## 🟡 Produto e escala
 
