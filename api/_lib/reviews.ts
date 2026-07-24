@@ -1,4 +1,6 @@
 import { prisma } from './prisma.js'
+import { averageRating } from '../../src/domain/rating.js'
+import { everyChapterFinished, everyChapterRated } from '../../src/domain/chapterProgress.js'
 
 /**
  * Carrega as avaliações de um ClubBook com o resumo (média e total).
@@ -15,10 +17,9 @@ export async function getClubBookReviews(clubBookId: string) {
     }
   })
 
-  const count = reviews.length
-  const average = count ? reviews.reduce((sum, review) => sum + review.rating, 0) / count : null
+  const average = averageRating(reviews.map((review) => review.rating))
 
-  return { reviews, reviewSummary: { average, count } }
+  return { reviews, reviewSummary: { average, count: reviews.length } }
 }
 
 /**
@@ -36,11 +37,7 @@ export async function userRatedAllChapters(clubBookId: string, userId: string) {
     }
   })
 
-  if (chapters.length === 0) {
-    return false
-  }
-
-  return chapters.every((chapter) => chapter.ratings.length > 0)
+  return everyChapterRated(chapters.map((chapter) => chapter.ratings.length > 0))
 }
 
 /**
@@ -58,9 +55,5 @@ export async function userFinishedAllChapters(clubBookId: string, userId: string
     }
   })
 
-  if (chapters.length === 0) {
-    return false
-  }
-
-  return chapters.every((chapter) => chapter.progress[0]?.status === 'FINISHED')
+  return everyChapterFinished(chapters.map((chapter) => chapter.progress[0]?.status))
 }

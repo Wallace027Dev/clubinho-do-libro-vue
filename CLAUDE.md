@@ -45,10 +45,22 @@ Em resumo: refatorou → teste intacto; teste vermelho → explicar antes de agi
 regra mudou → perguntar antes de mudar o teste; código quebrou → consertar o
 código.
 
+## Regras de negócio: camada de domínio
+
+Regra de negócio pura (validação, cálculo, gate de permissão como o
+anti-spoiler) vive em **`src/domain/`**, fonte única consumida pelo backend
+real (`api/`) **e** pelo mock — **nunca duplicada**. Ao criar/alterar qualquer
+regra de negócio, **invoque a habilidade `dominio`**: ela diz onde a regra mora,
+como ligar os dois lados e qual teste usar (unitário no próprio domínio, mais
+integração quando muda comportamento observável). Achou lógica de negócio
+copiada no handler real e no mock? Extraia para `src/domain/` e ligue os dois.
+
 ## Convenções que sempre valem
 
 - Português (pt-BR) em UI, mensagens e nomes de teste (descrevem a regra de
   negócio, não o código).
+- Regra de negócio pura mora em `src/domain/` (habilidade `dominio`), nunca
+  duplicada entre backend e mock.
 - Camada de dados nas views passa por **ações de store**, nunca `apiRequest`
   direto (ver TODO/AGENT).
 - `master` é protegida: só recebe merge da `developer`. Desenvolva na

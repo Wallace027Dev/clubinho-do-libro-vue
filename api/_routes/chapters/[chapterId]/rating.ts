@@ -2,6 +2,7 @@ import { requireSession } from '../../../_lib/auth.js'
 import { getFinishedChapterForUser } from '../../../_lib/chapterAccess.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
 import { prisma } from '../../../_lib/prisma.js'
+import { normalizeRating } from '../../../../src/domain/rating.js'
 
 interface RatingBody {
   rating?: number
@@ -32,9 +33,9 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = readBody<RatingBody>(req)
-  const rating = Math.round(Number(body.rating) * 10) / 10
+  const rating = normalizeRating(body.rating)
 
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+  if (rating === null) {
     sendJson(res, 400, { error: 'A nota deve ser um número entre 1 e 5.' })
     return
   }

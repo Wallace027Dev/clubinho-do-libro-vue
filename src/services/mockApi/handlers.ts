@@ -19,6 +19,14 @@ import {
   type MockSession
 } from './db'
 import { clearAttempts, isRateLimited, recordFailure } from './rateLimit'
+import { averageRating, formatRating, normalizeRating } from '../../domain/rating'
+import {
+  everyChapterFinished,
+  everyChapterRated,
+  isChapterUnlocked,
+  resolveFinishedAt as resolveFinishedDate
+} from '../../domain/chapterProgress'
+import { chapterMessageLabel } from '../../domain/chapterLabel'
 
 export interface MockResponse {
   status: number
@@ -81,15 +89,15 @@ function progressFor(chapterId: string, userId: string | null) {
 
 function userFinishedAllChapters(clubBookId: string, userId: string): boolean {
   const chapters = chaptersOf(clubBookId)
-  if (chapters.length === 0) return false
-  return chapters.every((chapter) => progressFor(chapter.id, userId)?.status === 'FINISHED')
+  return everyChapterFinished(chapters.map((chapter) => progressFor(chapter.id, userId)?.status))
 }
 
 function userRatedAllChapters(clubBookId: string, userId: string): boolean {
   const chapters = chaptersOf(clubBookId)
-  if (chapters.length === 0) return false
-  return chapters.every((chapter) =>
-    getDb().ratings.some((rating) => rating.chapterId === chapter.id && rating.userId === userId)
+  return everyChapterRated(
+    chapters.map((chapter) =>
+      getDb().ratings.some((rating) => rating.chapterId === chapter.id && rating.userId === userId)
+    )
   )
 }
 
@@ -98,20 +106,11 @@ function getFinishedChapterForUser(chapterId: string, userId: string): MockChapt
   const chapter = getDb().chapters.find((item) => item.id === chapterId)
   if (!chapter) return null
   const clubBook = getDb().clubBooks.find((item) => item.id === chapter.clubBookId)
-  if (!clubBook || clubBook.status !== 'CURRENT') return null
-  if (progressFor(chapterId, userId)?.status !== 'FINISHED') return null
-  return chapter
-}
-
-function isStandaloneTitle(title: string): boolean {
-  const normalized = title.trim().toLowerCase()
-  return ['prólogo', 'prologo', 'epílogo', 'epilogo'].includes(normalized)
-}
-
-function chapterMessageLabel(chapter: MockChapter): string {
-  return isStandaloneTitle(chapter.title)
-    ? `o ${chapter.title.trim().toLowerCase()}`
-    : `o capítulo ${chapter.number}`
+  const unlocked = isChapterUnlocked({
+    clubBookStatus: clubBook?.status,
+    progressStatus: progressFor(chapterId, userId)?.status
+  })
+  return unlocked ? chapter : null
 }
 
 function countReactions(types: ReactionType[]): Partial<Record<ReactionType, number>> {
@@ -160,10 +159,9 @@ function reviewsPayload(clubBookId: string) {
       user: actorView(review.userId)
     }))
 
-  const count = reviews.length
-  const average = count ? reviews.reduce((sum, review) => sum + review.rating, 0) / count : null
+  const average = averageRating(reviews.map((review) => review.rating))
 
-  return { reviews, reviewSummary: { average, count } }
+  return { reviews, reviewSummary: { average, count: reviews.length } }
 }
 
 function addActivity(
@@ -221,14 +219,9 @@ function chapterForCurrentPayload(chapter: MockChapter, userId: string | null) {
   }
 }
 
+/** Horário de conclusão (regra no domínio); o mock persiste como ISO string. */
 function resolveFinishedAt(raw: unknown): string {
-  const now = new Date()
-  if (typeof raw !== 'string' || !raw) return now.toISOString()
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime()) || parsed.getTime() > now.getTime()) {
-    return now.toISOString()
-  }
-  return parsed.toISOString()
+  return resolveFinishedDate(raw).toISOString()
 }
 
 // ---------------------------------------------------------------------------
@@ -608,8 +601,8 @@ function submitReview(body: Body): MockResponse {
   if (!clubBook) return err(404, 'Não existe livro atual em andamento.')
 
   const book = getDb().books.find((item) => item.id === clubBook.bookId)
-  const rating = Math.round(Number(body.rating) * 10) / 10
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+  const rating = normalizeRating(body.rating)
+  if (rating === null) {
     return err(400, 'A nota deve ser um número entre 1 e 5.')
   }
 
@@ -650,7 +643,7 @@ function submitReview(body: Body): MockResponse {
   addActivity(
     current.userId,
     'BOOK_REVIEWED',
-    `${user?.displayName || user?.login || 'Um membro'} avaliou ${book?.title ?? 'o livro'} com ${String(rating).replace('.', ',')}/5.`,
+    `${user?.displayName || user?.login || 'Um membro'} avaliou ${book?.title ?? 'o livro'} com ${formatRating(rating)}/5.`,
     { bookId: clubBook.bookId, rating }
   )
   persist()
@@ -710,8 +703,8 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   if (!chapter) return err(404, 'Capítulo atual não encontrado.')
 
   // Nota obrigatória na conclusão (fica registrada na atividade de fim).
-  const rating = Math.round(Number(body.rating) * 10) / 10
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+  const rating = normalizeRating(body.rating)
+  if (rating === null) {
     return err(400, 'Dê uma nota de 1 a 5 ao concluir o capítulo.')
   }
 
@@ -748,7 +741,7 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   addActivity(
     current.userId,
     'CHAPTER_FINISHED',
-    `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)} e deu nota ${rating.toFixed(1).replace('.', ',')}.`,
+    `${user?.displayName || user?.login || 'Um membro'} terminou ${chapterMessageLabel(chapter)} e deu nota ${formatRating(rating)}.`,
     { chapterId: chapter.id, chapterNumber: chapter.number, chapterTitle: chapter.title, rating }
   )
   persist()
@@ -782,8 +775,8 @@ function rateChapter(chapterId: string, body: Body): MockResponse {
   const chapter = getFinishedChapterForUser(chapterId, current.userId)
   if (!chapter) return err(403, 'Conclua o capítulo antes de dar a sua nota.')
 
-  const rating = Math.round(Number(body.rating) * 10) / 10
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+  const rating = normalizeRating(body.rating)
+  if (rating === null) {
     return err(400, 'A nota deve ser um número entre 1 e 5.')
   }
 

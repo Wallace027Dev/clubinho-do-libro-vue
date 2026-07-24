@@ -3,33 +3,12 @@ import { getDefaultClub } from '../../../_lib/club.js'
 import { assertMethod, readBody, sendJson } from '../../../_lib/http.js'
 import { chapterMessageLabel } from '../../../_lib/chapterLabel.js'
 import { prisma } from '../../../_lib/prisma.js'
+import { formatRating, normalizeRating } from '../../../../src/domain/rating.js'
+import { resolveFinishedAt } from '../../../../src/domain/chapterProgress.js'
 
 interface FinishBody {
   finishedAt?: string
   rating?: number
-}
-
-/** Nota fracionada no formato pt-BR: 4.8 -> "4,8". */
-function formatRating(value: number): string {
-  return value.toFixed(1).replace('.', ',')
-}
-
-/**
- * Resolve o horário de conclusão informado pelo membro. Aceita apenas datas
- * válidas e não futuras; caso contrário, usa o horário atual como padrão.
- */
-function resolveFinishedAt(raw: string | undefined, now: Date): Date {
-  if (!raw) {
-    return now
-  }
-
-  const parsed = new Date(raw)
-
-  if (Number.isNaN(parsed.getTime()) || parsed.getTime() > now.getTime()) {
-    return now
-  }
-
-  return parsed
 }
 
 export default async function handler(req: any, res: any) {
@@ -66,9 +45,9 @@ export default async function handler(req: any, res: any) {
 
   // A nota do capítulo passou a ser obrigatória na conclusão (fica registrada
   // na própria atividade de fim de capítulo).
-  const rating = Math.round(Number(body.rating) * 10) / 10
+  const rating = normalizeRating(body.rating)
 
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+  if (rating === null) {
     sendJson(res, 400, { error: 'Dê uma nota de 1 a 5 ao concluir o capítulo.' })
     return
   }

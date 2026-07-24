@@ -42,11 +42,16 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       **Caveat:** o contador é em memória do processo — em serverless é
       best-effort (some no cold start). **Upgrade:** mover o contador para
       Postgres/Redis para garantia forte entre instâncias.
-- [ ] **Extrair camada de domínio.** Regras de negócio vivem dentro dos
-      handlers HTTP (`api/_routes/*`) e estão **duplicadas** no mock de
-      homologação (`src/services/mockApi/handlers.ts`, ~1100 linhas). Extrair
-      serviços de domínio testáveis que o backend real **e** o mock consumam
-      elimina a duplicação e destrava testes unitários da lógica real.
+- [x] **Extrair camada de domínio (regras puras).** As regras de negócio puras
+      agora vivem em `src/domain/` (fonte única): nota (`rating.ts` — faixa,
+      normalização, formato, média), progresso/anti-spoiler (`chapterProgress.ts`
+      — `isChapterUnlocked`, conclusão, horário) e rótulos (`chapterLabel.ts`).
+      O backend real (`api/`) e o mock importam do mesmo lugar — fim da
+      duplicação do gate anti-spoiler e da validação de nota. Cobertas por
+      testes unitários no próprio domínio (`src/domain/*.test.ts`); padrão na
+      habilidade `dominio`. **Falta (evolução):** extrair também a **persistência**
+      (hoje Prisma no backend e `getDb()` no mock seguem separados) via uma
+      abstração de repositório, para o CRUD de domínio rodar contra os dois.
 
 ## 🟡 Produto e escala
 
