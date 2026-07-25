@@ -33,6 +33,8 @@
 .feed-search {
   position: relative;
   display: block;
+  /* Respiro entre o campo de busca e o primeiro card. */
+  margin-bottom: 18px;
 }
 
 .feed-search input {

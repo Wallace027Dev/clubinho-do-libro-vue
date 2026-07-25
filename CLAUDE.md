@@ -55,6 +55,26 @@ como ligar os dois lados e qual teste usar (unitário no próprio domínio, mais
 integração quando muda comportamento observável). Achou lógica de negócio
 copiada no handler real e no mock? Extraia para `src/domain/` e ligue os dois.
 
+## Arquitetura de módulo e requisições
+
+Toda entrada/saída de dados segue o caminho **view → ação de store → apiClient →
+mock/backend real → domínio → Prisma**, cada camada com sua responsabilidade.
+Três habilidades, separadas por obrigação, governam isso:
+
+- **`modulo`** (coordenadora) — o **mapa das camadas**: o que mora em cada uma e
+  qual habilidade cuida de cada parte. Invoque ao montar uma feature de ponta a
+  ponta ou para saber onde uma coisa vai.
+- **`store`** — criar/refatorar **stores Pinia** (estilo setup): estado tipado,
+  getters `computed`, ações async que são as únicas donas do `apiRequest` e
+  controlam as flags de loading em `try/finally`. View chama **ação de store**,
+  nunca `apiRequest`/`fetch` direto.
+- **`requisicoes-http`** — a **requisição em si**. Exige, sem exceção: **tipagem
+  dura** (toda requisição `apiRequest<T>`, todo retorno em `src/types/*` e todo
+  objeto tipados; **nenhum `any`, nenhum implícito**, `strict` ligado) e
+  **loading em toda espera** (carga parcial → **skeleton** `SkeletonLoader`, um
+  só componente configurável; tela cheia / carregar mais → **spinner**
+  `AppSpinner`).
+
 ## Convenções que sempre valem
 
 - Português (pt-BR) em UI, mensagens e nomes de teste (descrevem a regra de
