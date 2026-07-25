@@ -20,7 +20,7 @@ import adminChapters from '../_routes/admin/chapters.js'
 import adminChapterById from '../_routes/admin/chapters/[chapterId].js'
 import adminFinishBook from '../_routes/admin/current-book/finish.js'
 import activities from '../_routes/activities.js'
-import notifications from '../_routes/notifications.js'
+import alerts from '../_routes/alerts.js'
 import booksCurrent from '../_routes/books/current.js'
 import booksReview from '../_routes/books/review.js'
 import booksHistory from '../_routes/books/history.js'
@@ -56,7 +56,7 @@ const routes: Route[] = [
   ['admin/chapters/[chapterId]', adminChapterById],
   ['admin/current-book/finish', adminFinishBook],
   ['activities', activities],
-  ['notifications', notifications],
+  ['alerts', alerts],
   ['books/current', booksCurrent],
   ['books/review', booksReview],
   ['books/history', booksHistory],

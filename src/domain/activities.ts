@@ -2,48 +2,52 @@
  * Camada de domínio — canais de atividade.
  *
  * Cada tipo de atividade pertence a um canal:
- * - `feed`  → descoberta: progresso de leitura e marcos do clube.
- * - `bell`  → notificações acionáveis (comentário; menção no futuro).
- * - `hidden`→ ruído que não aparece em nenhum dos dois (ex.: "iniciou capítulo").
+ * - `feed`  → **comentários** dos capítulos, mostrados na página /feed (só de
+ *             outras pessoas e de capítulos que o membro já concluiu — filtro
+ *             feito na borda, com os dados do banco).
+ * - `alert` → **progresso e marcos** (começo/fim de capítulo, seleção/fim de
+ *             livro, avaliação, novo membro): o log do sininho, num modal.
+ * - `hidden`→ ruído que não aparece em nenhum lugar (ex.: "atualizou perfil").
  *
- * Fonte única consumida pelo backend real e pelo mock, para o feed e o sininho
- * mostrarem exatamente os mesmos tipos dos dois lados.
+ * Fonte única consumida pelo backend real e pelo mock. Os filtros por usuário
+ * (só de outros; anti-spoiler do feed) dependem do banco e ficam na borda.
  */
 
-export type ActivityChannel = 'feed' | 'bell' | 'hidden'
+export type ActivityChannel = 'feed' | 'alert' | 'hidden'
 
-/** Notificações acionáveis (sininho). */
-export const BELL_ACTIVITY_TYPES = ['CHAPTER_COMMENTED'] as const
+/** Feed: comentários (acionáveis; abrem a página do comentário). */
+export const FEED_ACTIVITY_TYPES = ['CHAPTER_COMMENTED'] as const
 
-/** Ruído: não entra no feed nem no sininho (ex.: "iniciou capítulo", perfil). */
-export const HIDDEN_ACTIVITY_TYPES = ['CHAPTER_STARTED', 'PROFILE_UPDATED'] as const
-
-/** Feed de descoberta: progresso dos membros e marcos do clube. */
-export const FEED_ACTIVITY_TYPES = [
-  'MEMBER_CREATED',
+/** Sininho/alerta: progresso da leitura e marcos do clube. */
+export const ALERT_ACTIVITY_TYPES = [
+  'CHAPTER_STARTED',
+  'CHAPTER_FINISHED',
   'BOOK_SELECTED',
   'BOOK_FINISHED',
   'BOOK_REVIEWED',
-  'CHAPTER_FINISHED'
+  'MEMBER_CREATED'
 ] as const
+
+/** Ruído: não entra no feed nem no sininho. */
+export const HIDDEN_ACTIVITY_TYPES = ['PROFILE_UPDATED'] as const
 
 /** Canal a que um tipo de atividade pertence. */
 export function activityChannel(type: string): ActivityChannel {
-  if ((BELL_ACTIVITY_TYPES as readonly string[]).includes(type)) {
-    return 'bell'
+  if ((FEED_ACTIVITY_TYPES as readonly string[]).includes(type)) {
+    return 'feed'
   }
 
-  if ((HIDDEN_ACTIVITY_TYPES as readonly string[]).includes(type)) {
-    return 'hidden'
+  if ((ALERT_ACTIVITY_TYPES as readonly string[]).includes(type)) {
+    return 'alert'
   }
 
-  return 'feed'
+  return 'hidden'
 }
 
 export function isFeedActivity(type: string): boolean {
   return activityChannel(type) === 'feed'
 }
 
-export function isBellActivity(type: string): boolean {
-  return activityChannel(type) === 'bell'
+export function isAlertActivity(type: string): boolean {
+  return activityChannel(type) === 'alert'
 }

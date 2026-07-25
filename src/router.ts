@@ -13,7 +13,6 @@ import HistoryDetailView from './views/HistoryDetailView.vue'
 import HistoryView from './views/HistoryView.vue'
 import HomeView from './views/HomeView.vue'
 import LoginView from './views/LoginView.vue'
-import NotificationsView from './views/NotificationsView.vue'
 import ProfileView from './views/ProfileView.vue'
 import RaffleView from './views/RaffleView.vue'
 
@@ -22,7 +21,6 @@ export const router = createRouter({
   routes: [
     { path: '/', component: HomeView, meta: { requiresAuth: true } },
     { path: '/feed', component: FeedView, meta: { requiresAuth: true } },
-    { path: '/notifications', component: NotificationsView, meta: { requiresAuth: true } },
     { path: '/activity/:activityId', component: ActivityDetailView, meta: { requiresAuth: true } },
     { path: '/chapters', component: ChaptersView, meta: { requiresAuth: true } },
     { path: '/chapters/:chapterId', component: ChapterDetailView, meta: { requiresAuth: true } },

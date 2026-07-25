@@ -21,8 +21,8 @@ interface ActivitiesResponse {
   hasMore: boolean
 }
 
-interface NotificationsResponse {
-  notifications: Activity[]
+interface AlertsResponse {
+  alerts: Activity[]
   hasMore: boolean
 }
 
@@ -30,11 +30,11 @@ interface NotificationsResponse {
 const ACTIVITIES_PAGE_SIZE = 30
 
 /** Marca até quando o sininho já foi visto (badge de não lidas). */
-const NOTIFICATIONS_SEEN_KEY = 'clubinho:notifications-seen'
+const ALERTS_SEEN_KEY = 'clubinho:alerts-seen'
 
-function loadNotificationsSeen(): string {
+function loadAlertsSeen(): string {
   try {
-    return localStorage.getItem(NOTIFICATIONS_SEEN_KEY) ?? ''
+    return localStorage.getItem(ALERTS_SEEN_KEY) ?? ''
   } catch {
     return ''
   }
@@ -65,15 +65,15 @@ export const usePlatformStore = defineStore('platform', () => {
   const activitiesHasMore = ref(false)
   const isLoadingMoreActivities = ref(false)
 
-  // Sininho: notificações acionáveis (comentários), separadas do feed.
-  const notifications = ref<Activity[]>([])
-  const notificationsHasMore = ref(false)
-  const isLoadingMoreNotifications = ref(false)
-  const notificationsSeenAt = ref(loadNotificationsSeen())
+  // Sininho (modal): alertas de progresso/marcos, separados do feed.
+  const alerts = ref<Activity[]>([])
+  const alertsHasMore = ref(false)
+  const isLoadingMoreAlerts = ref(false)
+  const alertsSeenAt = ref(loadAlertsSeen())
 
-  // Não lidas = mais novas do que a última vez que o sininho foi aberto.
-  const unreadNotificationsCount = computed(
-    () => notifications.value.filter((item) => item.createdAt > notificationsSeenAt.value).length
+  // Não lidos = mais novos do que a última vez que o sininho foi aberto.
+  const unreadAlertsCount = computed(
+    () => alerts.value.filter((item) => item.createdAt > alertsSeenAt.value).length
   )
 
   async function loadHome() {
@@ -122,58 +122,56 @@ export const usePlatformStore = defineStore('platform', () => {
     }
   }
 
-  /** Carrega o primeiro lote do sininho. */
-  async function loadNotifications() {
-    const response = await apiRequest<NotificationsResponse>(
-      `/api/notifications?limit=${ACTIVITIES_PAGE_SIZE}`
-    )
-    notifications.value = response.notifications
-    notificationsHasMore.value = response.hasMore
+  /** Carrega o primeiro lote do sininho (alertas). */
+  async function loadAlerts() {
+    const response = await apiRequest<AlertsResponse>(`/api/alerts?limit=${ACTIVITIES_PAGE_SIZE}`)
+    alerts.value = response.alerts
+    alertsHasMore.value = response.hasMore
   }
 
   /** Próxima página do sininho. Retorna se ainda há mais. */
-  async function loadMoreNotifications(): Promise<boolean> {
-    if (isLoadingMoreNotifications.value || !notificationsHasMore.value) {
+  async function loadMoreAlerts(): Promise<boolean> {
+    if (isLoadingMoreAlerts.value || !alertsHasMore.value) {
       return false
     }
 
-    const last = notifications.value[notifications.value.length - 1]
+    const last = alerts.value[alerts.value.length - 1]
     if (!last) {
-      notificationsHasMore.value = false
+      alertsHasMore.value = false
       return false
     }
 
-    isLoadingMoreNotifications.value = true
+    isLoadingMoreAlerts.value = true
 
     try {
-      const response = await apiRequest<NotificationsResponse>(
-        `/api/notifications?cursor=${encodeURIComponent(last.id)}&limit=${ACTIVITIES_PAGE_SIZE}`
+      const response = await apiRequest<AlertsResponse>(
+        `/api/alerts?cursor=${encodeURIComponent(last.id)}&limit=${ACTIVITIES_PAGE_SIZE}`
       )
 
-      const seen = new Set(notifications.value.map((item) => item.id))
-      const fresh = response.notifications.filter((item) => !seen.has(item.id))
-      notifications.value.push(...fresh)
+      const seen = new Set(alerts.value.map((item) => item.id))
+      const fresh = response.alerts.filter((item) => !seen.has(item.id))
+      alerts.value.push(...fresh)
 
-      notificationsHasMore.value = response.hasMore && fresh.length > 0
-      return notificationsHasMore.value
+      alertsHasMore.value = response.hasMore && fresh.length > 0
+      return alertsHasMore.value
     } catch {
-      notificationsHasMore.value = false
+      alertsHasMore.value = false
       return false
     } finally {
-      isLoadingMoreNotifications.value = false
+      isLoadingMoreAlerts.value = false
     }
   }
 
-  /** Marca o sininho como visto (zera o badge de não lidas). */
-  function markNotificationsSeen() {
-    const newest = notifications.value[0]?.createdAt
+  /** Marca o sininho como visto (zera o badge de não lidos). */
+  function markAlertsSeen() {
+    const newest = alerts.value[0]?.createdAt
     if (!newest) {
       return
     }
 
-    notificationsSeenAt.value = newest
+    alertsSeenAt.value = newest
     try {
-      localStorage.setItem(NOTIFICATIONS_SEEN_KEY, newest)
+      localStorage.setItem(ALERTS_SEEN_KEY, newest)
     } catch {
       // Sem localStorage (ex.: navegação privada): o badge some só na sessão.
     }
@@ -330,15 +328,15 @@ export const usePlatformStore = defineStore('platform', () => {
     isLoading,
     activitiesHasMore,
     isLoadingMoreActivities,
-    notifications,
-    notificationsHasMore,
-    isLoadingMoreNotifications,
-    unreadNotificationsCount,
+    alerts,
+    alertsHasMore,
+    isLoadingMoreAlerts,
+    unreadAlertsCount,
     loadHome,
     loadMoreActivities,
-    loadNotifications,
-    loadMoreNotifications,
-    markNotificationsSeen,
+    loadAlerts,
+    loadMoreAlerts,
+    markAlertsSeen,
     loadHistory,
     loadMembers,
     createMember,

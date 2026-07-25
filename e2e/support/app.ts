@@ -21,12 +21,21 @@ export function buildSeed() {
       { id: 'cb-e2e', bookId: 'bk-e2e', status: 'CURRENT', selectedAt: iso(3000), finishedAt: null, selectedByUserId: null, finishedByUserId: null }
     ],
     chapters: [{ id: 'ch-e2e', clubBookId: 'cb-e2e', number: 1, title: 'Capítulo 1' }],
-    progress: [],
-    comments: [],
+    // Maria já concluiu e comentou o capítulo 1: assim, quando joao concluir,
+    // o feed dele mostra o comentário DELA e o sininho mostra o progresso dela.
+    progress: [
+      { id: 'pg-maria', chapterId: 'ch-e2e', userId: 'u-maria', status: 'FINISHED', startedAt: iso(5000), finishedAt: iso(4000) }
+    ],
+    comments: [
+      { id: 'cm-maria', chapterId: 'ch-e2e', userId: 'u-maria', body: 'Adorei este capítulo!', createdAt: iso(4000), updatedAt: iso(4000) }
+    ],
     reactions: [],
     ratings: [],
     reviews: [],
-    activities: []
+    activities: [
+      { id: 'act-maria-comment', actorId: 'u-maria', type: 'CHAPTER_COMMENTED', message: 'Maria comentou o capítulo 1.', metadata: { chapterId: 'ch-e2e', chapterNumber: 1, chapterTitle: 'Capítulo 1' }, createdAt: iso(4000) },
+      { id: 'act-maria-finish', actorId: 'u-maria', type: 'CHAPTER_FINISHED', message: 'Maria terminou o capítulo 1 e deu nota 4,0.', metadata: { chapterId: 'ch-e2e', chapterNumber: 1, chapterTitle: 'Capítulo 1', rating: 4 }, createdAt: iso(3500) }
+    ]
   }
 }
 
