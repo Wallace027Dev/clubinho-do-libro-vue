@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
+import AppSpinner from './ui/AppSpinner.vue'
 import EmptyState from './ui/EmptyState.vue'
 import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
@@ -77,7 +78,7 @@ function alertDate(activity: Activity) {
           <EmptyState v-else message="Nenhum aviso por enquanto." />
 
           <div v-if="platformStore.alertsHasMore" ref="sentinel" class="list-sentinel">
-            <span v-if="platformStore.isLoadingMoreAlerts">Carregando mais...</span>
+            <AppSpinner v-if="platformStore.isLoadingMoreAlerts" size="1.1rem" />
           </div>
         </div>
       </div>
