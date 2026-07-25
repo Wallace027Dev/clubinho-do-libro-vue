@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import SkeletonBlock from '../components/ui/SkeletonBlock.vue'
+import SkeletonLoader from '../components/ui/SkeletonLoader.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import { formatRating } from '../utils/format'
 
@@ -35,14 +35,14 @@ onMounted(async () => {
 <template>
   <section class="glass-panel current-book">
     <!-- Carregando: placeholders no lugar do conteúdo, para não "pipocar". -->
-    <div v-if="showSkeleton" class="home-skeleton" aria-hidden="true">
-      <SkeletonBlock width="7rem" height="0.8rem" />
-      <SkeletonBlock width="70%" height="1.6rem" />
-      <SkeletonBlock width="90%" height="0.9rem" />
-      <SkeletonBlock width="55%" height="0.9rem" />
-      <SkeletonBlock height="0.6rem" radius="999px" />
-    </div>
-    <p v-if="showSkeleton" class="visually-hidden" role="status">Carregando o livro do clube...</p>
+    <SkeletonLoader
+      v-if="showSkeleton"
+      :rows="4"
+      :columns="1"
+      height="1.3rem"
+      gap="14px"
+      label="Carregando o livro do clube"
+    />
 
     <template v-else>
       <div>
@@ -94,10 +94,3 @@ onMounted(async () => {
     </template>
   </section>
 </template>
-
-<style scoped>
-.home-skeleton {
-  display: grid;
-  gap: 12px;
-}
-</style>

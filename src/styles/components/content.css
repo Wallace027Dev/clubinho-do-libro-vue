@@ -69,11 +69,6 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Card de esqueleto (carregando): mesmo formato, com um respiro maior. */
-.feed-card--skeleton {
-  gap: 10px;
-}
-
 /* Sentinela do scroll infinito (feed e capítulos): dispara o próximo lote. */
 .list-sentinel {
   display: grid;

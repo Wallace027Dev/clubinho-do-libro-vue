@@ -1,15 +1,25 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import AppSpinner from '../../../src/components/ui/AppSpinner.vue'
-import SkeletonBlock from '../../../src/components/ui/SkeletonBlock.vue'
+import SkeletonLoader from '../../../src/components/ui/SkeletonLoader.vue'
 
-describe('SkeletonBlock', () => {
-  it('aplica as dimensões passadas', () => {
-    const wrapper = mount(SkeletonBlock, { props: { width: '5rem', height: '2rem' } })
-    const el = wrapper.find('.skeleton')
-    expect(el.exists()).toBe(true)
-    expect(el.attributes('style')).toContain('width: 5rem')
-    expect(el.attributes('style')).toContain('height: 2rem')
+describe('SkeletonLoader', () => {
+  it('renderiza rows × columns blocos', () => {
+    const wrapper = mount(SkeletonLoader, { props: { rows: 3, columns: 2 } })
+    expect(wrapper.findAll('.skeleton-cell')).toHaveLength(6)
+  })
+
+  it('aplica tamanho e colunas configurados', () => {
+    const wrapper = mount(SkeletonLoader, {
+      props: { rows: 2, columns: 1, height: '4rem', radius: '16px' }
+    })
+    const grid = wrapper.find('.skeleton-loader')
+    expect(grid.attributes('role')).toBe('status')
+    expect(grid.attributes('style')).toContain('repeat(1, 1fr)')
+
+    const cell = wrapper.find('.skeleton-cell')
+    expect(cell.attributes('style')).toContain('height: 4rem')
+    expect(cell.attributes('style')).toContain('border-radius: 16px')
   })
 })
 
