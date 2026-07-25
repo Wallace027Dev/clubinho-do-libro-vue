@@ -101,12 +101,16 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       `apiRequest` direto agora passam por ações de store: comentários/reação/
       ratings na `platformStore`; perfil/senha na `authStore`. Nenhuma view
       importa `apiRequest`. Coberto por testes de integração das novas ações.
-- [x] **Separar feed e notificações.** O feed (`/feed`) virou descoberta:
-      progresso dos membros e marcos do clube, sem "iniciou capítulo" e sem
-      comentários. Os comentários (acionáveis) foram para o **sininho**
-      (`/notifications`), com badge de não lidas no cabeçalho. Classificação de
-      canal no domínio (`src/domain/activities.ts`, testado); backend (feed
-      filtrado + `GET /api/notifications`) e mock espelhados.
+- [x] **Feed = comentários / sininho = alertas.** O **feed** (`/feed`) mostra
+      **comentários de outras pessoas**, só de capítulos que o membro já
+      concluiu (anti-spoiler), cada um com link para a página do comentário. Os
+      **alertas** de progresso/marcos (começo/fim de capítulo, livro, avaliação,
+      novo membro — de outros usuários) vão para um **modal** aberto pelo
+      **sininho no cabeçalho**, com badge de não lidos e scroll infinito.
+      `PROFILE_UPDATED` fica oculto. Canais no domínio
+      (`src/domain/activities.ts`); filtros por usuário na borda
+      (`api/_lib/feedActivities.ts`) e espelhados no mock. `GET /api/activities`
+      (feed) e `GET /api/alerts` (sininho).
 - [ ] **Dividir o `platformStore`** (livro + membros + histórico + feed + admin)
       antes de virar "god store" — ex.: `adminStore`, `feedStore`.
 

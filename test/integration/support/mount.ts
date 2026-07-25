@@ -12,7 +12,6 @@ const paths = [
   '/login/admin',
   '/admin',
   '/feed',
-  '/notifications',
   '/activity/:activityId',
   '/chapters',
   '/chapters/:chapterId',

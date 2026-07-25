@@ -34,7 +34,7 @@ describe('platformStore', () => {
     expect(platform.clubState.currentBook?.book.title).toBe('Mistborn')
   })
 
-  it('finishChapter conclui e registra a nota na atividade do feed', async () => {
+  it('finishChapter conclui e registra a nota na atividade de progresso', async () => {
     const [chapterId] = await seedBook(1)
     await useAuthStore().login('joao', '123456')
     const platform = usePlatformStore()
@@ -45,15 +45,16 @@ describe('platformStore', () => {
     const chapter = platform.clubState.currentBook!.chapters.find((item) => item.id === chapterId)
     expect(chapter?.progress[0]?.status).toBe('FINISHED')
 
-    const finished = platform.clubState.activities.find((a) => a.type === 'CHAPTER_FINISHED')
+    // A atividade CHAPTER_FINISHED (canal alerta) fica registrada com a nota.
+    const finished = getDb().activities.find((a) => a.type === 'CHAPTER_FINISHED')
     expect(finished?.message).toMatch(/deu nota 5,0/)
   })
 
-  it('loadMoreActivities pagina o feed de 30 em 30, sem duplicatas', async () => {
+  it('loadMoreAlerts pagina o sininho de 30 em 30, sem duplicatas', async () => {
     await useAuthStore().login('joao', '123456')
 
-    // 35 atividades injetadas direto no "banco" (fixture). Tipo do canal
-    // "feed" (CHAPTER_FINISHED); aqui só interessa a paginação.
+    // 35 alertas injetados direto no "banco" (fixture). Tipo do canal "alerta"
+    // (CHAPTER_FINISHED, ator do sistema); aqui só interessa a paginação.
     const start = Date.parse('2026-07-01T12:00:00.000Z')
     getDb().activities = Array.from({ length: 35 }, (_, i) => ({
       id: `a-${String(i).padStart(2, '0')}`,
@@ -66,16 +67,16 @@ describe('platformStore', () => {
     persist()
 
     const platform = usePlatformStore()
-    await platform.loadHome()
-    expect(platform.clubState.activities.length).toBe(30)
-    expect(platform.activitiesHasMore).toBe(true)
+    await platform.loadAlerts()
+    expect(platform.alerts.length).toBe(30)
+    expect(platform.alertsHasMore).toBe(true)
 
-    const more = await platform.loadMoreActivities()
-    expect(platform.clubState.activities.length).toBe(35)
-    expect(platform.activitiesHasMore).toBe(false)
+    const more = await platform.loadMoreAlerts()
+    expect(platform.alerts.length).toBe(35)
+    expect(platform.alertsHasMore).toBe(false)
     expect(more).toBe(false)
 
-    const ids = platform.clubState.activities.map((a) => a.id)
+    const ids = platform.alerts.map((a) => a.id)
     expect(new Set(ids).size).toBe(35)
   })
 
@@ -110,28 +111,40 @@ describe('platformStore', () => {
     expect(ratings.chapters).toHaveLength(1)
   })
 
-  it('separa o feed (progresso) do sininho (comentários)', async () => {
+  it('feed = comentários de outros (capítulos concluídos); sininho = progresso de outros', async () => {
+    const joao = getDb().users.find((user) => user.login === 'joao')!
+    const maria = getDb().users.find((user) => user.login === 'maria')!
     await useAuthStore().login('joao', '123456')
 
-    const start = Date.parse('2026-07-01T12:00:00.000Z')
+    // joao concluiu o capítulo c1 (não o c2).
+    getDb().progress.push({
+      id: 'p1',
+      chapterId: 'c1',
+      userId: joao.id,
+      status: 'FINISHED',
+      startedAt: '2026-07-01T10:00:00.000Z',
+      finishedAt: '2026-07-01T11:00:00.000Z'
+    })
+
+    const t = Date.parse('2026-07-01T12:00:00.000Z')
+    const iso = (n: number) => new Date(t - n * 1000).toISOString()
     getDb().activities = [
-      { id: 'f1', actorId: null, type: 'CHAPTER_FINISHED', message: 'terminou', metadata: null, createdAt: new Date(start).toISOString() },
-      { id: 's1', actorId: null, type: 'CHAPTER_STARTED', message: 'iniciou', metadata: null, createdAt: new Date(start - 1000).toISOString() },
-      { id: 'c1', actorId: null, type: 'CHAPTER_COMMENTED', message: 'comentou', metadata: { chapterId: 'x' }, createdAt: new Date(start - 2000).toISOString() }
+      { id: 'cm-maria-c1', actorId: maria.id, type: 'CHAPTER_COMMENTED', message: 'maria comentou c1', metadata: { chapterId: 'c1' }, createdAt: iso(0) },
+      { id: 'cm-joao-c1', actorId: joao.id, type: 'CHAPTER_COMMENTED', message: 'meu comentário', metadata: { chapterId: 'c1' }, createdAt: iso(1) },
+      { id: 'cm-maria-c2', actorId: maria.id, type: 'CHAPTER_COMMENTED', message: 'maria comentou c2', metadata: { chapterId: 'c2' }, createdAt: iso(2) },
+      { id: 'fin-maria', actorId: maria.id, type: 'CHAPTER_FINISHED', message: 'maria terminou', metadata: null, createdAt: iso(3) },
+      { id: 'fin-joao', actorId: joao.id, type: 'CHAPTER_FINISHED', message: 'eu terminei', metadata: null, createdAt: iso(4) }
     ]
     persist()
 
     const platform = usePlatformStore()
 
-    // Feed = descoberta: tem o progresso, sem "iniciou" nem comentário.
+    // Feed = comentário de OUTRO, só do capítulo que joao concluiu (c1).
     await platform.loadHome()
-    const feedTypes = platform.clubState.activities.map((activity) => activity.type)
-    expect(feedTypes).toContain('CHAPTER_FINISHED')
-    expect(feedTypes).not.toContain('CHAPTER_STARTED')
-    expect(feedTypes).not.toContain('CHAPTER_COMMENTED')
+    expect(platform.clubState.activities.map((item) => item.id)).toEqual(['cm-maria-c1'])
 
-    // Sininho = só o comentário (acionável).
-    await platform.loadNotifications()
-    expect(platform.notifications.map((item) => item.type)).toEqual(['CHAPTER_COMMENTED'])
+    // Sininho = progresso de OUTRO (o de joao é excluído).
+    await platform.loadAlerts()
+    expect(platform.alerts.map((item) => item.id)).toEqual(['fin-maria'])
   })
 })

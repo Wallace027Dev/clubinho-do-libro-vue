@@ -3,11 +3,10 @@ import { getDefaultClub } from '../../_lib/club.js'
 import { assertMethod, readBody, sendJson } from '../../_lib/http.js'
 import { prisma } from '../../_lib/prisma.js'
 import { getClubBookReviews, userFinishedAllChapters } from '../../_lib/reviews.js'
-import type { ActivityType } from '@prisma/client'
+import { commentFeedPage } from '../../_lib/feedActivities.js'
 import { selectBookRepository } from '../../_lib/repositories/adminBookRepository.js'
 import { selectBook } from '../../../src/domain/services/adminBook.js'
 import { notifyBookSelected } from '../../_lib/push.js'
-import { FEED_ACTIVITY_TYPES } from '../../../src/domain/activities.js'
 
 interface SelectBookBody {
   title?: string
@@ -57,18 +56,9 @@ export default async function handler(req: any, res: any) {
         }
       }
     })
-    const activities = await prisma.activity.findMany({
-      // Só o canal "feed" (descoberta) — igual ao /api/activities.
-      where: { clubId: club.id, type: { in: [...FEED_ACTIVITY_TYPES] as ActivityType[] } },
-      // Mesma ordem do feed paginado (/api/activities) para o cursor casar.
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: 30,
-      include: {
-        actor: {
-          select: { id: true, login: true, displayName: true, avatarUrl: true }
-        }
-      }
-    })
+    // Primeiro lote do feed = comentários de outros, de capítulos concluídos
+    // (mesmo filtro do GET /api/activities).
+    const { activities } = await commentFeedPage(club.id, session.userId ?? null, null, 30)
 
     let currentBookWithReviews = null
 
