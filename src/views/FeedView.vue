@@ -6,7 +6,7 @@ import AppSpinner from '../components/ui/AppSpinner.vue'
 import ClickableCard from '../components/ui/ClickableCard.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
-import SkeletonBlock from '../components/ui/SkeletonBlock.vue'
+import SkeletonLoader from '../components/ui/SkeletonLoader.vue'
 import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity } from '../types/platform'
@@ -79,14 +79,14 @@ function actorName(activity: Activity) {
       <Search class="feed-search-icon" :size="18" aria-hidden="true" />
     </label>
 
-    <div v-if="showSkeleton" class="feed-list" aria-hidden="true">
-      <div v-for="n in 3" :key="n" class="feed-card feed-card--skeleton">
-        <SkeletonBlock width="6rem" height="0.9rem" radius="6px" />
-        <SkeletonBlock width="80%" height="1.1rem" />
-        <SkeletonBlock width="30%" height="0.8rem" />
-      </div>
-    </div>
-    <p v-if="showSkeleton" class="visually-hidden" role="status">Carregando o feed do clube...</p>
+    <SkeletonLoader
+      v-if="showSkeleton"
+      :rows="3"
+      :columns="1"
+      height="4.5rem"
+      radius="16px"
+      label="Carregando o feed do clube"
+    />
 
     <ol v-else-if="filteredComments.length" class="feed-list">
       <ClickableCard
