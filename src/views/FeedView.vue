@@ -2,9 +2,11 @@
 import { Search } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppSpinner from '../components/ui/AppSpinner.vue'
 import ClickableCard from '../components/ui/ClickableCard.vue'
 import EmptyState from '../components/ui/EmptyState.vue'
 import SectionCard from '../components/ui/SectionCard.vue'
+import SkeletonBlock from '../components/ui/SkeletonBlock.vue'
 import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity } from '../types/platform'
@@ -16,6 +18,10 @@ const comments = computed(() => platformStore.clubState.activities)
 // Scroll infinito: carrega os próximos comentários de 30 em 30.
 const sentinel = ref<HTMLElement | null>(null)
 useInfiniteScroll(sentinel, () => platformStore.loadMoreActivities())
+
+// Só a primeira carga (sem nada em memória) mostra skeleton.
+const hasLoaded = ref(false)
+const showSkeleton = computed(() => !comments.value.length && !hasLoaded.value)
 
 const searchTerm = ref('')
 
@@ -37,8 +43,12 @@ const filteredComments = computed(() => {
   })
 })
 
-onMounted(() => {
-  void platformStore.loadHome()
+onMounted(async () => {
+  try {
+    await platformStore.loadHome()
+  } finally {
+    hasLoaded.value = true
+  }
 })
 
 function openComment(activity: Activity) {
@@ -69,10 +79,14 @@ function actorName(activity: Activity) {
       <Search class="feed-search-icon" :size="18" aria-hidden="true" />
     </label>
 
-    <EmptyState
-      v-if="platformStore.isLoading && !comments.length"
-      message="Carregando o feed do clube..."
-    />
+    <div v-if="showSkeleton" class="feed-list" aria-hidden="true">
+      <div v-for="n in 3" :key="n" class="feed-card feed-card--skeleton">
+        <SkeletonBlock width="6rem" height="0.9rem" radius="6px" />
+        <SkeletonBlock width="80%" height="1.1rem" />
+        <SkeletonBlock width="30%" height="0.8rem" />
+      </div>
+    </div>
+    <p v-if="showSkeleton" class="visually-hidden" role="status">Carregando o feed do clube...</p>
 
     <ol v-else-if="filteredComments.length" class="feed-list">
       <ClickableCard
@@ -96,12 +110,12 @@ function actorName(activity: Activity) {
     />
 
     <EmptyState
-      v-else
+      v-else-if="!showSkeleton"
       message="Ainda não há comentários de outras pessoas nos capítulos que você concluiu."
     />
 
     <div v-if="platformStore.activitiesHasMore" ref="sentinel" class="list-sentinel">
-      <span v-if="platformStore.isLoadingMoreActivities">Carregando mais...</span>
+      <AppSpinner v-if="platformStore.isLoadingMoreActivities" size="1.1rem" />
     </div>
   </SectionCard>
 </template>
