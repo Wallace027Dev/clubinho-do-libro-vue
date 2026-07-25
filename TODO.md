@@ -16,26 +16,12 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       telas e mais fluxos E2E (admin, anti-spoiler entre membros).
 - [x] **CI de qualidade.** `ci.yml` roda `build` + `check:api` + `npm test`
       (job "qualidade") e o E2E (job "e2e") em toda PR e nos pushes de
-      master/developer. **Falta:** marcar o check "Build, typecheck e testes"
-      como obrigatório na branch protection da master (e opcionalmente o E2E).
-- [ ] **Tornar os checks obrigatórios na `master`** (passo manual no GitHub —
-      sem isso a proteção não bloqueia de fato). Em *Settings → Branches*
-      exigir os checks **"Build, typecheck e testes"** e **"Somente developer
-      pode mergear na master"**, ou via API:
-      ```bash
-      gh api -X PUT repos/Wallace027Dev/clubinho-do-libro-vue/branches/master/protection \
-        --input - <<'JSON'
-      {
-        "required_status_checks": {
-          "strict": true,
-          "contexts": ["Build, typecheck e testes", "Somente developer pode mergear na master"]
-        },
-        "enforce_admins": true,
-        "required_pull_request_reviews": { "required_approving_review_count": 0 },
-        "restrictions": null
-      }
-      JSON
-      ```
+      master/developer. Checks obrigatórios na branch protection da master já
+      ativados (ver item abaixo).
+- [x] **Checks obrigatórios na `master`.** Branch protection cadastrada no
+      GitHub exigindo os checks **"Build, typecheck e testes"** e **"Somente
+      developer pode mergear na master"** — a `master` só recebe merge por PR
+      com CI verde.
 - [x] **Rate limiting no login.** `/api/auth/login` (por IP) e
       `/api/admin/login` bloqueiam com **429** após 5 tentativas falhas por
       minuto; login correto zera o contador. Espelhado no mock + testes.
@@ -84,14 +70,12 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       (todos os membros ativos, menos o autor); novo comentário (anti-spoiler:
       só quem já concluiu aquele capítulo). Simulados localmente na homologação.
       **Config em produção:** gerar VAPID e rodar `prisma db push` (ver README).
-- [ ] **Ativar push em produção (ops).** Passo manual na conta Vercel (não dá
-      pra fazer da sandbox — sem CLI/token/link): registrar/logar o **Vercel
-      CLI** (`vercel login` + `vercel link`), **gerar as chaves VAPID**
-      (`npx web-push generate-vapid-keys`), setar `VAPID_PUBLIC_KEY`,
-      `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` e `VITE_VAPID_PUBLIC_KEY`
-      (`vercel env add ... production`), rodar `prisma db push` (URL direta)
-      para criar a tabela `PushSubscription` e fazer `vercel --prod`. Comandos
-      prontos no README/na conversa.
+- [x] **Ativar push em produção (ops).** Chaves VAPID (`VAPID_PUBLIC_KEY`,
+      `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `VITE_VAPID_PUBLIC_KEY`) cadastradas
+      em produção e tabela `PushSubscription` criada via `prisma db push` (URL
+      direta). Feature de push funcional em produção. **Verificação final
+      (manual):** testar em aparelho real com o PWA instalado (iOS exige tela
+      inicial + 16.4+).
 - [ ] **(opcional) Mute administrativo de push por membro.** Hoje o membro
       desativa o próprio push no perfil; desativar a conta também corta (efeito
       colateral). Falta um controle durável: campo `pushEnabled` no `User` que o
