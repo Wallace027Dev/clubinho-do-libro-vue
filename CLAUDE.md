@@ -55,22 +55,25 @@ como ligar os dois lados e qual teste usar (unitário no próprio domínio, mais
 integração quando muda comportamento observável). Achou lógica de negócio
 copiada no handler real e no mock? Extraia para `src/domain/` e ligue os dois.
 
-## Requisições HTTP: padrão único
+## Arquitetura de módulo e requisições
 
 Toda entrada/saída de dados segue o caminho **view → ação de store → apiClient →
-mock/backend real → domínio → Prisma**, cada camada com sua responsabilidade. Ao
-criar/alterar qualquer **chamada de rede, ação de store, endpoint (real ou mock)
-ou tela que carrega dados**, **invoque a habilidade `requisicoes-http`**. Ela é a
-fonte da verdade e exige, sem exceção:
+mock/backend real → domínio → Prisma**, cada camada com sua responsabilidade.
+Três habilidades, separadas por obrigação, governam isso:
 
-- **Tipagem dura:** toda requisição (`apiRequest<T>`), todo retorno (tipo em
-  `src/types/*`) e **todo objeto** têm tipo explícito. **Nenhum `any`, nenhum
-  tipo implícito** (`strict` ligado). Desconhecido → `unknown` + estreitamento.
-- **Loading em toda espera:** requisição que demora nunca deixa a tela pipocar.
-  Carregamento **específico/parcial** → **skeleton** (`SkeletonLoader`, um só
-  componente configurável por props); **tela cheia / carregar mais** → **spinner**
-  (`AppSpinner`). A flag de loading é estado da store, controlado em `try/finally`.
-- View chama **ação de store**, nunca `apiRequest`/`fetch` direto.
+- **`modulo`** (coordenadora) — o **mapa das camadas**: o que mora em cada uma e
+  qual habilidade cuida de cada parte. Invoque ao montar uma feature de ponta a
+  ponta ou para saber onde uma coisa vai.
+- **`store`** — criar/refatorar **stores Pinia** (estilo setup): estado tipado,
+  getters `computed`, ações async que são as únicas donas do `apiRequest` e
+  controlam as flags de loading em `try/finally`. View chama **ação de store**,
+  nunca `apiRequest`/`fetch` direto.
+- **`requisicoes-http`** — a **requisição em si**. Exige, sem exceção: **tipagem
+  dura** (toda requisição `apiRequest<T>`, todo retorno em `src/types/*` e todo
+  objeto tipados; **nenhum `any`, nenhum implícito**, `strict` ligado) e
+  **loading em toda espera** (carga parcial → **skeleton** `SkeletonLoader`, um
+  só componente configurável; tela cheia / carregar mais → **spinner**
+  `AppSpinner`).
 
 ## Convenções que sempre valem
 
