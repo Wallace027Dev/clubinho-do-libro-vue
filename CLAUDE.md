@@ -55,6 +55,23 @@ como ligar os dois lados e qual teste usar (unitário no próprio domínio, mais
 integração quando muda comportamento observável). Achou lógica de negócio
 copiada no handler real e no mock? Extraia para `src/domain/` e ligue os dois.
 
+## Requisições HTTP: padrão único
+
+Toda entrada/saída de dados segue o caminho **view → ação de store → apiClient →
+mock/backend real → domínio → Prisma**, cada camada com sua responsabilidade. Ao
+criar/alterar qualquer **chamada de rede, ação de store, endpoint (real ou mock)
+ou tela que carrega dados**, **invoque a habilidade `requisicoes-http`**. Ela é a
+fonte da verdade e exige, sem exceção:
+
+- **Tipagem dura:** toda requisição (`apiRequest<T>`), todo retorno (tipo em
+  `src/types/*`) e **todo objeto** têm tipo explícito. **Nenhum `any`, nenhum
+  tipo implícito** (`strict` ligado). Desconhecido → `unknown` + estreitamento.
+- **Loading em toda espera:** requisição que demora nunca deixa a tela pipocar.
+  Carregamento **específico/parcial** → **skeleton** (`SkeletonLoader`, um só
+  componente configurável por props); **tela cheia / carregar mais** → **spinner**
+  (`AppSpinner`). A flag de loading é estado da store, controlado em `try/finally`.
+- View chama **ação de store**, nunca `apiRequest`/`fetch` direto.
+
 ## Convenções que sempre valem
 
 - Português (pt-BR) em UI, mensagens e nomes de teste (descrevem a regra de
