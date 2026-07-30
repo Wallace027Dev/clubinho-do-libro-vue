@@ -39,7 +39,9 @@ const HomologationBadge = isHomologation
 
   <main class="app-shell" :class="{ 'app-shell--with-tab-bar': authStore.isAuthenticated }">
     <section class="hero glass-panel">
-      <h1 class="brand-logo">clubin. do libro</h1>
+      <h1 class="brand-logo">
+        <img class="brand-logo-img" src="/logo-clubin.png" alt="clubin. do libro" />
+      </h1>
 
       <button
         v-if="authStore.isAuthenticated"
@@ -69,6 +71,32 @@ const HomologationBadge = isHomologation
 <style scoped>
 .hero {
   position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 148px;
+  padding: 18px 16px;
+  /* Estampa de carimbo (azul + marrom) como header; scrim escuro sutil
+     por cima para a placa se destacar. */
+  background:
+    linear-gradient(180deg, rgba(15, 15, 15, 0.12), rgba(15, 15, 15, 0.3)),
+    url("/brand-stamp.webp") center / cover no-repeat;
+  color: var(--color-cream-50);
+}
+
+/* Placa oficial "clubin. do libro" sobre a estampa. */
+.brand-logo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  margin: 0;
+}
+
+.brand-logo-img {
+  width: auto;
+  max-width: 82%;
+  max-height: 118px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(15, 15, 15, 0.45));
 }
 
 .hero-bell {
