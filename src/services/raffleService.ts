@@ -73,7 +73,7 @@ export function calculateWinnerRotation(
 export function getSpinDurationMs(): number {
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-  return reduceMotion ? 120 : 3600
+  return reduceMotion ? 120 : 5600
 }
 
 export function vibrate(pattern: number | number[]) {

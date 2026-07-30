@@ -103,7 +103,7 @@
   height: 0;
   border-right: 14px solid transparent;
   border-left: 14px solid transparent;
-  border-top: 28px solid var(--color-terra);
+  border-top: 28px solid var(--color-ink);
   filter: drop-shadow(0 6px 10px rgba(46, 43, 30, 0.28));
 }
 
@@ -118,7 +118,7 @@
   box-shadow:
     inset 0 0 24px rgba(46, 43, 30, 0.18),
     0 16px 36px rgba(46, 43, 30, 0.25);
-  transition: transform 3.6s var(--ease-wheel);
+  transition: transform 5.6s var(--ease-wheel);
 }
 
 /* Miolo: disco de papel. */

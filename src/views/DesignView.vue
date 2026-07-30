@@ -46,8 +46,8 @@ const tokenGroups = reactive<TokenGroup[]>([
       { name: '--color-paper', label: 'Fundo (papel)', kind: 'color', value: '#f3efd6', def: '#f3efd6' },
       { name: '--color-card', label: 'Cartão', kind: 'color', value: '#fdfbef', def: '#fdfbef' },
       { name: '--color-card-edge', label: 'Borda do cartão', kind: 'color', value: '#ddd2ad', def: '#ddd2ad' },
-      { name: '--color-star', label: 'Estrela', kind: 'color', value: '#c08d3e', def: '#c08d3e' },
-      { name: '--color-star-stroke', label: 'Estrela (borda)', kind: 'color', value: '#a2742f', def: '#a2742f' }
+      { name: '--color-star', label: 'Estrela', kind: 'color', value: '#c9992e', def: '#c9992e' },
+      { name: '--color-star-stroke', label: 'Estrela (borda)', kind: 'color', value: '#a87a1f', def: '#a87a1f' }
     ]
   },
   {

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { Plus, Settings } from 'lucide-vue-next'
 import BaseButton from '../components/ui/BaseButton.vue'
 import PasswordInput from '../components/ui/PasswordInput.vue'
-import SectionCard from '../components/ui/SectionCard.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError } from '../services/apiClient'
 import { disablePush, enablePush, pushStatus, type PushStatus } from '../services/pushService'
@@ -32,6 +32,10 @@ const isAvatarModalOpen = ref(false)
 
 const pushState = ref<PushStatus>('unsupported')
 const isTogglingPush = ref(false)
+
+const displayNameOrLogin = computed(
+  () => authStore.user?.displayName || authStore.user?.login || 'Membro'
+)
 
 async function enableNotifications() {
   isTogglingPush.value = true
@@ -79,24 +83,26 @@ onMounted(() => {
   pushState.value = pushStatus()
 })
 
-// Estatísticas pessoais calculadas com dados que o front já recebe.
-const finishedChapters = computed(() => {
+// Capítulos que o membro concluiu no livro atual.
+const chaptersRead = computed(() => {
   const chapters = platformStore.clubState.currentBook?.chapters ?? []
-  return {
-    finished: chapters.filter((chapter) => chapter.progress[0]?.status === 'FINISHED').length,
-    total: chapters.length
-  }
+  return chapters.filter((chapter) => chapter.progress[0]?.status === 'FINISHED').length
 })
 
-const participatedBooks = computed(() => {
+// Comentários do membro ao longo dos livros já lidos pelo clube.
+const commentsCount = computed(() => {
   const userId = authStore.user?.id
   if (!userId) return 0
 
-  return platformStore.history.filter(
-    (book) =>
-      book.reviews.some((review) => review.user.id === userId) ||
-      book.chapters.some((chapter) => chapter.comments.some((comment) => comment.user.id === userId))
-  ).length
+  let total = 0
+  for (const book of platformStore.history) {
+    for (const chapter of book.chapters) {
+      for (const comment of chapter.comments) {
+        if (comment.user.id === userId) total += 1
+      }
+    }
+  }
+  return total
 })
 
 const isDataUrlAvatar = computed(() => avatarUrl.value.startsWith('data:image/'))
@@ -223,13 +229,10 @@ async function handleLogout() {
 </script>
 
 <template>
-  <SectionCard
-    label="Perfil"
-    title="Seu nome no clube"
-    subtitle="O login continua privado; os membros conhecem você pelo feed e pelo apelido."
-  >
-    <form class="stack-form" @submit.prevent="saveProfile">
-      <div class="profile-avatar-row">
+  <!-- Cabeçalho de carimbo: avatar, nome, @login e pills de atividade. -->
+  <header class="profile-hero">
+    <div class="profile-hero__top">
+      <div class="profile-hero__avatar">
         <button
           type="button"
           class="avatar-trigger"
@@ -246,91 +249,71 @@ async function handleLogout() {
             alt="Sua foto de perfil"
           />
         </button>
-
-        <div class="action-stack">
-          <BaseButton variant="secondary" @click="pickPhoto">
-            {{ avatarUrl ? 'Trocar foto' : 'Escolher foto da galeria' }}
-          </BaseButton>
-          <BaseButton v-if="avatarUrl" variant="outline" @click="removePhoto">
-            Remover foto
-          </BaseButton>
-        </div>
-
-        <input
-          ref="fileInput"
-          class="visually-hidden"
-          type="file"
-          accept="image/*"
-          @change="onFileSelected"
-        />
+        <button
+          type="button"
+          class="profile-hero__badge"
+          aria-label="Trocar foto"
+          @click="pickPhoto"
+        >
+          <Plus :size="16" :stroke-width="2.6" />
+        </button>
       </div>
 
-      <p v-if="isDataUrlAvatar" class="comment-muted">
-        A foto é comprimida no seu aparelho antes de salvar.
-      </p>
-
-      <label>
-        Apelido
-        <input v-model="displayName" />
-      </label>
-
-      <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
-
-      <BaseButton type="submit" :loading="isSaving">
-        {{ isSaving ? 'Salvando...' : 'Salvar perfil' }}
-      </BaseButton>
-    </form>
-  </SectionCard>
-
-  <SectionCard label="Minha leitura" title="Estatísticas">
-    <div class="profile-stats">
-      <div class="profile-stat">
-        <strong>{{ finishedChapters.finished }}/{{ finishedChapters.total || '—' }}</strong>
-        <p>Capítulos do livro atual</p>
-      </div>
-      <div class="profile-stat">
-        <strong>{{ participatedBooks }}</strong>
-        <p>Livros em que participei</p>
-      </div>
-      <div class="profile-stat">
-        <strong>{{ platformStore.history.length }}</strong>
-        <p>Livros lidos pelo clube</p>
-      </div>
-    </div>
-  </SectionCard>
-
-  <SectionCard
-    label="Notificações"
-    title="Avisos do clube"
-    subtitle="Receba um aviso quando o clube escolher um novo livro do mês."
-  >
-    <p v-if="pushState === 'unsupported'" class="comment-muted">
-      Seu navegador não suporta notificações push.
-    </p>
-
-    <p v-else-if="pushState === 'denied'" class="comment-muted">
-      As notificações estão bloqueadas. Libere nas configurações do navegador para ativar.
-    </p>
-
-    <div v-else-if="pushState === 'granted'" class="action-stack">
-      <p class="comment-muted">Notificações ativadas neste aparelho.</p>
-      <BaseButton variant="outline" :loading="isTogglingPush" @click="disableNotifications">
-        Desativar notificações
-      </BaseButton>
+      <span class="profile-hero__eyebrow">Meu perfil</span>
     </div>
 
-    <BaseButton v-else variant="secondary" :loading="isTogglingPush" @click="enableNotifications">
-      Ativar notificações
+    <h1 class="profile-hero__name">{{ displayNameOrLogin }}</h1>
+    <p class="profile-hero__handle">@{{ authStore.user?.login }}</p>
+
+    <div class="profile-hero__pills">
+      <span class="profile-pill">{{ chaptersRead }} Capítulos lidos</span>
+      <span class="profile-pill">{{ commentsCount }} Comentários</span>
+    </div>
+  </header>
+
+  <input
+    ref="fileInput"
+    class="visually-hidden"
+    type="file"
+    accept="image/*"
+    @change="onFileSelected"
+  />
+
+  <!-- Apelido (como o clube te chama). -->
+  <form class="profile-name-field" @submit.prevent="saveProfile">
+    <label class="section-label" for="profile-apelido">Como o clube te chama</label>
+    <input id="profile-apelido" v-model="displayName" placeholder="Seu apelido no clube" />
+
+    <p v-if="isDataUrlAvatar" class="comment-muted">
+      A foto é comprimida no seu aparelho antes de salvar.
+      <button type="button" class="text-link text-link--inline" @click="removePhoto">
+        Remover foto
+      </button>
+    </p>
+
+    <p v-if="errorMessage" class="form-error">{{ errorMessage }}</p>
+
+    <BaseButton type="submit" :loading="isSaving">
+      {{ isSaving ? 'Salvando...' : 'Salvar perfil' }}
     </BaseButton>
-  </SectionCard>
+  </form>
 
-  <SectionCard label="Segurança" title="Trocar senha">
+  <!-- Configurações: senha, notificações e conta. -->
+  <section class="profile-config">
+    <div class="profile-config__head">
+      <h2>Configurações</h2>
+      <span class="profile-config__gear" aria-hidden="true">
+        <Settings :size="20" :stroke-width="2.2" />
+      </span>
+    </div>
+
     <form class="stack-form" @submit.prevent="changePassword">
-      <label>
+      <p class="profile-config__label">Trocar senha</p>
+      <label class="profile-config__field">
         Senha atual
         <PasswordInput v-model="currentPassword" autocomplete="current-password" required />
       </label>
-      <label>
+      <label class="profile-config__field">
         Nova senha
         <PasswordInput v-model="newPassword" autocomplete="new-password" minlength="6" required />
       </label>
@@ -341,19 +324,41 @@ async function handleLogout() {
         {{ isChangingPassword ? 'Alterando...' : 'Alterar senha' }}
       </BaseButton>
     </form>
-  </SectionCard>
 
-  <SectionCard label="Conta" title="Sessão e acessos">
-    <div class="action-stack">
-      <RouterLink v-if="authStore.isAdmin" class="text-link" to="/admin">
+    <div class="profile-config__notify">
+      <p class="profile-config__label">Notificações</p>
+
+      <p v-if="pushState === 'unsupported'" class="profile-config__note">
+        Seu navegador não suporta notificações push.
+      </p>
+      <p v-else-if="pushState === 'denied'" class="profile-config__note">
+        As notificações estão bloqueadas. Libere nas configurações do navegador para ativar.
+      </p>
+      <template v-else-if="pushState === 'granted'">
+        <p class="profile-config__note">Ativadas neste aparelho.</p>
+        <BaseButton variant="outline" :loading="isTogglingPush" @click="disableNotifications">
+          Desativar notificações
+        </BaseButton>
+      </template>
+      <BaseButton
+        v-else
+        variant="secondary"
+        :loading="isTogglingPush"
+        @click="enableNotifications"
+      >
+        Ativar notificações
+      </BaseButton>
+    </div>
+
+    <div class="profile-config__account">
+      <RouterLink v-if="authStore.isAdmin" class="text-link text-link--on-dark" to="/admin">
         Abrir painel do admin
       </RouterLink>
-
       <BaseButton variant="outline" :loading="isLoggingOut" @click="handleLogout">
         Sair da conta
       </BaseButton>
     </div>
-  </SectionCard>
+  </section>
 
   <Teleport to="body">
     <div
