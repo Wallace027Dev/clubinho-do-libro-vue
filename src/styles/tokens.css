@@ -39,16 +39,17 @@
   --color-danger: var(--color-terra);
   --color-danger-strong: #732512;
 
-  /* Estrelas de avaliação (caramelo) */
-  --color-star: #c08d3e;
-  --color-star-stroke: #a2742f;
+  /* Estrelas de avaliação (âmbar neutro, harmoniza com creme/marrom) */
+  --color-star: #c9992e;
+  --color-star-stroke: #a87a1f;
 
-  /* Faixas do heatmap de satisfação (média/5) */
-  --color-band-incrivel: #4a6b35;
-  --color-band-otimo: #7fa05b;
-  --color-band-mediano: #d0a15c;
-  --color-band-ruim: #bd6b4c;
-  --color-band-pessimo: #8a4634;
+  /* Faixas do heatmap de satisfação (média/5) — escala sálvia → âmbar →
+     terracota, alinhada à paleta da marca. */
+  --color-band-incrivel: #4b7a2e;
+  --color-band-otimo: #8aa85f;
+  --color-band-mediano: #c9992e;
+  --color-band-ruim: #b0552a;
+  --color-band-pessimo: #933012;
 
   /* ---- Cores semânticas (papéis de uso) ---- */
   --color-text: var(--color-ink);
