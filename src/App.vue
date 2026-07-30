@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Bell } from 'lucide-vue-next'
-import { defineAsyncComponent, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import AlertsModal from './components/AlertsModal.vue'
 import AppTabBar from './components/ui/AppTabBar.vue'
 import AppToast from './components/ui/AppToast.vue'
@@ -10,8 +11,13 @@ import { usePlatformStore } from './stores/platformStore'
 
 const authStore = useAuthStore()
 const platformStore = usePlatformStore()
+const route = useRoute()
 
 const isAlertsOpen = ref(false)
+
+// A tela de perfil tem o próprio cabeçalho (profile-hero); o header global
+// da marca é ocultado nela para não repetir dois carimbos empilhados.
+const showBrandHeader = computed(() => route.path !== '/profile')
 
 // Ao autenticar (sessão restaurada ou login novo): reconcilia a assinatura de
 // push e carrega os alertas (para o badge de não lidos no sininho).
@@ -38,7 +44,7 @@ const HomologationBadge = isHomologation
   <div class="bg-drift" aria-hidden="true"></div>
 
   <main class="app-shell" :class="{ 'app-shell--with-tab-bar': authStore.isAuthenticated }">
-    <section class="hero glass-panel">
+    <section v-if="showBrandHeader" class="hero glass-panel">
       <h1 class="brand-logo">
         <img class="brand-logo-img" src="/logo-clubin.png" alt="clubin. do libro" />
       </h1>

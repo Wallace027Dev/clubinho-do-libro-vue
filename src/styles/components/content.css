@@ -592,8 +592,9 @@
   border-radius: var(--radius-panel);
   overflow: hidden;
   color: var(--color-cream-50);
-  /* Estampa oficial de carimbo (azul + marrom). O scrim escuro sutil por
-     cima só garante a legibilidade do texto creme. */
+  /* Estampa oficial de carimbo (azul + marrom). Na tela de perfil o header
+     global (App.vue) é ocultado, então este é o único carimbo da tela. O
+     scrim escuro sutil por cima garante a legibilidade do texto creme. */
   background:
     linear-gradient(180deg, rgba(15, 15, 15, 0.15), rgba(15, 15, 15, 0.32)),
     url("/brand-stamp.webp") center / cover no-repeat,
