@@ -90,7 +90,7 @@
   /* Títulos em typewriter (Courier New, fonte de sistema — sem download);
      corpo em Open Sans. Slot histórico "--font-serif" = fonte de exibição. */
   --font-serif: "Courier New", "Courier", ui-monospace, "Cascadia Mono", monospace;
-  --font-body: "Open Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Parabolica", "Open Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-size-xs: 0.72rem;
   --font-size-sm: 0.85rem;
   --font-size-md: 0.94rem;
