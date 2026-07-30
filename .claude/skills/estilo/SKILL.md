@@ -72,6 +72,10 @@ Hierarquia vem da **fonte** (Courier nos títulos), não do peso.
   "0 0 271.14 270.81"`. Referenciado pelo manifest (`vite.config.ts`) e pelo
   `<link rel="icon">` (`index.html`). **Trocar só substituindo o arquivo pelo
   oficial atualizado, sem editar o vetor.**
+- **Estampa de carimbo** (textura azul + marrom): `public/brand-stamp.webp` —
+  arquivo oficial, usado sem alteração como fundo (ex.: card hero do perfil,
+  `background: url("/brand-stamp.webp") center/cover`, com scrim escuro sutil por
+  cima para o texto creme). Não editar a textura; não recriar à mão.
 - **Variações de logo** (horizontal, "clubin. do libro" na tarja azul, versões
   coloridas): guardar em `public/` (ou `src/assets/brand/`) e referenciar como
   `<img>`/`background`. Não editar o vetor. Ligar cada uma onde fizer sentido

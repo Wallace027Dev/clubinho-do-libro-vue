@@ -25,3 +25,6 @@ dev-server*.log
 # Vercel
 .vercel
 .vercel-cli
+
+# Scratchpad temporário do agente (screenshots, builds de verificação)
+scratchpad/
