@@ -75,6 +75,17 @@ Três habilidades, separadas por obrigação, governam isso:
   só componente configurável; tela cheia / carregar mais → **spinner**
   `AppSpinner`).
 
+## Identidade visual: style-guide
+
+Toda a **cara** do produto — paleta oficial, tipografia (títulos Courier New;
+corpo Parabólica, oficial), wordmark/uso do nome ("clubin. do libro") e os
+**assets oficiais** (logo, ícone do PWA/favicon, ícones de UI) — é governada pela
+habilidade **`estilo`**. **Invoque `estilo`** antes de aplicar/alterar qualquer
+coisa visual (cor, fonte, logo, ícone, espaçamento de marca) ou trocar um asset.
+Regras-chave: design vem de **tokens** (`src/styles/tokens.css`, nunca hex solto);
+e **assets oficiais entram sem alteração** — nunca recrie logo/ícone à mão; se o
+arquivo não chegou, **peça**.
+
 ## Convenções que sempre valem
 
 - Português (pt-BR) em UI, mensagens e nomes de teste (descrevem a regra de

@@ -34,11 +34,11 @@ export default defineConfig({
         importScripts: ['push-sw.js']
       },
       manifest: {
-        name: 'Clubinho do Libro',
-        short_name: 'Libro',
+        name: 'Clubin do Libro',
+        short_name: 'Clubin',
         description: 'Sorteador mobile first para escolher o livro do mes.',
-        theme_color: '#556034',
-        background_color: '#f5ecd8',
+        theme_color: '#004ba9',
+        background_color: '#f3efd6',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',

@@ -50,13 +50,13 @@
 
 /* Fantasma: contorno oliva sobre o papel. */
 .base-button--outline {
-  border: 1.5px solid rgba(85, 96, 52, 0.45);
+  border: 1.5px solid rgba(0, 75, 169, 0.45);
   background: transparent;
   color: var(--color-primary);
 }
 
 .base-button--outline:hover:not(:disabled) {
-  background: rgba(85, 96, 52, 0.08);
+  background: rgba(0, 75, 169, 0.08);
 }
 
 .base-button__spinner {

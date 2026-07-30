@@ -63,7 +63,7 @@
 }
 
 .app-nav a.router-link-exact-active {
-  background: rgba(85, 96, 52, 0.14);
+  background: rgba(0, 75, 169, 0.14);
   color: var(--color-olive-950);
 }
 
