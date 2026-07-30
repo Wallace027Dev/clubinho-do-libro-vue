@@ -69,7 +69,7 @@ button:disabled {
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(85, 96, 52, 0.5);
+  outline: 3px solid rgba(0, 75, 169, 0.5);
   outline-offset: 3px;
 }
 
@@ -108,9 +108,11 @@ h1 {
 .brand-logo {
   width: 100%;
   max-width: 100%;
-  font-size: clamp(1.25rem, 5.4vw, 1.8rem);
-  font-style: italic;
+  font-size: clamp(1.35rem, 5.8vw, 1.95rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.01em;
   line-height: 1.1;
+  text-transform: lowercase;
   overflow-wrap: normal;
   white-space: nowrap;
 }

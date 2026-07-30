@@ -29,7 +29,7 @@ const wheelStyle = computed(() => {
     <div class="wheel-pointer" aria-hidden="true"></div>
     <div class="wheel" :class="{ spinning: raffleStore.isSpinning }" :style="wheelStyle">
       <div class="wheel-center">
-        <span>Libro</span>
+        <span>clubin.</span>
       </div>
     </div>
   </div>

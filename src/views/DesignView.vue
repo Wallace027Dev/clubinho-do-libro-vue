@@ -37,15 +37,15 @@ const tokenGroups = reactive<TokenGroup[]>([
   {
     title: 'Cores',
     tokens: [
-      { name: '--color-olive-800', label: 'Primária', kind: 'color', value: '#556034', def: '#556034' },
-      { name: '--color-olive-650', label: 'Primária clara', kind: 'color', value: '#6b7541', def: '#6b7541' },
-      { name: '--color-olive-950', label: 'Títulos', kind: 'color', value: '#3a4023', def: '#3a4023' },
-      { name: '--color-caramel-300', label: 'Acento', kind: 'color', value: '#c08d3e', def: '#c08d3e' },
-      { name: '--color-cream-50', label: 'Sobre primária', kind: 'color', value: '#fbf6e9', def: '#fbf6e9' },
-      { name: '--color-ink', label: 'Texto', kind: 'color', value: '#2e2b1e', def: '#2e2b1e' },
-      { name: '--color-paper', label: 'Fundo (papel)', kind: 'color', value: '#f5ecd8', def: '#f5ecd8' },
-      { name: '--color-card', label: 'Cartão', kind: 'color', value: '#fffdf4', def: '#fffdf4' },
-      { name: '--color-card-edge', label: 'Borda do cartão', kind: 'color', value: '#e3d6b6', def: '#e3d6b6' },
+      { name: '--color-olive-800', label: 'Primária', kind: 'color', value: '#004ba9', def: '#004ba9' },
+      { name: '--color-olive-650', label: 'Primária clara', kind: 'color', value: '#1f60b3', def: '#1f60b3' },
+      { name: '--color-olive-950', label: 'Títulos', kind: 'color', value: '#4b261d', def: '#4b261d' },
+      { name: '--color-caramel-300', label: 'Acento', kind: 'color', value: '#933012', def: '#933012' },
+      { name: '--color-cream-50', label: 'Sobre primária', kind: 'color', value: '#f7f3df', def: '#f7f3df' },
+      { name: '--color-ink', label: 'Texto', kind: 'color', value: '#4b261d', def: '#4b261d' },
+      { name: '--color-paper', label: 'Fundo (papel)', kind: 'color', value: '#f3efd6', def: '#f3efd6' },
+      { name: '--color-card', label: 'Cartão', kind: 'color', value: '#fdfbef', def: '#fdfbef' },
+      { name: '--color-card-edge', label: 'Borda do cartão', kind: 'color', value: '#ddd2ad', def: '#ddd2ad' },
       { name: '--color-star', label: 'Estrela', kind: 'color', value: '#c08d3e', def: '#c08d3e' },
       { name: '--color-star-stroke', label: 'Estrela (borda)', kind: 'color', value: '#a2742f', def: '#a2742f' }
     ]
@@ -322,7 +322,7 @@ const sampleReviews: BookReview[] = [
 .pg-preview code {
   padding: 1px 5px;
   border-radius: 6px;
-  background: rgba(85, 96, 52, 0.12);
+  background: rgba(0, 75, 169, 0.12);
   font-size: 0.85em;
 }
 
@@ -379,7 +379,7 @@ const sampleReviews: BookReview[] = [
   place-items: center;
   margin-bottom: 14px;
   padding: 18px;
-  border: 1px dashed rgba(85, 96, 52, 0.24);
+  border: 1px dashed rgba(0, 75, 169, 0.24);
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.22);
 }

@@ -39,7 +39,7 @@ const HomologationBadge = isHomologation
 
   <main class="app-shell" :class="{ 'app-shell--with-tab-bar': authStore.isAuthenticated }">
     <section class="hero glass-panel">
-      <h1 class="brand-logo">Clubinho do Libro</h1>
+      <h1 class="brand-logo">clubin. do libro</h1>
 
       <button
         v-if="authStore.isAuthenticated"

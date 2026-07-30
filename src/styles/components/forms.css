@@ -73,7 +73,7 @@ textarea {
 input:focus,
 textarea:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(85, 96, 52, 0.16);
+  box-shadow: 0 0 0 4px rgba(0, 75, 169, 0.16);
 }
 
 /* Campo de senha com botão de olho (mostrar/ocultar). */
@@ -117,7 +117,7 @@ textarea:focus {
 }
 
 .password-toggle:focus-visible {
-  outline: 2px solid rgba(85, 96, 52, 0.5);
+  outline: 2px solid rgba(0, 75, 169, 0.5);
   outline-offset: 2px;
 }
 
@@ -137,7 +137,7 @@ textarea:focus {
 }
 
 .form-success {
-  background: rgba(85, 96, 52, 0.13);
+  background: rgba(0, 75, 169, 0.13);
   color: var(--color-olive-800);
 }
 
