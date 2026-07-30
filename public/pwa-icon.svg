@@ -1,9 +1,11 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="120" fill="#687047"/>
-  <path d="M150 140C150 123.431 163.431 110 180 110H362V368H180C163.431 368 150 381.431 150 398V140Z" fill="#F6EEDF"/>
-  <path d="M180 110H362V356H180C163.431 356 150 369.431 150 386V140C150 123.431 163.431 110 180 110Z" fill="#F1D9AA"/>
-  <path d="M197 151H318" stroke="#4D5733" stroke-width="18" stroke-linecap="round"/>
-  <path d="M197 199H334" stroke="#4D5733" stroke-width="18" stroke-linecap="round"/>
-  <path d="M197 247H292" stroke="#4D5733" stroke-width="18" stroke-linecap="round"/>
-  <path d="M150 386C150 369.431 163.431 356 180 356H362" stroke="#3C4228" stroke-width="24" stroke-linecap="round"/>
+  <!-- Ícone interino "clubin. do libro": quadrado marrom (container da
+       marca), carimbo azul e lettering creme. Substituir pelo SVG de
+       carimbo/grunge oficial quando disponível. -->
+  <rect width="512" height="512" rx="120" fill="#4b261d"/>
+  <rect x="94" y="116" width="324" height="280" rx="20" fill="#004ba9" transform="rotate(-1.6 256 256)"/>
+  <g fill="#f7f3df" font-family="'Courier New', Courier, monospace" font-weight="700" text-anchor="middle" letter-spacing="-4">
+    <text x="256" y="248" font-size="118">clu</text>
+    <text x="256" y="356" font-size="118">bin.</text>
+  </g>
 </svg>

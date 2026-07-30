@@ -19,7 +19,7 @@ withDefaults(defineProps<{ size?: string; label?: string }>(), {
 .spinner {
   display: inline-block;
   border: 2px solid rgba(46, 43, 30, 0.22);
-  border-top-color: var(--color-primary, #556034);
+  border-top-color: var(--color-primary, #004ba9);
   border-radius: 50%;
   animation: spinner-rotate 0.7s linear infinite;
 }
