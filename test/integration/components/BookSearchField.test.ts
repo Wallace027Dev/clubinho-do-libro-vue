@@ -2,8 +2,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import BookEntryStep from '../../../src/components/BookEntryStep.vue'
+import type { ExternalBook } from '../../../src/domain/bookSearch'
 import { resetMockDb } from '../../../src/services/mockApi/db'
 import { useAuthStore } from '../../../src/stores/authStore'
+import { useBookSearchStore } from '../../../src/stores/bookSearchStore'
 import { useRaffleStore } from '../../../src/stores/raffleStore'
 import { createTestRouter } from '../support/mount'
 
@@ -108,6 +110,46 @@ describe('busca de livro no sorteio', () => {
     }
 
     expect(raffleStore.books).toHaveLength(1)
+  })
+
+  it('não apaga o termo digitado enquanto o detalhe do livro escolhido carregava', async () => {
+    const { wrapper, raffleStore } = await mountEntryStepAsAdmin()
+    const bookSearchStore = useBookSearchStore()
+
+    // Detalhe pendente: dá para digitar "por cima" da escolha anterior.
+    let liberaDetalhe: (book: ExternalBook) => void = () => {}
+    vi.spyOn(bookSearchStore, 'loadBookDetail').mockImplementation(
+      () =>
+        new Promise<ExternalBook>((resolve) => {
+          liberaDetalhe = resolve
+        })
+    )
+
+    const campo = wrapper.get('input[type="search"]')
+    await campo.setValue('casmurro')
+    await vi.waitFor(() => expect(wrapper.findAll('.book-search-item')).toHaveLength(2), ESPERA)
+    await wrapper.findAll('.book-search-item')[0].trigger('click')
+
+    // A pessoa não espera o detalhe: já digita o próximo termo.
+    await campo.setValue('herbert')
+
+    liberaDetalhe({
+      source: 'openlibrary',
+      providerId: '/works/OL1003040W',
+      title: 'Dom Casmurro',
+      authors: ['Machado de Assis'],
+      publisher: 'Penguin-Companhia',
+      pageCount: 400,
+      pageCountApproximate: false,
+      isbn: null,
+      coverUrl: null,
+      description: 'Sinopse do detalhe.'
+    })
+    await flushPromises()
+
+    // O candidato entrou e o que estava sendo digitado sobreviveu.
+    expect(raffleStore.books).toHaveLength(1)
+    expect((campo.element as HTMLInputElement).value).toBe('herbert')
   })
 
   it('mantém o cadastro à mão para livro que os provedores não conhecem', async () => {
