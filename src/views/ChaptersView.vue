@@ -9,7 +9,7 @@ import SectionCard from '../components/ui/SectionCard.vue'
 import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Chapter } from '../types/platform'
-import { chapterTag, isStandaloneChapterTitle } from '../utils/chapters'
+import { chapterHeading, chapterTag, isStandaloneChapterTitle } from '../utils/chapters'
 
 const router = useRouter()
 const platformStore = usePlatformStore()
@@ -76,7 +76,7 @@ function openChapter(chapter: Chapter) {
         v-for="chapter in visibleChapters"
         :key="chapter.id"
         class="chapter-card"
-        :aria-label="`Abrir ${chapterTag(chapter)}: ${chapter.title}`"
+        :aria-label="`Abrir ${chapterHeading(chapter)}`"
         @activate="openChapter(chapter)"
       >
         <div class="feed-card-top">

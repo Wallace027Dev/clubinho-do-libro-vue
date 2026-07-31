@@ -195,7 +195,11 @@ async function saveChapterEdit(chapterId: string) {
 }
 
 async function removeChapter(chapter: { id: string; number: number; title: string }) {
-  if (!window.confirm(`Excluir ${chapterTagLower(chapter)} (${chapter.title})?`)) {
+  const alvo = chapter.title.trim()
+    ? `${chapterTagLower(chapter)} (${chapter.title})`
+    : chapterTagLower(chapter)
+
+  if (!window.confirm(`Excluir ${alvo}?`)) {
     return
   }
 
@@ -388,7 +392,9 @@ async function removeChapter(chapter: { id: string; number: number; title: strin
           <div class="chapter-card-row">
             <div>
               <span class="chapter-kicker">{{ chapterTag(chapter) }}</span>
-              <strong>{{ chapter.title }}</strong>
+              <!-- É no painel que se nomeia um capítulo gerado sem título. -->
+              <strong v-if="chapter.title">{{ chapter.title }}</strong>
+              <em v-else class="chapter-untitled">Sem título</em>
             </div>
             <div class="member-actions">
               <button type="button" class="filter-chip" @click="startEditChapter(chapter)">

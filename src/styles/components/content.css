@@ -365,6 +365,12 @@
   text-transform: uppercase;
 }
 
+/* Capítulo gerado junto com o livro, ainda sem nome (só no painel admin). */
+.chapter-untitled {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
 .chapter-list .secondary-action,
 .chapter-action {
   width: auto;
@@ -908,6 +914,13 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Preenche a coluna do pai (listagem da busca de livro). Especificidade dupla
+   pelo mesmo motivo do --small: o `.history-cover` base vem depois. */
+.history-cover.history-cover--fill {
+  width: 100%;
+  height: 100%;
 }
 
 /* Sem capa: placeholder listrado com lombada, inicial em serif. */
