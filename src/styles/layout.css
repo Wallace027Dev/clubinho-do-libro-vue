@@ -169,7 +169,7 @@
 .tab-bar {
   position: fixed;
   right: 0;
-  bottom: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   left: 0;
   z-index: 30;
   display: flex;
@@ -177,7 +177,11 @@
   justify-content: space-between;
   width: min(calc(100% - 32px), 420px);
   margin: 0 auto;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  /* Padding interno simétrico: a pílula flutuante fica compacta. A safe-area
+     do iOS (home indicator no PWA standalone) é resolvida elevando a pílula
+     inteira via `bottom`, não como padding-bottom — senão a barra "estica"
+     e sobra uma faixa preta embaixo dos ícones. */
+  padding: 10px 16px;
   border-radius: var(--radius-pill);
   background: #0f0f0f;
   box-shadow: 0 14px 34px rgba(15, 15, 15, 0.4);
