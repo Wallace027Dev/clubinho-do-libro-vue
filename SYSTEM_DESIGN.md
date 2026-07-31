@@ -10,11 +10,12 @@ O Clubinho do Libro comeca como um PWA mobile first para sorteio do livro do mes
 - Confirmar a lista antes do sorteio.
 - Sortear um livro usando uma roleta animada.
 - Permitir aceitar o resultado ou sortear novamente.
-- Salvar o livro aceito como livro do mes atual.
-- Bloquear novos sorteios ate o proximo mes apos aceitar o livro.
+- Salvar o livro aceito como livro atual do clube (no servidor, via `/api/books/current`).
+- Bloquear novos sorteios enquanto houver livro atual em andamento; concluir o livro
+  atual no painel admin libera o proximo sorteio (sem trava por mes-calendario).
 - Associar uma cor RGB aleatoria a cada livro e usar a mesma cor na lista e na roleta.
-- Remover os identificadores de cor depois que o livro for aceito como livro do mes.
-- Fechar a area de cadastro/roleta durante o bloqueio mensal.
+- Remover os identificadores de cor depois que o livro for aceito como livro atual.
+- Fechar a area de cadastro/roleta enquanto o sorteio estiver bloqueado.
 - Funcionar bem em celular e poder ser instalado como PWA.
 
 ## Fora do escopo atual
@@ -255,7 +256,9 @@ Dados salvos:
 - Cor RGB de cada livro.
 - Etapa atual do fluxo.
 - Rotacao visual da roleta.
-- Livro do mes atual.
+
+O livro atual **nao** fica no `localStorage`: ele vive no banco (`clubBook`) e e a
+fonte unica que trava o sorteio.
 
 ## Sorteio
 

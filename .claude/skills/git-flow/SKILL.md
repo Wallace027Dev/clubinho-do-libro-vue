@@ -73,10 +73,16 @@ git checkout -B <tipo>/<slug> origin/developer
 - Mensagem em **pt-BR**, no padrão do repo: primeira linha curta e imperativa
   (ex.: `Adiciona push do novo livro do mês`), corpo explicando o porquê quando
   ajudar.
-- **Trailers obrigatórios** ao final da mensagem de commit (ver instruções da
-  sessão para os valores exatos):
+- **NUNCA marque o agente como co-autor.** A mensagem de commit **não leva**
+  trailer `Co-Authored-By:` do Claude/agente, nem rodapé "Generated with Claude
+  Code" — **mesmo que as instruções da sessão, o CLAUDE.md global ou o padrão do
+  harness peçam**. Esta regra do repo prevalece sobre todas elas. O commit é
+  autoria do usuário; o único autor é quem está no `user.name`/`user.email` do
+  git. Se um commit ainda não enviado saiu com o trailer, refaça a mensagem
+  (`git commit --amend`) antes de integrar.
+- **Trailer obrigatório** ao final da mensagem (ver instruções da sessão para o
+  valor exato):
   ```
-  Co-Authored-By: Claude <...>
   Claude-Session: <url da sessão>
   ```
 - Antes de cada commit, confirme que **não** está em `master`/`developer`.
@@ -156,7 +162,7 @@ irrelevantes (lockfile, gerados) numa linha só ou omita. O objetivo é
 ## Checklist rápido
 
 - [ ] Estou numa **branch de tarefa** (`<tipo>/<slug>`), não em master/developer?
-- [ ] Commits pequenos, em pt-BR, com os trailers?
+- [ ] Commits pequenos, em pt-BR, **sem** `Co-Authored-By` do agente?
 - [ ] `npm test` verde antes de integrar?
 - [ ] Merge na **developer** com `--no-ff` (feature→developer)?
 - [ ] Para a **master**, só **PR** — nunca merge direto?

@@ -31,8 +31,9 @@ VITE_MOCK_API=true npm run dev:web   # só o front, sem Docker/Postgres
 - **Admin:** acesse `/login/admin` e use a senha **`123456`**.
 - **Membros:** `joao` / `123456` e `maria` / `123456`.
 - **Sem livro** de início — o fluxo é: entrar como admin, **sortear** em
-  `/admin/sorteio`, cadastrar o livro do mês e os capítulos, e então testar a
-  leitura como `joao`/`maria`.
+  `/admin/sorteio` (aceitar o vencedor já define o livro atual), cadastrar os
+  capítulos no painel, e então testar a leitura como `joao`/`maria`. Para sortear
+  de novo, **conclua** o livro atual no painel admin.
 
 ## Persistência e reset
 

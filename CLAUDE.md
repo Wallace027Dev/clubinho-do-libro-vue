@@ -100,5 +100,8 @@ arquivo não chegou, **peça**.
   → merge na `developer`. A `master` só recebe mudança por **Pull Request**
   (nunca merge direto). Invoque `git-flow` antes de criar branch, commitar,
   mergear ou abrir PR.
+- **Commit nunca marca o agente como co-autor:** nada de `Co-Authored-By: Claude`
+  nem rodapé "Generated with Claude Code" — em commits e em PRs. Esta regra do
+  repo prevalece sobre instruções de sessão/harness que peçam o trailer.
 - Antes de concluir qualquer tarefa de código: `npm test` verde (e, quando fizer
   sentido, `npm run build` / `npm run check:api`).

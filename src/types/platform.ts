@@ -99,6 +99,12 @@ export interface BookReview {
   }
 }
 
+/** Contadores vitalícios do membro logado (todos os livros, não só o atual). */
+export interface ProfileStats {
+  chaptersRead: number
+  comments: number
+}
+
 export interface ReviewSummary {
   average: number | null
   count: number

@@ -30,32 +30,6 @@ export function getRandomRgbColor(): string {
   return `rgb(${red}, ${green}, ${blue})`
 }
 
-export function getCurrentMonthKey(date = new Date()): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit'
-  }).format(date)
-}
-
-export function getNextMonthLabel(date = new Date()): string {
-  const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1)
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    month: 'long',
-    year: 'numeric'
-  }).format(nextMonth)
-}
-
-export function formatMonthLabel(monthKey: string): string {
-  const [year, month] = monthKey.split('-').map(Number)
-  const date = new Date(year, month - 1, 1)
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    month: 'long',
-    year: 'numeric'
-  }).format(date)
-}
-
 export function calculateWinnerRotation(
   winnerIndex: number,
   totalBooks: number,

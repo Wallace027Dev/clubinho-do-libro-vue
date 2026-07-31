@@ -12,7 +12,11 @@ defineProps<{
   <ol class="review-list">
     <li v-for="review in reviews" :key="review.id">
       <div class="review-head">
-        <UserAvatar :display-name="review.user.displayName" :login="review.user.login" />
+        <UserAvatar
+          :avatar-url="review.user.avatarUrl"
+          :display-name="review.user.displayName"
+          :login="review.user.login"
+        />
         <div>
           <strong>{{ review.user.displayName || review.user.login }}</strong>
           <StarRating :value="review.rating" :size="16" />

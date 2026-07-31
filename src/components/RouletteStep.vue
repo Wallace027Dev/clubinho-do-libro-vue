@@ -1,8 +1,22 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import RouletteWheel from './RouletteWheel.vue'
+import { usePlatformStore } from '../stores/platformStore'
 import { useRaffleStore } from '../stores/raffleStore'
 
+const platformStore = usePlatformStore()
 const raffleStore = useRaffleStore()
+
+const isLockedByCurrentBook = computed(() => raffleStore.raffleLock === 'current-book-in-progress')
+const currentBookTitle = computed(() => platformStore.clubState.currentBook?.book.title ?? '')
+
+const spinLabel = computed(() => {
+  if (isLockedByCurrentBook.value) {
+    return 'Conclua o livro atual para sortear'
+  }
+
+  return raffleStore.isSpinning ? 'Sorteando...' : 'Sortear'
+})
 </script>
 
 <template>
@@ -10,19 +24,18 @@ const raffleStore = useRaffleStore()
     <div class="flow-heading">
       <p class="section-label">Passo 2</p>
       <h2>Gire a roleta</h2>
-      <p v-if="raffleStore.hasCurrentMonthBook">
-        O sorteio deste mês já foi concluído. O próximo libera em
-        {{ raffleStore.nextRaffleMonthLabel }}.
+      <p v-if="isLockedByCurrentBook">
+        O clube ainda está lendo um livro. O próximo sorteio libera quando ele for concluído.
       </p>
       <p v-else>A roleta desacelera e para no livro sorteado.</p>
     </div>
 
     <RouletteWheel />
 
-    <div v-if="raffleStore.hasCurrentMonthBook" class="locked-raffle" role="status">
+    <div v-if="isLockedByCurrentBook" class="locked-raffle" role="status">
       <p class="section-label">Sorteio bloqueado</p>
-      <h3>{{ raffleStore.monthlyBook?.book.title }}</h3>
-      <p>Livro confirmado para o mês atual.</p>
+      <h3>{{ currentBookTitle }}</h3>
+      <p>Livro em andamento no clube.</p>
     </div>
 
     <div class="action-stack">
@@ -32,13 +45,7 @@ const raffleStore = useRaffleStore()
         :disabled="!raffleStore.canSpin"
         @click="raffleStore.spin"
       >
-        {{
-          raffleStore.hasCurrentMonthBook
-            ? 'Bloqueado até o próximo mês'
-            : raffleStore.isSpinning
-              ? 'Sorteando...'
-              : 'Sortear'
-        }}
+        {{ spinLabel }}
       </button>
 
       <button class="secondary-action" type="button" @click="raffleStore.editBooks">

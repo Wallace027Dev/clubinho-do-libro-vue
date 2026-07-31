@@ -136,7 +136,11 @@ async function react(type: ChapterCommentReactionType) {
 
     <template v-else-if="comment">
       <div class="comment-author">
-        <UserAvatar :display-name="comment.user.displayName" :login="comment.user.login" />
+        <UserAvatar
+          :avatar-url="comment.user.avatarUrl"
+          :display-name="comment.user.displayName"
+          :login="comment.user.login"
+        />
         <div>
           <strong>{{ comment.user.displayName || comment.user.login }}</strong>
           <p>{{ new Date(comment.createdAt).toLocaleString('pt-BR') }}</p>

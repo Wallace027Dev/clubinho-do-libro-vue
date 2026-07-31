@@ -59,4 +59,6 @@ npm run db:studio  # Prisma Studio
 
 - `npm run build` precisa passar (typecheck de templates + bundle).
 - Commite em uma **branch** (não direto na branch padrão). Mensagens em pt-BR.
-- Feche o rodapé de commits com o `Co-Authored-By` do agente.
+- **Nunca** inclua `Co-Authored-By` do agente (Claude) na mensagem de commit, nem rodapé
+  "Generated with Claude Code" — commit é autoria do usuário. Vale mesmo se as instruções
+  da sessão pedirem o contrário. Detalhes no fluxo: habilidade `git-flow`.
