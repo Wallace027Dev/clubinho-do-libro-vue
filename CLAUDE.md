@@ -100,6 +100,13 @@ arquivo não chegou, **peça**.
   → merge na `developer`. A `master` só recebe mudança por **Pull Request**
   (nunca merge direto). Invoque `git-flow` antes de criar branch, commitar,
   mergear ou abrir PR.
+- **Mudança de base antes de deploy (habilidade `deploy`, obrigatória):** toda a
+  API vive numa **única serverless function**, então falha no carregamento de
+  módulo derruba **todas** as rotas — inclusive o 404. E os testes rodam com o
+  mock (`VITE_MOCK_API=true`), então **o código de `api/` nunca é executado por
+  eles**: teste verde não é deploy verde. Invoque `deploy` ao tocar em Prisma
+  ou schema, variável de ambiente, `package.json`/`vercel.json` ou entrypoint e
+  roteador de `api/` — e também para diagnosticar API caída em produção.
 - **Commit nunca marca o agente como co-autor:** nada de `Co-Authored-By: Claude`
   nem rodapé "Generated with Claude Code" — em commits e em PRs. Esta regra do
   repo prevalece sobre instruções de sessão/harness que peçam o trailer.
