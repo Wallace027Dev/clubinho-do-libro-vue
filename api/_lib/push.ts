@@ -10,9 +10,9 @@ import { chapterMessageLabel } from '../../src/domain/chapterLabel.js'
 import {
   activeMemberIds,
   bookFinishedNotification,
-  bookSelectedNotification,
   chapterCommentNotification,
   chapterFinishedNotification,
+  commentReactionNotification,
   excludeUser,
   type NotificationPayload
 } from '../../src/domain/notifications.js'
@@ -94,15 +94,28 @@ async function activeMembers() {
   return prisma.user.findMany({ select: { id: true, deactivatedAt: true } })
 }
 
-/** Novo livro do mês: notifica os membros ativos (menos quem selecionou). */
-export async function notifyBookSelected(
+/**
+ * Id da atividade que representa a interação, para a notificação levar à página
+ * dela. Resolvido por (tipo, ator, capítulo) — a mais recente —, o que evita
+ * fazer os comandos de domínio e os repositórios devolverem o id só por causa do
+ * push.
+ */
+async function activityIdFor(
+  type: 'CHAPTER_FINISHED' | 'CHAPTER_COMMENTED',
   actorId: string | null,
-  bookTitle: string
-): Promise<void> {
-  await sendPushToUsers(
-    activeMemberIds(await activeMembers(), actorId),
-    bookSelectedNotification(bookTitle)
-  )
+  chapterId: string
+): Promise<string | null> {
+  if (!actorId) {
+    return null
+  }
+
+  const activity = await prisma.activity.findFirst({
+    where: { type, actorId, metadata: { path: ['chapterId'], equals: chapterId } },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    select: { id: true }
+  })
+
+  return activity?.id ?? null
 }
 
 /** Capítulo concluído: notifica os demais membros ativos. */
@@ -121,7 +134,11 @@ export async function notifyChapterFinished(
 
   await sendPushToUsers(
     activeMemberIds(await activeMembers(), actorId),
-    chapterFinishedNotification(await actorName(actorId), chapterMessageLabel(chapter))
+    chapterFinishedNotification(
+      await actorName(actorId),
+      chapterMessageLabel(chapter),
+      await activityIdFor('CHAPTER_FINISHED', actorId, chapterId)
+    )
   )
 }
 
@@ -163,6 +180,39 @@ export async function notifyChapterComment(
       finishers.map((progress) => progress.userId),
       actorId
     ),
-    chapterCommentNotification(await actorName(actorId), chapterMessageLabel(chapter))
+    chapterCommentNotification(
+      await actorName(actorId),
+      chapterMessageLabel(chapter),
+      await activityIdFor('CHAPTER_COMMENTED', actorId, chapterId)
+    )
+  )
+}
+
+/**
+ * Reação num comentário: notifica **só o autor do comentário**, e não quando a
+ * pessoa reage ao próprio. O autor concluiu o capítulo (é pré-requisito para
+ * comentar), então não há questão de spoiler aqui.
+ */
+export async function notifyCommentReaction(
+  actorId: string | null,
+  commentId: string
+): Promise<void> {
+  const comment = await prisma.chapterComment.findUnique({
+    where: { id: commentId },
+    select: { userId: true, chapterId: true, chapter: { select: { number: true, title: true } } }
+  })
+
+  if (!comment || !comment.chapter || comment.userId === actorId) {
+    return
+  }
+
+  await sendPushToUsers(
+    [comment.userId],
+    commentReactionNotification(
+      await actorName(actorId),
+      chapterMessageLabel(comment.chapter),
+      commentId,
+      await activityIdFor('CHAPTER_COMMENTED', comment.userId, comment.chapterId)
+    )
   )
 }

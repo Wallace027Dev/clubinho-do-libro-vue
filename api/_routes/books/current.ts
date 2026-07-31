@@ -6,7 +6,6 @@ import { getClubBookReviews, userFinishedAllChapters } from '../../_lib/reviews.
 import { commentFeedPage } from '../../_lib/feedActivities.js'
 import { selectBookRepository } from '../../_lib/repositories/adminBookRepository.js'
 import { selectBook } from '../../../src/domain/services/adminBook.js'
-import { notifyBookSelected } from '../../_lib/push.js'
 
 interface SelectBookBody {
   title?: string
@@ -107,13 +106,6 @@ export default async function handler(req: any, res: any) {
   if (!result.ok) {
     sendJson(res, result.status, { error: result.error })
     return
-  }
-
-  // Push best-effort: uma falha de notificação nunca quebra a seleção do livro.
-  try {
-    await notifyBookSelected(session.userId ?? null, result.currentBook.book.title)
-  } catch {
-    // Silencioso: sem VAPID/assinaturas, é no-op.
   }
 
   sendJson(res, 201, { currentBook: result.currentBook })

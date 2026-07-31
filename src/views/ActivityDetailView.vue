@@ -24,7 +24,14 @@ const errorMessage = ref('')
 
 const activity = computed<Activity | null>(() => {
   const activityId = String(route.params.activityId)
-  return platformStore.clubState.activities.find((item) => item.id === activityId) ?? null
+
+  return (
+    platformStore.clubState.activities.find((item) => item.id === activityId) ??
+    // Conclusão de capítulo vive no canal do sininho, não no feed — e é para cá
+    // que a notificação dela aponta.
+    platformStore.alerts.find((item) => item.id === activityId) ??
+    null
+  )
 })
 
 const chapterNumber = computed(() => activity.value?.metadata?.chapterNumber)
@@ -59,6 +66,16 @@ onMounted(async () => {
       await platformStore.loadHome()
     } catch {
       // O erro aparece no estado de "atividade não encontrada" abaixo.
+    }
+  }
+
+  // Não achou no feed: pode ser atividade do sininho (ex.: conclusão de
+  // capítulo, que é o alvo da notificação de avanço na leitura).
+  if (!activity.value) {
+    try {
+      await platformStore.loadAlerts()
+    } catch {
+      // Idem: cai no estado de "atividade não encontrada".
     }
   }
 

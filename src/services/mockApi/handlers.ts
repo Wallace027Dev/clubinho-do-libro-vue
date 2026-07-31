@@ -14,7 +14,6 @@ import {
   type MockActivityMeta,
   type MockChapter,
   type MockClubBook,
-  type ReactionType,
   type MockSession
 } from './db'
 import { clearAttempts, isRateLimited, recordFailure } from './rateLimit'
@@ -48,10 +47,11 @@ import { normalizeLogin, resolveCreateUser, resolveUpdateUser } from '../../doma
 import { resolveFinishBook, resolveSelectBook } from '../../domain/services/adminBook'
 import {
   bookFinishedNotification,
-  bookSelectedNotification,
+  commentReactionNotification,
   chapterCommentNotification,
   chapterFinishedNotification
 } from '../../domain/notifications'
+import { countReactionTypes } from '../../domain/reactions'
 import { resolveBookSearchQuery, type ExternalBookSource } from '../../domain/bookSearch'
 import { findFixtureBook, searchFixtureBooks } from './bookSearchSim'
 import { simulateLocalPush } from './pushSim'
@@ -142,12 +142,8 @@ function getFinishedChapterForUser(chapterId: string, userId: string): MockChapt
   return unlocked ? chapter : null
 }
 
-function countReactions(types: ReactionType[]): Partial<Record<ReactionType, number>> {
-  return types.reduce<Partial<Record<ReactionType, number>>>((acc, type) => {
-    acc[type] = (acc[type] ?? 0) + 1
-    return acc
-  }, {})
-}
+/** Contagem por tipo vem do domínio (mesma do backend real). */
+const countReactions = countReactionTypes
 
 function commentsPayload(chapterId: string, viewerId: string | null) {
   const comments = getDb()
@@ -217,6 +213,59 @@ function sortedActivities(keep?: (type: string) => boolean) {
   return keep ? all.filter((activity) => keep(activity.type)) : all
 }
 
+/**
+ * Reações do comentário do ator naquele capítulo — só para atividade de
+ * comentário. Junção por (capítulo, autor), igual ao backend real, porque a
+ * metadata não guarda o id do comentário.
+ */
+function commentReactionsOf(activity: {
+  type: string
+  actorId: string | null
+  metadata: MockActivityMeta | null
+}) {
+  const chapterId = activity.metadata?.chapterId
+
+  if (activity.type !== 'CHAPTER_COMMENTED' || !chapterId || !activity.actorId) {
+    return {}
+  }
+
+  const comment = getDb().comments.find(
+    (item) => item.chapterId === chapterId && item.userId === activity.actorId
+  )
+
+  if (!comment) {
+    return {}
+  }
+
+  const reactions = getDb().reactions.filter((item) => item.commentId === comment.id)
+
+  if (reactions.length === 0) {
+    return {}
+  }
+
+  return {
+    commentReactions: countReactions(reactions.map((item) => item.type)),
+    commentReactionTotal: reactions.length
+  }
+}
+
+/**
+ * Id da atividade que representa a interação (mesma resolução do backend real:
+ * a mais recente daquele tipo, do ator, naquele capítulo). É o que faz a
+ * notificação abrir a página da interação em vez de uma lista.
+ */
+function activityIdFor(type: string, actorId: string | null, chapterId: string): string | null {
+  if (!actorId) {
+    return null
+  }
+
+  const found = sortedActivities((item) => item === type).find(
+    (activity) => activity.actorId === actorId && activity.metadata?.chapterId === chapterId
+  )
+
+  return found?.id ?? null
+}
+
 function activityView(activity: { id: string; type: string; message: string; createdAt: string; actorId: string | null; metadata: MockActivityMeta | null }) {
   return {
     id: activity.id,
@@ -224,7 +273,8 @@ function activityView(activity: { id: string; type: string; message: string; cre
     message: activity.message,
     createdAt: activity.createdAt,
     actor: actorView(activity.actorId),
-    metadata: activity.metadata
+    metadata: activity.metadata,
+    ...commentReactionsOf(activity)
   }
 }
 
@@ -600,9 +650,6 @@ function selectCurrent(body: Body): MockResponse {
   })
   persist()
 
-  // Homologação: simula o push do novo livro localmente (se houver permissão).
-  simulateLocalPush(bookSelectedNotification(book.title))
-
   return json(201, { currentBook: { ...clubBook, book } })
 }
 
@@ -913,7 +960,8 @@ function finishChapter(chapterId: string, body: Body): MockResponse {
   simulateLocalPush(
     chapterFinishedNotification(
       actor?.displayName || actor?.login || 'Um membro',
-      chapterMessageLabel(chapter!)
+      chapterMessageLabel(chapter!),
+      activityIdFor('CHAPTER_FINISHED', current.userId, chapterId)
     )
   )
 
@@ -1040,7 +1088,8 @@ function upsertComment(chapterId: string, body: Body): MockResponse {
   simulateLocalPush(
     chapterCommentNotification(
       actor?.displayName || actor?.login || 'Um membro',
-      chapterMessageLabel(chapter!)
+      chapterMessageLabel(chapter!),
+      activityIdFor('CHAPTER_COMMENTED', current.userId, chapterId)
     )
   )
 
@@ -1091,6 +1140,24 @@ function reactToComment(commentId: string, body: Body): MockResponse {
 
   const reaction = commitMockCommentReaction(decision.command)
   persist()
+
+  // Homologação: simula o push da reação para o autor do comentário. Reagir ao
+  // próprio comentário não notifica ninguém.
+  if (comment && comment.userId !== current.userId) {
+    const chapter = getDb().chapters.find((item) => item.id === comment.chapterId)
+    const actor = getDb().users.find((item) => item.id === current.userId)
+
+    if (chapter) {
+      simulateLocalPush(
+        commentReactionNotification(
+          actor?.displayName || actor?.login || 'Um membro',
+          chapterMessageLabel(chapter),
+          comment.id,
+          activityIdFor('CHAPTER_COMMENTED', comment.userId, comment.chapterId)
+        )
+      )
+    }
+  }
 
   return json(200, { reaction })
 }

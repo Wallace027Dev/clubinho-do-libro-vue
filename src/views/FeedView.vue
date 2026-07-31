@@ -9,7 +9,8 @@ import SectionCard from '../components/ui/SectionCard.vue'
 import SkeletonLoader from '../components/ui/SkeletonLoader.vue'
 import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
-import type { Activity } from '../types/platform'
+import type { Activity, ChapterCommentReactionType } from '../types/platform'
+import { reactionEmoji } from '../utils/reactions'
 
 const router = useRouter()
 const platformStore = usePlatformStore()
@@ -65,6 +66,13 @@ function activityDate(activity: Activity) {
 function actorName(activity: Activity) {
   return activity.actor?.displayName || activity.actor?.login || 'Um membro'
 }
+
+/** Só os tipos que têm reação (a contagem já vem sem os zerados). */
+function reactionEntries(activity: Activity) {
+  return Object.entries(activity.commentReactions ?? {}) as Array<
+    [ChapterCommentReactionType, number]
+  >
+}
 </script>
 
 <template>
@@ -101,6 +109,11 @@ function actorName(activity: Activity) {
         </div>
         <strong>{{ activity.message }}</strong>
         <p>{{ actorName(activity) }}</p>
+        <p v-if="activity.commentReactionTotal" class="feed-card-reactions">
+          <span v-for="[type, count] in reactionEntries(activity)" :key="type">
+            {{ reactionEmoji(type) }} {{ count }}
+          </span>
+        </p>
       </ClickableCard>
     </ol>
 
