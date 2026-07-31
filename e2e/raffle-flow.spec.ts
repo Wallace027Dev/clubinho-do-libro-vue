@@ -60,9 +60,10 @@ test('admin busca o livro, sorteia e o vencedor vira livro atual com capítulos'
   await expect(page.locator('#winner-chapter-hint')).toContainText('Serão criados 3 capítulos')
 
   await page.getByRole('button', { name: 'Aceitar' }).click()
-  await expect(page.getByText('Livro atual definido!')).toBeVisible()
 
   // --- O que ficou registrado ---------------------------------------------
+  // Não afirmo o toast: ele se dissolve em 3,8s e viraria bomba de tempo em
+  // máquina lenta. As asserções abaixo provam o mesmo, e de forma durável.
   // O sorteio trava, porque agora existe livro em andamento.
   await expect(page.getByText(/Sorteio travado enquanto houver livro em andamento/)).toBeVisible()
   await expect(page.getByText(vencedor)).toBeVisible()
