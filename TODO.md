@@ -103,9 +103,14 @@ Legenda: 🔴 alta · 🟡 média · 🟢 baixa · 🔭 evolução maior · ✅ 
       `/api/push/(un)subscribe`, service worker (`public/push-sw.js` via
       `workbox.importScripts`), serviço no front (`pushService`) e toggle no
       perfil. Conteúdo/alvo no domínio (`src/domain/notifications.ts`, testado).
-      **Eventos:** novo livro do mês, capítulo concluído e livro finalizado
-      (todos os membros ativos, menos o autor); novo comentário (anti-spoiler:
-      só quem já concluiu aquele capítulo). Simulados localmente na homologação.
+      **Eventos:** capítulo concluído e livro finalizado (todos os membros
+      ativos, menos o autor); novo comentário (anti-spoiler: só quem já concluiu
+      aquele capítulo); **reação no seu comentário** (só o autor, e não quando
+      reage ao próprio). O push de "novo livro do mês" foi removido a pedido.
+      Tocar na notificação abre a **página da interação** (`/activity/:id`, que
+      mostra o que a pessoa fez no capítulo e o comentário dela se houver), e o
+      service worker navega a janela já aberta em vez de só focá-la. Simulados
+      localmente na homologação.
       **Config em produção:** gerar VAPID e rodar `prisma db push` (ver README).
 - [x] **Ativar push em produção (ops).** Chaves VAPID (`VAPID_PUBLIC_KEY`,
       `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `VITE_VAPID_PUBLIC_KEY`) cadastradas

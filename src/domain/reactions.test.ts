@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { REACTION_TYPES, isValidReactionType } from './reactions'
+import { countReactionTypes, REACTION_TYPES, isValidReactionType } from './reactions'
 
 describe('tipos de reação (domínio)', () => {
   it('aceita as reações do clube', () => {
@@ -13,5 +13,20 @@ describe('tipos de reação (domínio)', () => {
     expect(isValidReactionType('')).toBe(false)
     expect(isValidReactionType(undefined)).toBe(false)
     expect(isValidReactionType(1)).toBe(false)
+  })
+})
+
+describe('contagem de reações', () => {
+  it('conta por tipo, aceitando lista de objetos ou de strings', () => {
+    expect(countReactionTypes([{ type: 'GOSTEI' }, { type: 'GOSTEI' }, { type: 'SOFRI' }])).toEqual({
+      GOSTEI: 2,
+      SOFRI: 1
+    })
+    expect(countReactionTypes(['SURPRESO', 'SURPRESO'])).toEqual({ SURPRESO: 2 })
+  })
+
+  it('omite tipo sem reação e ignora tipo desconhecido', () => {
+    expect(countReactionTypes([{ type: 'GOSTEI' }, { type: 'INVENTADO' }])).toEqual({ GOSTEI: 1 })
+    expect(countReactionTypes([])).toEqual({})
   })
 })

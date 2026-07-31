@@ -24,6 +24,9 @@ export interface Activity {
   createdAt: string
   actor?: AuthUser | null
   metadata?: ActivityMetadata | null
+  /** Só em atividade de comentário: reações do comentário, exibidas no card do feed. */
+  commentReactions?: Partial<Record<ChapterCommentReactionType, number>>
+  commentReactionTotal?: number
 }
 
 export interface ChapterProgress {

@@ -8,17 +8,11 @@ import type { Prisma } from '@prisma/client'
 import { getFinishedChapterForUser } from '../chapterAccess.js'
 import { getDefaultClub } from '../club.js'
 import { prisma } from '../prisma.js'
+import { countReactionTypes } from '../../../src/domain/reactions.js'
 import type {
   ChapterCommentCommand,
   ChapterCommentRepository
 } from '../../../src/domain/services/chapterComment.js'
-
-function countReactions(reactions: Array<{ type: string }>) {
-  return reactions.reduce<Record<string, number>>((acc, reaction) => {
-    acc[reaction.type] = (acc[reaction.type] ?? 0) + 1
-    return acc
-  }, {})
-}
 
 async function serializeComments(chapterId: string, viewerId: string) {
   const comments = await prisma.chapterComment.findMany({
@@ -37,7 +31,7 @@ async function serializeComments(chapterId: string, viewerId: string) {
     updatedAt: comment.updatedAt,
     user: comment.user,
     myReaction: comment.reactions.find((reaction) => reaction.userId === viewerId)?.type ?? null,
-    reactions: countReactions(comment.reactions),
+    reactions: countReactionTypes(comment.reactions),
     reactionTotal: comment.reactions.length,
     recentReactions: comment.reactions.slice(0, 6).map((reaction) => ({
       type: reaction.type,

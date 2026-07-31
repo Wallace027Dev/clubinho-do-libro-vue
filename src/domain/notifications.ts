@@ -41,14 +41,14 @@ export function excludeUser(userIds: readonly string[], excludeUserId?: string |
   return userIds.filter((id) => id !== excludeUserId)
 }
 
-/** Novo livro do mês → todos os membros ativos. */
-export function bookSelectedNotification(bookTitle: string): NotificationPayload {
-  return {
-    title: 'Novo livro do mês 📖',
-    body: `${bookTitle} virou o livro atual do clube. Bora ler!`,
-    url: '/',
-    tag: 'book-selected'
-  }
+/**
+ * Rota da página da interação. Tocar na notificação leva à atividade em si — que
+ * mostra o que a pessoa fez naquele capítulo e o comentário dela, se houver — em
+ * vez de despejar quem clicou numa lista genérica. Sem a atividade resolvida,
+ * cai no `fallback`.
+ */
+export function activityUrl(activityId: string | null | undefined, fallback: string): string {
+  return activityId ? `/activity/${activityId}` : fallback
 }
 
 /**
@@ -57,12 +57,13 @@ export function bookSelectedNotification(bookTitle: string): NotificationPayload
  */
 export function chapterFinishedNotification(
   actorName: string,
-  chapterLabel: string
+  chapterLabel: string,
+  activityId?: string | null
 ): NotificationPayload {
   return {
     title: 'Avanço na leitura 📚',
     body: `${actorName} terminou ${chapterLabel}.`,
-    url: '/feed',
+    url: activityUrl(activityId, '/feed'),
     tag: 'chapter-finished'
   }
 }
@@ -84,12 +85,35 @@ export function bookFinishedNotification(bookTitle: string): NotificationPayload
  */
 export function chapterCommentNotification(
   actorName: string,
-  chapterLabel: string
+  chapterLabel: string,
+  activityId?: string | null
 ): NotificationPayload {
   return {
     title: 'Novo comentário 💬',
     body: `${actorName} comentou ${chapterLabel}.`,
-    url: '/feed',
+    url: activityUrl(activityId, '/feed'),
     tag: 'chapter-comment'
+  }
+}
+
+/**
+ * Reação num comentário → **só o autor do comentário**. Ninguém é notificado por
+ * reagir a si mesmo (a borda cuida de excluir esse caso).
+ *
+ * O `tag` inclui o comentário para que reações em comentários diferentes não se
+ * substituam na bandeja.
+ */
+export function commentReactionNotification(
+  actorName: string,
+  chapterLabel: string,
+  commentId: string,
+  activityId?: string | null
+): NotificationPayload {
+  return {
+    title: 'Reagiram ao seu comentário 😍',
+    // "sobre o capítulo 3" / "sobre o prólogo": o rótulo já vem com artigo.
+    body: `${actorName} reagiu ao seu comentário sobre ${chapterLabel}.`,
+    url: activityUrl(activityId, '/chapters'),
+    tag: `comment-reaction:${commentId}`
   }
 }

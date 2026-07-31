@@ -29,11 +29,28 @@ self.addEventListener('notificationclick', (event) => {
   const targetUrl = (event.notification.data && event.notification.data.url) || '/'
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    (async () => {
+      const clientList = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true
+      })
+
       for (const client of clientList) {
-        if (client.url.includes(targetUrl) && 'focus' in client) {
-          return client.focus()
+        if (!('focus' in client)) {
+          continue
         }
+
+        // Antes só focava a janela quando a URL dela já continha o alvo — com o
+        // app aberto em outra página, o clique não levava a lugar nenhum. Agora
+        // navega a janela existente até a interação.
+        const jaEstaNoAlvo = new URL(client.url).pathname === targetUrl
+
+        if (!jaEstaNoAlvo && 'navigate' in client) {
+          const navegada = await client.navigate(targetUrl).catch(() => null)
+          return (navegada || client).focus()
+        }
+
+        return client.focus()
       }
 
       if (self.clients.openWindow) {
@@ -41,6 +58,6 @@ self.addEventListener('notificationclick', (event) => {
       }
 
       return undefined
-    })
+    })()
   )
 })

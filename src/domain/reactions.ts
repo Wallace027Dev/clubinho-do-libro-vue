@@ -20,3 +20,21 @@ export const REACTION_TYPES: readonly ReactionType[] = [
 export function isValidReactionType(value: unknown): value is ReactionType {
   return typeof value === 'string' && (REACTION_TYPES as readonly string[]).includes(value)
 }
+
+/**
+ * Quantas reações de cada tipo. Tipo sem nenhuma reação não entra no resultado,
+ * então a UI itera só o que existe.
+ */
+export function countReactionTypes(
+  types: readonly { type: string }[] | readonly string[]
+): Partial<Record<ReactionType, number>> {
+  return types.reduce<Partial<Record<ReactionType, number>>>((acc, item) => {
+    const type = typeof item === 'string' ? item : item.type
+
+    if (isValidReactionType(type)) {
+      acc[type] = (acc[type] ?? 0) + 1
+    }
+
+    return acc
+  }, {})
+}
