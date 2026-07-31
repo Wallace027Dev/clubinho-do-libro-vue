@@ -103,7 +103,7 @@ const avatar = reactive({
 
 const empty = reactive({ message: 'Nada por aqui ainda.' })
 
-const cover = reactive({ title: 'Mistborn', coverUrl: '', small: false })
+const cover = reactive({ title: 'Mistborn', coverUrl: '', small: false, fill: false })
 
 const rating = ref(4)
 const star = reactive({ value: 3.6, size: 24 })
@@ -254,12 +254,18 @@ const sampleReviews: BookReview[] = [
   <!-- ---------- BookCover ---------- -->
   <SectionCard label="Componente" title="BookCover">
     <div class="pg-preview">
-      <BookCover :title="cover.title" :cover-url="cover.coverUrl || null" :small="cover.small" />
+      <BookCover
+        :title="cover.title"
+        :cover-url="cover.coverUrl || null"
+        :small="cover.small"
+        :fill="cover.fill"
+      />
     </div>
     <div class="pg-controls">
       <label>Título <input v-model="cover.title" /></label>
       <label>URL da capa <input v-model="cover.coverUrl" placeholder="deixe vazio p/ inicial" /></label>
       <label class="pg-check"><input type="checkbox" v-model="cover.small" /> small</label>
+      <label class="pg-check"><input type="checkbox" v-model="cover.fill" /> fill</label>
     </div>
   </SectionCard>
 

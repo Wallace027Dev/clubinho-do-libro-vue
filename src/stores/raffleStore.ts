@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import type { ExternalBook } from '../domain/bookSearch'
 import { canRaffle, resolveRaffleLock } from '../domain/raffle'
 import {
   calculateWinnerRotation,
@@ -75,6 +76,37 @@ export const useRaffleStore = defineStore('raffle', () => {
     persist()
   }
 
+  /**
+   * Candidato vindo da busca externa. Guarda os metadados junto porque é deles
+   * que o aceite monta o livro do clube (capa, autor, sinopse) — `addBook`
+   * continua existindo para o livro que nenhum provedor conhece.
+   */
+  function addCandidate(book: ExternalBook) {
+    const title = book.title.trim().replace(/\s+/g, ' ')
+
+    if (!title) {
+      return
+    }
+
+    // Clique duplo, ou o mesmo livro achado por outro termo, não entra duas vezes.
+    if (book.providerId && books.value.some((item) => item.providerId === book.providerId)) {
+      return
+    }
+
+    books.value.push({
+      ...createBook(title),
+      author: book.authors.join(', ') || null,
+      publisher: book.publisher,
+      pageCount: book.pageCount,
+      pageCountApproximate: book.pageCountApproximate,
+      coverUrl: book.coverUrl,
+      description: book.description,
+      source: book.source,
+      providerId: book.providerId
+    })
+    persist()
+  }
+
   function removeBook(bookId: string) {
     books.value = books.value.filter((book) => book.id !== bookId)
     persist()
@@ -136,7 +168,7 @@ export const useRaffleStore = defineStore('raffle', () => {
    * mais um "livro do mês" guardado em localStorage: o livro atual é a fonte
    * única, e é ele que trava o próximo sorteio até ser concluído.
    */
-  async function acceptWinner() {
+  async function acceptWinner(chapterCount?: number) {
     const winner = selectedBook.value
 
     if (!winner || isAccepting.value) {
@@ -146,7 +178,14 @@ export const useRaffleStore = defineStore('raffle', () => {
     isAccepting.value = true
 
     try {
-      await platformStore.selectCurrentBook(winner.title, '', '')
+      // Os metadados da busca viram o livro do clube; a quantidade só decide
+      // quantos capítulos nascem (ela não é guardada em campo nenhum).
+      await platformStore.selectCurrentBook(
+        winner.title,
+        winner.author ?? '',
+        winner.description ?? '',
+        { coverUrl: winner.coverUrl ?? null, chapterCount }
+      )
 
       // O vencedor virou o livro do clube: sai da lista de candidatos para não
       // concorrer no próximo sorteio. Os demais continuam na fila.
@@ -184,6 +223,7 @@ export const useRaffleStore = defineStore('raffle', () => {
     canConfirmBooks,
     canSpin,
     addBook,
+    addCandidate,
     removeBook,
     confirmBooks,
     editBooks,

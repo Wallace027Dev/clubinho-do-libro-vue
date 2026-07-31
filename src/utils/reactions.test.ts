@@ -14,14 +14,20 @@ describe('reactions', () => {
   })
 
   it('mapeia emoji e rótulo por tipo', () => {
-    expect(reactionEmoji('GOSTEI')).toBe('🙂')
-    expect(reactionLabel('SOFRI')).toBe('sofri')
-    expect(reactionLabel('DISCUTIR')).toBe('discutir')
+    // Tipos são o enum do banco; emoji e rótulo são só apresentação.
+    expect(reactionEmoji('GOSTEI')).toBe('❤️')
+    expect(reactionLabel('GOSTEI')).toBe('amei')
+    expect(reactionEmoji('SOFRI')).toBe('😂')
+    expect(reactionLabel('SOFRI')).toBe('engraçado')
+    expect(reactionEmoji('SUSPEITO')).toBe('😢')
+    expect(reactionLabel('SUSPEITO')).toBe('triste')
+    expect(reactionEmoji('DISCUTIR')).toBe('😡')
+    expect(reactionLabel('DISCUTIR')).toBe('revoltado')
   })
 
   it('tem fallback para tipo desconhecido', () => {
     const unknown = 'INEXISTENTE' as ChapterCommentReactionType
-    expect(reactionEmoji(unknown)).toBe('🙂')
+    expect(reactionEmoji(unknown)).toBe('❤️')
     expect(reactionLabel(unknown)).toBe('reação')
   })
 })

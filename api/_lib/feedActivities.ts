@@ -14,6 +14,7 @@
 import type { ActivityType, Prisma } from '@prisma/client'
 import { prisma } from './prisma.js'
 import { ALERT_ACTIVITY_TYPES } from '../../src/domain/activities.js'
+import { countReactionTypes, type ReactionType } from '../../src/domain/reactions.js'
 
 const actorSelect = { id: true, login: true, displayName: true, avatarUrl: true } as const
 
@@ -24,6 +25,62 @@ interface ActivityView {
   createdAt: Date
   actor: { id: string; login: string; displayName: string | null; avatarUrl: string | null } | null
   metadata: Prisma.JsonValue
+  /** Só em atividade de comentário: reações do comentário, para o card do feed. */
+  commentReactions?: Partial<Record<ReactionType, number>>
+  commentReactionTotal?: number
+}
+
+function chapterIdOf(metadata: Prisma.JsonValue): string | null {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+    return null
+  }
+
+  const value = (metadata as Record<string, unknown>).chapterId
+  return typeof value === 'string' && value ? value : null
+}
+
+/**
+ * Anexa as reações do comentário de cada atividade de comentário.
+ *
+ * A metadata não guarda o id do comentário (nem nas linhas já existentes), então
+ * a junção é por (capítulo, autor) — que identifica um comentário só, graças ao
+ * `@@unique([chapterId, userId])`. Uma consulta em lote para a página inteira,
+ * não uma por item.
+ */
+async function withCommentReactions(activities: ActivityView[]): Promise<ActivityView[]> {
+  const keys = activities
+    .map((activity) => ({
+      chapterId: chapterIdOf(activity.metadata),
+      userId: activity.actor?.id ?? null
+    }))
+    .filter((key): key is { chapterId: string; userId: string } =>
+      Boolean(key.chapterId && key.userId)
+    )
+
+  if (keys.length === 0) {
+    return activities
+  }
+
+  const comments = await prisma.chapterComment.findMany({
+    where: { OR: keys },
+    select: { chapterId: true, userId: true, reactions: { select: { type: true } } }
+  })
+
+  const byKey = new Map(comments.map((comment) => [`${comment.chapterId}:${comment.userId}`, comment.reactions]))
+
+  return activities.map((activity) => {
+    const reactions = byKey.get(`${chapterIdOf(activity.metadata)}:${activity.actor?.id}`)
+
+    if (!reactions || reactions.length === 0) {
+      return activity
+    }
+
+    return {
+      ...activity,
+      commentReactions: countReactionTypes(reactions),
+      commentReactionTotal: reactions.length
+    }
+  })
 }
 
 /** Ids dos capítulos que o usuário já concluiu. */
@@ -73,7 +130,7 @@ export async function commentFeedPage(
     return { activities: [], hasMore: false }
   }
 
-  return query(
+  const page = await query(
     {
       clubId,
       type: 'CHAPTER_COMMENTED',
@@ -84,6 +141,8 @@ export async function commentFeedPage(
     cursor,
     limit
   )
+
+  return { ...page, activities: await withCommentReactions(page.activities) }
 }
 
 export async function alertsPage(

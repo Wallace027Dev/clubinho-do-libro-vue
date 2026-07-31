@@ -25,8 +25,55 @@ describe('resolveSelectBook', () => {
       title: 'Mistborn',
       author: null,
       description: 'Épico',
+      coverUrl: null,
+      chapters: [],
       activity: { type: 'BOOK_SELECTED', message: 'Mistborn virou o livro atual do clube.' }
     })
+  })
+
+  it('gera as linhas de capítulo a partir da quantidade informada', () => {
+    const decision = resolveSelectBook({
+      hasCurrentBook: false,
+      rawTitle: 'Duna',
+      rawAuthor: 'Frank Herbert',
+      rawDescription: null,
+      rawChapterCount: 3
+    })
+
+    expect(decision.ok).toBe(true)
+    if (!decision.ok) return
+    // A quantidade não é guardada em campo nenhum: ela só decide as linhas.
+    expect(decision.command.chapters).toEqual([
+      { number: 1, title: '' },
+      { number: 2, title: '' },
+      { number: 3, title: '' }
+    ])
+  })
+
+  it('guarda a capa vinda da busca, trimada', () => {
+    const decision = resolveSelectBook({
+      hasCurrentBook: false,
+      rawTitle: 'Duna',
+      rawAuthor: null,
+      rawDescription: null,
+      rawCoverUrl: '  https://covers.exemplo/duna.jpg  '
+    })
+
+    expect(decision.ok).toBe(true)
+    if (!decision.ok) return
+    expect(decision.command.coverUrl).toBe('https://covers.exemplo/duna.jpg')
+  })
+
+  it('recusa quantidade inválida antes de olhar o conflito de livro atual', () => {
+    const decision = resolveSelectBook({
+      hasCurrentBook: true,
+      rawTitle: 'Duna',
+      rawAuthor: null,
+      rawDescription: null,
+      rawChapterCount: -1
+    })
+
+    expect(decision.ok === false && decision.status).toBe(400)
   })
 })
 

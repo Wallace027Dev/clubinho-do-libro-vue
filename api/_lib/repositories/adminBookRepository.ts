@@ -29,15 +29,33 @@ export function selectBookRepository(selectedByUserId: string | null): SelectBoo
     async selectBook(command: SelectBookCommand) {
       const club = await getDefaultClub()
 
+      // Livro, estrutura de capítulos e atividade nascem juntos ou não nascem:
+      // um livro CURRENT com metade dos capítulos não teria como ser retentado
+      // (o 409 de "já existe livro atual" barraria a segunda tentativa).
       return prisma.$transaction(async (tx) => {
         const book = await tx.book.create({
-          data: { title: command.title, author: command.author, description: command.description }
+          data: {
+            title: command.title,
+            author: command.author,
+            description: command.description,
+            coverUrl: command.coverUrl
+          }
         })
 
         const selected = await tx.clubBook.create({
           data: { clubId: club.id, bookId: book.id, selectedByUserId },
           include: { book: true }
         })
+
+        if (command.chapters.length > 0) {
+          await tx.chapter.createMany({
+            data: command.chapters.map((chapter) => ({
+              clubBookId: selected.id,
+              number: chapter.number,
+              title: chapter.title
+            }))
+          })
+        }
 
         await tx.activity.create({
           data: {

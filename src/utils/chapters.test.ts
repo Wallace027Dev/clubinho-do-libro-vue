@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  chapterHeading,
   chapterShortTag,
   chapterTag,
   chapterTagFromMeta,
@@ -33,6 +34,14 @@ describe('etiquetas de capítulo', () => {
   it('chapterTagLower', () => {
     expect(chapterTagLower(prologo)).toBe('o prólogo')
     expect(chapterTagLower(cap3)).toBe('o capítulo 3')
+  })
+
+  it('chapterHeading', () => {
+    expect(chapterHeading(prologo)).toBe('Prólogo')
+    expect(chapterHeading(cap3)).toBe('Capítulo 3 — Rumo a Tarbean')
+    // Capítulo gerado no aceite do sorteio nasce sem título.
+    expect(chapterHeading({ number: 1, title: '' })).toBe('Capítulo 1')
+    expect(chapterHeading({ number: 1, title: '   ' })).toBe('Capítulo 1')
   })
 
   it('chapterShortTag', () => {

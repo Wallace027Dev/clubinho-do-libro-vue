@@ -2,6 +2,55 @@
    SORTEADOR — lista de candidatos, roleta, resultado e overlay.
    ============================================================ */
 
+/* --- Busca de livro (escolha do candidato) -------------------------------- */
+
+.book-search {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.book-search-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Capa à esquerda ocupando a coluna inteira; texto à direita em duas linhas.
+   Vem depois de content.css na cascata, então vence o grid do `.feed-card`. */
+.book-search-item {
+  grid-template-columns: 56px 1fr auto;
+  gap: var(--space-5);
+  align-items: stretch;
+  min-height: 92px;
+  padding: var(--space-3);
+}
+
+/* Guarda a proporção de livro quando o texto é curto. */
+.book-search-cover {
+  min-height: 80px;
+}
+
+.book-search-info {
+  display: grid;
+  gap: var(--space-1);
+  align-content: center;
+  min-width: 0;
+}
+
+.book-search-info strong {
+  font-family: var(--font-serif);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-tight);
+}
+
+.book-search-info p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
 .book-list {
   display: grid;
   gap: 10px;
@@ -38,6 +87,14 @@
 
 .book-title-with-color {
   justify-content: center;
+}
+
+/* Editora · páginas · autor do candidato escolhido na busca. */
+.book-list-meta {
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
 }
 
 .book-color-dot {
@@ -180,4 +237,30 @@
 .winner-modal h2 {
   margin-top: 6px;
   font-size: 1.7rem;
+}
+
+/* Vencedor: capa à esquerda, título e metadados à direita. */
+.winner-book {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: var(--space-5);
+  align-items: center;
+  margin-top: var(--space-3);
+}
+
+.winner-book-info {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.winner-book .winner-book-info h2 {
+  margin-top: 0;
+  font-size: var(--font-size-xl);
+}
+
+.winner-book-meta {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }

@@ -40,6 +40,22 @@ export function buildSeed() {
 }
 
 /**
+ * Clube sem livro nenhum: é o estado em que o sorteio está liberado (a trava do
+ * sorteio é o livro atual em andamento). Mesmos membros do seed padrão.
+ */
+export function buildSeedWithoutBook() {
+  return {
+    ...buildSeed(),
+    books: [],
+    clubBooks: [],
+    chapters: [],
+    progress: [],
+    comments: [],
+    activities: []
+  }
+}
+
+/**
  * Injeta o estado no localStorage antes de qualquer script da página rodar
  * (o mock lê o "banco" no boot). O guard semeia só na primeira navegação e
  * preserva as mutações do app nas navegações seguintes.
@@ -53,6 +69,20 @@ export async function seedApp(page: Page, db: unknown = buildSeed()) {
     },
     { key: STORAGE_KEY, value: JSON.stringify(db) }
   )
+}
+
+/**
+ * Login administrativo pela UI (senha do seed do mock).
+ *
+ * Espera o painel de verdade, não a URL: `/\/admin/` também casa com
+ * `/login/admin` e passaria antes do login terminar — aí a navegação seguinte
+ * sai sem sessão e o guard de `requiresAdmin` rebate para a home.
+ */
+export async function loginAsAdmin(page: Page, password = '123456') {
+  await page.goto('/login/admin')
+  await page.fill('input[type="password"]', password)
+  await page.getByRole('button', { name: 'Entrar no admin' }).click()
+  await expect(page.getByRole('heading', { name: 'Gerenciar clube' })).toBeVisible()
 }
 
 /** Faz login pela UI e espera a navegação inferior (autenticado) aparecer. */

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   activeMemberIds,
+  activityUrl,
   bookFinishedNotification,
-  bookSelectedNotification,
   chapterCommentNotification,
   chapterFinishedNotification,
+  commentReactionNotification,
   excludeUser
 } from './notifications'
 
@@ -31,18 +32,27 @@ describe('excludeUser', () => {
   })
 })
 
-describe('conteúdo das notificações', () => {
-  it('novo livro do mês', () => {
-    const payload = bookSelectedNotification('Mistborn')
-    expect(payload.body).toContain('Mistborn')
-    expect(payload.url).toBe('/')
-    expect(payload.tag).toBe('book-selected')
+describe('rota da interação', () => {
+  it('aponta para a atividade quando ela foi resolvida', () => {
+    expect(activityUrl('act-1', '/feed')).toBe('/activity/act-1')
   })
 
-  it('capítulo concluído', () => {
-    const payload = chapterFinishedNotification('João', 'o capítulo 3')
+  it('cai no fallback sem atividade', () => {
+    expect(activityUrl(null, '/feed')).toBe('/feed')
+    expect(activityUrl(undefined, '/chapters')).toBe('/chapters')
+  })
+})
+
+describe('conteúdo das notificações', () => {
+  it('capítulo concluído leva à atividade da conclusão', () => {
+    const payload = chapterFinishedNotification('João', 'o capítulo 3', 'act-fin')
     expect(payload.body).toBe('João terminou o capítulo 3.')
+    expect(payload.url).toBe('/activity/act-fin')
     expect(payload.tag).toBe('chapter-finished')
+  })
+
+  it('capítulo concluído sem atividade resolvida cai no feed', () => {
+    expect(chapterFinishedNotification('João', 'o capítulo 3').url).toBe('/feed')
   })
 
   it('livro finalizado', () => {
@@ -52,9 +62,18 @@ describe('conteúdo das notificações', () => {
     expect(payload.tag).toBe('book-finished')
   })
 
-  it('novo comentário', () => {
-    const payload = chapterCommentNotification('Maria', 'o prólogo')
+  it('novo comentário leva à página do comentário', () => {
+    const payload = chapterCommentNotification('Maria', 'o prólogo', 'act-cm')
     expect(payload.body).toBe('Maria comentou o prólogo.')
+    expect(payload.url).toBe('/activity/act-cm')
     expect(payload.tag).toBe('chapter-comment')
+  })
+
+  it('reação no seu comentário', () => {
+    const payload = commentReactionNotification('Maria', 'o capítulo 3', 'cm-1', 'act-cm')
+    expect(payload.body).toBe('Maria reagiu ao seu comentário sobre o capítulo 3.')
+    expect(payload.url).toBe('/activity/act-cm')
+    // Tag por comentário: reação em comentários diferentes não se substitui.
+    expect(payload.tag).toBe('comment-reaction:cm-1')
   })
 })

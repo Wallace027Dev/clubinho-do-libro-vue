@@ -11,7 +11,9 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: false,
   workers: 1,
-  reporter: [['list']],
+  // No CI, o reporter `github` publica a falha como anotação do job — visível
+  // no PR e legível pela API, em vez de ficar só no log do passo.
+  reporter: process.env.CI ? [['list'], ['github']] : [['list']],
   use: {
     baseURL: `http://localhost:${PORT}`,
     viewport: { width: 430, height: 900 },

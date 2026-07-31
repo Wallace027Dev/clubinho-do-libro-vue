@@ -26,6 +26,34 @@ async function seedBook(chapters = 1): Promise<string[]> {
 }
 
 describe('platformStore', () => {
+  it('selectCurrentBook cria os capítulos e grava a capa numa tacada', async () => {
+    const auth = useAuthStore()
+    await auth.adminLogin('123456')
+    const platform = usePlatformStore()
+
+    await platform.selectCurrentBook('Duna', 'Frank Herbert', 'Épico de Arrakis', {
+      coverUrl: 'https://covers.exemplo/duna.jpg',
+      chapterCount: 3
+    })
+
+    const currentBook = platform.clubState.currentBook
+    expect(currentBook?.book.coverUrl).toBe('https://covers.exemplo/duna.jpg')
+    expect(currentBook?.chapters.map((chapter) => chapter.number)).toEqual([1, 2, 3])
+    // Capítulo gerado nasce sem título: o admin nomeia depois.
+    expect(currentBook?.chapters.every((chapter) => chapter.title === '')).toBe(true)
+  })
+
+  it('selectCurrentBook sem quantidade não cria capítulo (cadastro manual)', async () => {
+    const auth = useAuthStore()
+    await auth.adminLogin('123456')
+    const platform = usePlatformStore()
+
+    await platform.selectCurrentBook('Duna', '', '')
+
+    expect(platform.clubState.currentBook?.chapters).toEqual([])
+    expect(platform.clubState.currentBook?.book.coverUrl ?? null).toBeNull()
+  })
+
   it('loadHome traz o livro atual', async () => {
     await seedBook(1)
     await useAuthStore().login('joao', '123456')

@@ -17,9 +17,15 @@ atividades, comentários anti-spoiler, reações, notas e histórico.
 - **Sorteador reintroduzido** como ferramenta exclusiva do admin (`/admin/sorteio`):
   reaproveita a store/roleta legada (candidatos em `localStorage`), travado pelo **livro
   atual do clube** — só sorteia quando não há livro em andamento, e é o admin **concluir**
-  o livro que libera o próximo sorteio (não a virada do mês). Aceitar o vencedor define o
-  livro atual no servidor (`/api/books/current`); a regra do gate vive em
+  o livro que libera o próximo sorteio (não a virada do mês). A regra do gate vive em
   `src/domain/raffle.ts`.
+- **Candidato vem de busca externa de livro:** o admin busca por título ou autor
+  (300ms de debounce), escolhe numa lista com capa, editora, páginas e autor, e ao
+  **aceitar o vencedor** informa quantos capítulos o livro tem. Uma transação só cria o
+  livro (com capa, autor e sinopse), os N capítulos (numerados, sem título) e marca como
+  livro atual. Provedores: Google Books com `GOOGLE_BOOKS_API_KEY`, Open Library de
+  reserva; proxy em `api/_lib/bookSearch/`, mapeamento e escolha de edição em
+  `src/domain/bookSearchMapping.ts`, catálogo fixo do mock em `bookSearchSim.ts`.
 - **Componentes reutilizáveis** extraídos em `src/components/ui/*` (nada de UI repetida),
   com composables e utils compartilhados.
 - **Design system**: tokens centralizados (`src/styles/tokens.css`), CSS modularizado

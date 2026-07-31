@@ -232,10 +232,20 @@ export const usePlatformStore = defineStore('platform', () => {
     await loadHome()
   }
 
-  async function selectCurrentBook(title: string, author: string, description: string) {
+  /**
+   * `extras` carrega o que vem da busca externa de livro: a capa e quantos
+   * capítulos criar junto. A contagem não é guardada em campo nenhum — o
+   * servidor só usa para decidir quantas linhas de Chapter nascem.
+   */
+  async function selectCurrentBook(
+    title: string,
+    author: string,
+    description: string,
+    extras: { coverUrl?: string | null; chapterCount?: number } = {}
+  ) {
     await apiRequest('/api/books/current', {
       method: 'POST',
-      body: JSON.stringify({ title, author, description })
+      body: JSON.stringify({ title, author, description, ...extras })
     })
     await loadHome()
   }

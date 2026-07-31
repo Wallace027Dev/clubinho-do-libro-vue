@@ -230,7 +230,8 @@ async function submitComment() {
   <SectionCard v-else-if="chapter" class="activity-detail">
     <div>
       <p class="section-label">{{ platformStore.clubState.currentBook?.book.title }}</p>
-      <h2>{{ chapter.title }}</h2>
+      <!-- Sem título (capítulo gerado): o cabeçalho já mostra "Capítulo N". -->
+      <h2 v-if="chapter.title">{{ chapter.title }}</h2>
       <p class="detail-meta">
         Status:
         <span class="chapter-status" :class="`chapter-status--${status.toLowerCase()}`">
