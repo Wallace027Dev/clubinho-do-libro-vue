@@ -1,41 +1,35 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatMonthLabel } from '../services/raffleService'
+import { usePlatformStore } from '../stores/platformStore'
 import { useRaffleStore } from '../stores/raffleStore'
 
+const platformStore = usePlatformStore()
 const raffleStore = useRaffleStore()
 
-const monthLabel = computed(() => {
-  if (!raffleStore.monthlyBook) {
+const currentBook = computed(() => platformStore.clubState.currentBook)
+
+const readingSince = computed(() => {
+  if (!currentBook.value) {
     return ''
   }
 
-  return formatMonthLabel(raffleStore.monthlyBook.month)
+  return new Date(currentBook.value.selectedAt).toLocaleDateString('pt-BR')
 })
 </script>
 
 <template>
   <section class="glass-panel current-book" aria-live="polite">
     <div>
-      <p class="section-label">Livro do mês</p>
-      <h2 v-if="raffleStore.monthlyBook">{{ raffleStore.monthlyBook.book.title }}</h2>
-      <h2 v-else>Nenhum livro escolhido ainda</h2>
-      <p v-if="raffleStore.monthlyBook">{{ monthLabel }}</p>
-      <p v-else>O resultado aceito da roleta aparece aqui.</p>
+      <p class="section-label">Livro atual</p>
+      <h2 v-if="currentBook">{{ currentBook.book.title }}</h2>
+      <h2 v-else>Nenhum livro em andamento</h2>
+      <p v-if="currentBook">Em leitura desde {{ readingSince }}.</p>
+      <p v-else>O vencedor aceito na roleta vira o livro atual do clube.</p>
     </div>
 
-    <button
-      v-if="raffleStore.monthlyBook"
-      class="ghost-action compact-action"
-      type="button"
-      @click="raffleStore.clearMonthlyBook"
-    >
-      Limpar livro do mês
-    </button>
-
-    <p v-if="raffleStore.hasCurrentMonthBook" class="lock-note" role="status">
-      Sorteio encerrado neste mês. O próximo libera em
-      {{ raffleStore.nextRaffleMonthLabel }}.
+    <p v-if="raffleStore.raffleLock === 'current-book-in-progress'" class="lock-note" role="status">
+      Sorteio travado enquanto houver livro em andamento. Conclua o livro no painel admin
+      para liberar o próximo.
     </p>
   </section>
 </template>

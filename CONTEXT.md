@@ -15,8 +15,11 @@ atividades, comentários anti-spoiler, reações, notas e histórico.
 - **Fases 1–9 implementadas e em produção** (Vercel + Supabase). Detalhes e histórico em
   [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) e [SPRINTS.md](SPRINTS.md).
 - **Sorteador reintroduzido** como ferramenta exclusiva do admin (`/admin/sorteio`):
-  reaproveita a store/roleta legada (`localStorage`), com trava mensal — só sorteia quando
-  vira o mês e não há livro do mês; aceitar o vencedor define o livro do mês.
+  reaproveita a store/roleta legada (candidatos em `localStorage`), travado pelo **livro
+  atual do clube** — só sorteia quando não há livro em andamento, e é o admin **concluir**
+  o livro que libera o próximo sorteio (não a virada do mês). Aceitar o vencedor define o
+  livro atual no servidor (`/api/books/current`); a regra do gate vive em
+  `src/domain/raffle.ts`.
 - **Componentes reutilizáveis** extraídos em `src/components/ui/*` (nada de UI repetida),
   com composables e utils compartilhados.
 - **Design system**: tokens centralizados (`src/styles/tokens.css`), CSS modularizado

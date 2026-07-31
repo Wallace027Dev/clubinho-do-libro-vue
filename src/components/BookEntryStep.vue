@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRaffleStore } from '../stores/raffleStore'
 
 const raffleStore = useRaffleStore()
 const title = ref('')
+
+const isLockedByCurrentBook = computed(() => raffleStore.raffleLock === 'current-book-in-progress')
 
 function handleSubmit() {
   raffleStore.addBook(title.value)
@@ -53,12 +55,12 @@ function handleSubmit() {
       :disabled="!raffleStore.canConfirmBooks"
       @click="raffleStore.confirmBooks"
     >
-      {{ raffleStore.hasCurrentMonthBook ? 'Sorteio bloqueado neste mês' : 'Confirmar livros' }}
+      {{ isLockedByCurrentBook ? 'Conclua o livro atual para sortear' : 'Confirmar livros' }}
     </button>
 
-    <p v-if="raffleStore.hasCurrentMonthBook" class="lock-note" role="status">
-      O livro deste mês já foi confirmado. O próximo sorteio libera em
-      {{ raffleStore.nextRaffleMonthLabel }}.
+    <p v-if="isLockedByCurrentBook" class="lock-note" role="status">
+      O clube ainda está lendo um livro. Conclua o livro atual no painel admin para
+      liberar o próximo sorteio.
     </p>
   </section>
 </template>
