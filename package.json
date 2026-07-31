@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check:api": "tsc -p tsconfig.api.json",
+    "check:api": "tsc -p tsconfig.api.json && node scripts/check-esm-imports.mjs",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "db:generate": "dotenv -e .env.local -- prisma generate",

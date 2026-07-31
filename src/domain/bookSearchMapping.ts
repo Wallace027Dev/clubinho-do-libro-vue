@@ -7,7 +7,7 @@
  * teste. Aqui em cima fica tudo que é decisão; em `api/_lib/bookSearch/` fica
  * só o I/O (fetch, timeout, cadeia de fallback).
  */
-import type { ExternalBook } from './bookSearch'
+import type { ExternalBook } from './bookSearch.js'
 
 // --- Leitores defensivos (payload de terceiro, nada é garantido) ------------
 
