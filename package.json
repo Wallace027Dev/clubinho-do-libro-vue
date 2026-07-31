@@ -8,7 +8,7 @@
     "dev:web": "vite",
     "dev:api": "dotenv -e .env.local -- tsx watch scripts/dev-api.ts",
     "postinstall": "prisma generate",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "prisma generate && vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
