@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import BookSearchField from './BookSearchField.vue'
 import { useRaffleStore } from '../stores/raffleStore'
+import { formatBookMeta } from '../utils/bookMeta'
 
 const raffleStore = useRaffleStore()
 const title = ref('')
+const showManual = ref(false)
 
 const isLockedByCurrentBook = computed(() => raffleStore.raffleLock === 'current-book-in-progress')
 
@@ -17,11 +20,18 @@ function handleSubmit() {
   <section class="flow-card glass-panel">
     <div class="flow-heading">
       <p class="section-label">Passo 1</p>
-      <h2>Cadastre os livros</h2>
-      <p>Inclua pelo menos duas opções para criar a roleta.</p>
+      <h2>Escolha os livros</h2>
+      <p>Busque por título ou autor. Inclua pelo menos duas opções para criar a roleta.</p>
     </div>
 
-    <form class="book-form" @submit.prevent="handleSubmit">
+    <BookSearchField @select="raffleStore.addCandidate" />
+
+    <!-- Livro que nenhum dos provedores conhece ainda pode ser candidato. -->
+    <button type="button" class="text-link text-link--inline" @click="showManual = !showManual">
+      {{ showManual ? 'Fechar cadastro manual' : 'Não achou? Adicionar à mão' }}
+    </button>
+
+    <form v-if="showManual" class="book-form" @submit.prevent="handleSubmit">
       <label for="book-title">Nome do livro</label>
       <div class="input-row">
         <input
@@ -40,6 +50,7 @@ function handleSubmit() {
         <span class="book-list-title">
           <span class="book-color-dot" :style="{ backgroundColor: book.color }" aria-hidden="true"></span>
           {{ book.title }}
+          <small v-if="formatBookMeta(book)" class="book-list-meta">{{ formatBookMeta(book) }}</small>
         </span>
         <button type="button" @click="raffleStore.removeBook(book.id)">Remover</button>
       </li>
