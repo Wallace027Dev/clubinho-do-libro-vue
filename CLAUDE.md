@@ -100,6 +100,16 @@ arquivo não chegou, **peça**.
   → merge na `developer`. A `master` só recebe mudança por **Pull Request**
   (nunca merge direto). Invoque `git-flow` antes de criar branch, commitar,
   mergear ou abrir PR.
+- **Import relativo em `api/` e `src/domain/` SEMPRE termina em `.js`** — ex.:
+  `from '../chapterStructure.js'` —, mesmo apontando para um arquivo `.ts` e
+  mesmo em `import type`. A serverless function é carregada pelo **Node em ESM**,
+  que não resolve extensão faltante; `tsc`, Vite, Vitest e `tsx` toleram, então o
+  erro passa por todos os gates e **derruba a API inteira em produção** com
+  `ERR_MODULE_NOT_FOUND` no carregamento do módulo — inclusive rotas que nem usam
+  o arquivo, porque o roteador importa todas. Já aconteceu (jul/2026: um único
+  import sem `.js` em `services/adminBook.ts` tirou o app do ar). O
+  `npm run check:api` roda `scripts/check-esm-imports.mjs` e barra isso; o resto
+  de `src/` é resolvido pelo Vite e não precisa de extensão.
 - **Mudança de base antes de deploy (habilidade `deploy`, obrigatória):** toda a
   API vive numa **única serverless function**, então falha no carregamento de
   módulo derruba **todas** as rotas — inclusive o 404. E os testes rodam com o

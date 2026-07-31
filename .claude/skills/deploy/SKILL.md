@@ -55,6 +55,11 @@ Ou seja: dá para ter 240 testes verdes, CI verde, e a API não subir em produç
 
 ### Tocou em `api/` (rota nova, roteador, entrypoint)
 
+- [ ] **Todo import relativo termina em `.js`** (também em `src/domain/`, também
+      em `import type`). O Node em ESM não resolve extensão faltante, e `tsc`,
+      Vite, Vitest e `tsx` **toleram** — então esse erro passa por todos os
+      gates e só aparece em produção, derrubando a função inteira. É o que
+      `npm run check:api` verifica via `scripts/check-esm-imports.mjs`.
 - [ ] **Nada executa no topo do módulo.** Só `const`/`let` de configuração e
       imports. Sem `new Cliente()`, sem leitura de env que lance, sem
       `await`/IIFE no escopo do módulo — qualquer um desses derruba a função
@@ -77,17 +82,20 @@ Ou seja: dá para ter 240 testes verdes, CI verde, e a API não subir em produç
 Como os testes não exercitam `api/`, faça **uma** destas antes de mergear:
 
 ```bash
-# 1. Sobe a API real (não o mock) e bate nas rotas
+# 1. Guard de resolução ESM (pega import sem .js, que só quebra em produção)
+npm run check:api      # tsc + scripts/check-esm-imports.mjs
+
+# 2. Sobe a API real (não o mock) e bate nas rotas
 npm run dev            # api em :3001 + web em :5173
 curl -i localhost:5173/api/auth/me          # 200 com user:null (sem sessão)
 curl -i localhost:5173/api/nao-existe       # 404 do roteador
-
-# 2. Mínimo indispensável: o grafo de módulos carrega?
-npx tsx -e "import('./api/_lib/router.ts').then(()=>console.log('OK'))"
 ```
 
-Se o passo 2 falhar, **o deploy vai cair** — é o mesmo caminho de import que a
-serverless function faz.
+**Cuidado com falso negativo:** `npx tsx -e "import('./api/_lib/router.ts')"`
+carrega o grafo, mas o `tsx` **resolve extensão faltante** — ele passa mesmo com
+o import que derruba a produção. Serve para pegar erro em tempo de módulo
+(algo executando no topo), não para validar especificadores. Quem valida
+especificador é o passo 1.
 
 ## Depois do deploy: fumaça em produção
 
@@ -116,17 +124,39 @@ esse, peça ao dono do projeto o texto da exceção em Logs → Functions.
 
 ## Histórico: o incidente que originou esta habilidade
 
-Julho/2026, `master` em `bbf767f`: **toda** a API respondeu 500
-`FUNCTION_INVOCATION_FAILED`, inclusive `/api/nao-existe`. Nada no código novo
-executava no import — o único ponto era `new PrismaClient()` no topo de
-`api/_lib/prisma.ts`. Reproduzindo localmente com o cliente gerado removido
-(`mv node_modules/.prisma …`), o erro foi
-`SyntaxError: ... does not provide an export named 'PrismaClient'` — ou seja,
-falha de instanciação do módulo, e o `prisma generate` só existia no
-`postinstall`. Correções: `prisma generate` no `build` e criação preguiçosa do
-cliente (esta última **não** teria evitado o incidente, porque o import estático
-falha antes; ela só contém erros futuros de construção e evita montar cliente em
-rota que não usa banco).
+Julho/2026: **toda** a API respondeu 500 `FUNCTION_INVOCATION_FAILED`, inclusive
+`/api/nao-existe` — o app não passava do login, porque a primeira chamada é
+`/api/auth/me`.
 
-Lição que esta habilidade existe para repetir: **teste verde não é deploy
-verde** enquanto o mock atender `/api/*` nos testes.
+A causa real foi **um import relativo sem `.js`** em
+`src/domain/services/adminBook.ts` (`from '../chapterStructure'`). O Node em ESM
+não resolve extensão faltante e a função morria no carregamento:
+
+```
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/src/domain/chapterStructure'
+imported from /var/task/src/domain/services/adminBook.js
+```
+
+Como o roteador importa todas as rotas, uma linha derrubou a API inteira. E
+passou por `check:api` (tsc tolera), pelos 243 testes (rodam com mock) e pelo CI.
+
+Duas hipóteses foram investigadas e **descartadas com experimento** antes disso —
+vale registrar para não custar tempo de novo:
+
+- *Cliente Prisma ausente no deploy* (`prisma generate` só no `postinstall`):
+  reproduzida localmente com `mv node_modules/.prisma …`, dá
+  `SyntaxError: ... does not provide an export named 'PrismaClient'` — mesmo
+  sintoma de fora. Descartada por **redeploy de produção sem cache**, que não
+  mudou nada. O `prisma generate` foi para o `build` de todo jeito, porque a
+  pegadinha é real; só não era esta.
+- *`DATABASE_URL` ausente*: descartada por teste — no Prisma 6 a variável só é
+  exigida na primeira consulta, não na construção do cliente.
+
+O caminho que resolveu foi o **runtime log da Vercel** (Deployment → Logs), com
+a rota inexistente como discriminador para saber que era carregamento de módulo.
+
+Lições que esta habilidade existe para repetir:
+
+1. **Teste verde não é deploy verde** enquanto o mock atender `/api/*` nos testes.
+2. **Sintoma igual não é causa igual** — duas hipóteses reproduziam o mesmo 500.
+   Vá ao log antes de aplicar correção baseada em semelhança.

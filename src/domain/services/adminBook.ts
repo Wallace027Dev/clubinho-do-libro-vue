@@ -6,7 +6,11 @@
  * os núcleos e permanece síncrono.
  */
 
-import { generatedChapters, resolveChapterCount, type GeneratedChapter } from '../chapterStructure'
+import {
+  generatedChapters,
+  resolveChapterCount,
+  type GeneratedChapter
+} from '../chapterStructure.js'
 
 /** Valor que pode vir pronto (mock) ou como promessa (Prisma). */
 export type Awaitable<T> = T | Promise<T>
