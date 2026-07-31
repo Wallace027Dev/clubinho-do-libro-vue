@@ -91,7 +91,11 @@ function reactionEntries(reactions: Partial<Record<ChapterCommentReactionType, n
           <ol class="comment-list">
             <li v-for="comment in chapter.comments" :key="comment.id">
               <div class="comment-author">
-                <UserAvatar :display-name="comment.user.displayName" :login="comment.user.login" />
+                <UserAvatar
+                  :avatar-url="comment.user.avatarUrl"
+                  :display-name="comment.user.displayName"
+                  :login="comment.user.login"
+                />
                 <div>
                   <strong>{{ comment.user.displayName || comment.user.login }}</strong>
                   <p>{{ new Date(comment.createdAt).toLocaleDateString('pt-BR') }}</p>
