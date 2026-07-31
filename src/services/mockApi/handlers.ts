@@ -343,6 +343,7 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
 
   // --- Profile --------------------------------------------------------------
   if (path === '/api/profile' && m === 'PATCH') return updateProfile(body)
+  if (path === '/api/profile/stats' && m === 'GET') return profileStats()
   if (path === '/api/profile/password' && m === 'POST') return changePassword(body)
 
   // --- Push (homologação: sem servidor real; a simulação é local) -----------
@@ -1232,6 +1233,23 @@ function deleteChapter(chapterId: string): MockResponse {
 // ---------------------------------------------------------------------------
 // Profile.
 // ---------------------------------------------------------------------------
+
+/**
+ * Contadores vitalícios do membro logado — espelha o /api/profile/stats real:
+ * soma todos os livros, não só o atual (capítulos) nem só os arquivados
+ * (comentários).
+ */
+function profileStats(): MockResponse {
+  const current = session()
+  if (!current || !current.userId) return err(401, 'Unauthorized.')
+
+  const chaptersRead = getDb().progress.filter(
+    (item) => item.userId === current.userId && item.status === 'FINISHED'
+  ).length
+  const comments = getDb().comments.filter((item) => item.userId === current.userId).length
+
+  return json(200, { chaptersRead, comments })
+}
 
 function updateProfile(body: Body): MockResponse {
   const current = session()

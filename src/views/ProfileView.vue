@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { Plus, Settings } from 'lucide-vue-next'
 import BaseButton from '../components/ui/BaseButton.vue'
 import PasswordInput from '../components/ui/PasswordInput.vue'
+import SkeletonLoader from '../components/ui/SkeletonLoader.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
 import { ApiError } from '../services/apiClient'
 import { disablePush, enablePush, pushStatus, type PushStatus } from '../services/pushService'
@@ -78,32 +79,17 @@ function closeAvatarModal() {
 }
 
 onMounted(() => {
-  void platformStore.loadHome()
-  void platformStore.loadHistory()
+  void platformStore.loadProfileStats()
   pushState.value = pushStatus()
 })
 
-// Capítulos que o membro concluiu no livro atual.
-const chaptersRead = computed(() => {
-  const chapters = platformStore.clubState.currentBook?.chapters ?? []
-  return chapters.filter((chapter) => chapter.progress[0]?.status === 'FINISHED').length
-})
-
-// Comentários do membro ao longo dos livros já lidos pelo clube.
-const commentsCount = computed(() => {
-  const userId = authStore.user?.id
-  if (!userId) return 0
-
-  let total = 0
-  for (const book of platformStore.history) {
-    for (const chapter of book.chapters) {
-      for (const comment of chapter.comments) {
-        if (comment.user.id === userId) total += 1
-      }
-    }
-  }
-  return total
-})
+/**
+ * Capítulos lidos e comentários vêm contados do servidor (`/api/profile/stats`),
+ * somando todos os livros. Somar no cliente não funcionava: o payload do livro
+ * atual não traz comentários e o histórico só tem livros finalizados, então a
+ * conta de comentários ficava 0 durante toda a leitura.
+ */
+const stats = computed(() => platformStore.profileStats)
 
 const isDataUrlAvatar = computed(() => avatarUrl.value.startsWith('data:image/'))
 
@@ -266,8 +252,17 @@ async function handleLogout() {
     <p class="profile-hero__handle">@{{ authStore.user?.login }}</p>
 
     <div class="profile-hero__pills">
-      <span class="profile-pill">{{ chaptersRead }} Capítulos lidos</span>
-      <span class="profile-pill">{{ commentsCount }} Comentários</span>
+      <SkeletonLoader
+        v-if="platformStore.isLoadingProfileStats"
+        :columns="2"
+        height="1.75rem"
+        width="8.5rem"
+        label="Carregando contadores do perfil"
+      />
+      <template v-else>
+        <span class="profile-pill">{{ stats.chaptersRead }} Capítulos lidos</span>
+        <span class="profile-pill">{{ stats.comments }} Comentários</span>
+      </template>
     </div>
   </header>
 
