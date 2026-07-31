@@ -24,6 +24,9 @@ test('admin busca o livro, sorteia e o vencedor vira livro atual com capítulos'
   await expect(domCasmurro).toContainText('Penguin-Companhia · 400 páginas · Machado de Assis')
   await expect(domCasmurro.locator('img')).toBeVisible()
   await domCasmurro.click()
+  // Espera o candidato entrar antes de buscar o próximo (é também o que uma
+  // pessoa faz: confere que entrou e só então digita de novo).
+  await expect(page.locator('.book-list li')).toHaveCount(1)
 
   // Busca por AUTOR para o segundo candidato (LIKE, não igualdade).
   await busca.fill('herbert')

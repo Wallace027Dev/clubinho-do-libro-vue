@@ -44,6 +44,7 @@ async function choose(book: ExternalBook) {
   }
 
   pendingId.value = book.providerId
+  const termoAoEscolher = term.value
 
   try {
     // O item da lista não traz sinopse; o detalhe traz.
@@ -54,8 +55,14 @@ async function choose(book: ExternalBook) {
     emit('select', book)
   } finally {
     pendingId.value = null
-    term.value = ''
-    bookSearchStore.clear()
+
+    // Limpa só se o campo ainda for o que era quando clicou: quem já começou a
+    // digitar o próximo termo durante a busca do detalhe não pode ter o que
+    // digitou apagado (a próxima busca cuida de trocar a lista).
+    if (term.value === termoAoEscolher) {
+      term.value = ''
+      bookSearchStore.clear()
+    }
   }
 }
 </script>
