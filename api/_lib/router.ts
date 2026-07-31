@@ -27,6 +27,7 @@ import booksHistory from '../_routes/books/history.js'
 import bookRatings from '../_routes/books/[clubBookId]/ratings.js'
 import profile from '../_routes/profile.js'
 import profilePassword from '../_routes/profile/password.js'
+import profileStats from '../_routes/profile/stats.js'
 import chapterStart from '../_routes/chapters/[chapterId]/start.js'
 import chapterFinish from '../_routes/chapters/[chapterId]/finish.js'
 import chapterReopen from '../_routes/chapters/[chapterId]/reopen.js'
@@ -63,6 +64,7 @@ const routes: Route[] = [
   ['books/[clubBookId]/ratings', bookRatings],
   ['profile', profile],
   ['profile/password', profilePassword],
+  ['profile/stats', profileStats],
   ['chapters/[chapterId]/start', chapterStart],
   ['chapters/[chapterId]/finish', chapterFinish],
   ['chapters/[chapterId]/reopen', chapterReopen],

@@ -9,7 +9,8 @@ import type {
   ChapterComment,
   ChapterCommentReactionType,
   ClubState,
-  FinishedBook
+  FinishedBook,
+  ProfileStats
 } from '../types/platform'
 
 interface UsersResponse {
@@ -63,6 +64,12 @@ export const usePlatformStore = defineStore('platform', () => {
   // Diferencia "sem livro atual" de "ainda não sei": quem trava decisão no
   // livro atual (ex.: sorteio) precisa poder falhar fechado antes da 1ª carga.
   const hasLoadedClubState = ref(false)
+
+  // Contadores do perfil: vêm prontos do servidor porque o cliente não tem os
+  // dados para somar (livro atual não traz comentários; histórico só traz
+  // livros finalizados).
+  const profileStats = ref<ProfileStats>({ chaptersRead: 0, comments: 0 })
+  const isLoadingProfileStats = ref(false)
 
   // Feed com scroll infinito: o primeiro lote vem no /api/books/current e os
   // próximos por /api/activities (cursor = id da última atividade carregada).
@@ -283,6 +290,17 @@ export const usePlatformStore = defineStore('platform', () => {
     await loadHome()
   }
 
+  /** Capítulos concluídos e comentários do membro logado, somando todos os livros. */
+  async function loadProfileStats() {
+    isLoadingProfileStats.value = true
+
+    try {
+      profileStats.value = await apiRequest<ProfileStats>('/api/profile/stats')
+    } finally {
+      isLoadingProfileStats.value = false
+    }
+  }
+
   async function loadHistory() {
     isLoading.value = true
 
@@ -339,6 +357,9 @@ export const usePlatformStore = defineStore('platform', () => {
     isLoadingMoreAlerts,
     unreadAlertsCount,
     loadHome,
+    profileStats,
+    isLoadingProfileStats,
+    loadProfileStats,
     loadMoreActivities,
     loadAlerts,
     loadMoreAlerts,
