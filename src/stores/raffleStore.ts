@@ -1,16 +1,16 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { canRaffle, resolveRaffleLock } from '../domain/raffle'
 import {
   calculateWinnerRotation,
-  getCurrentMonthKey,
-  getNextMonthLabel,
   getRandomRgbColor,
   getRandomIndex,
   getSpinDurationMs,
   vibrate
 } from '../services/raffleService'
 import { loadRaffleState, saveRaffleState } from '../services/storageService'
-import type { Book, FlowStep, MonthlyBook, PersistedRaffleState } from '../types/book'
+import type { Book, FlowStep, PersistedRaffleState } from '../types/book'
+import { usePlatformStore } from './platformStore'
 
 function createBook(title: string): Book {
   const id = window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
@@ -24,25 +24,28 @@ function createBook(title: string): Book {
 }
 
 export const useRaffleStore = defineStore('raffle', () => {
+  const platformStore = usePlatformStore()
+
   const persistedState = loadRaffleState()
   const books = ref<Book[]>((persistedState?.books ?? []).map(ensureBookColor))
   const step = ref<FlowStep>(persistedState?.step ?? 'entry')
-  const monthlyBook = ref<MonthlyBook | null>(ensureMonthlyBookColor(persistedState?.monthlyBook ?? null))
   const selectedBook = ref<Book | null>(null)
   const wheelRotation = ref(persistedState?.wheelRotation ?? 0)
   const isSpinning = ref(false)
+  const isAccepting = ref(false)
   const isWinnerModalOpen = ref(false)
-  const currentDate = ref(new Date())
 
-  window.setInterval(() => {
-    currentDate.value = new Date()
-  }, 60 * 60 * 1000)
+  // A trava do sorteio é derivada do estado do clube no servidor (livro atual),
+  // não de estado local: o admin pode concluir o livro em outro aparelho.
+  const raffleGate = computed(() => ({
+    clubStateLoaded: platformStore.hasLoadedClubState,
+    hasCurrentBook: platformStore.clubState.currentBook !== null,
+    candidateCount: books.value.length
+  }))
 
-  const currentMonthKey = computed(() => getCurrentMonthKey(currentDate.value))
-  const nextRaffleMonthLabel = computed(() => getNextMonthLabel(currentDate.value))
-  const hasCurrentMonthBook = computed(() => monthlyBook.value?.month === currentMonthKey.value)
-  const canConfirmBooks = computed(() => books.value.length >= 2 && !hasCurrentMonthBook.value)
-  const canSpin = computed(() => books.value.length >= 2 && !isSpinning.value && !hasCurrentMonthBook.value)
+  const raffleLock = computed(() => resolveRaffleLock(raffleGate.value))
+  const canConfirmBooks = computed(() => canRaffle(raffleGate.value))
+  const canSpin = computed(() => canRaffle(raffleGate.value) && !isSpinning.value)
 
   function ensureBookColor(book: Book): Book {
     return {
@@ -51,22 +54,10 @@ export const useRaffleStore = defineStore('raffle', () => {
     }
   }
 
-  function ensureMonthlyBookColor(bookOfMonth: MonthlyBook | null): MonthlyBook | null {
-    if (!bookOfMonth) {
-      return null
-    }
-
-    return {
-      ...bookOfMonth,
-      book: ensureBookColor(bookOfMonth.book)
-    }
-  }
-
   function persist() {
     const state: PersistedRaffleState = {
       books: books.value,
       step: step.value,
-      monthlyBook: monthlyBook.value,
       wheelRotation: wheelRotation.value
     }
 
@@ -114,14 +105,6 @@ export const useRaffleStore = defineStore('raffle', () => {
     persist()
   }
 
-  function clearMonthlyBook() {
-    monthlyBook.value = null
-    step.value = 'entry'
-    isWinnerModalOpen.value = false
-    selectedBook.value = null
-    persist()
-  }
-
   function spin() {
     if (!canSpin.value) {
       return
@@ -148,25 +131,39 @@ export const useRaffleStore = defineStore('raffle', () => {
     isWinnerModalOpen.value = false
   }
 
-  function acceptWinner() {
-    if (!selectedBook.value) {
+  /**
+   * Aceitar o vencedor define o **livro atual do clube** (servidor). Não existe
+   * mais um "livro do mês" guardado em localStorage: o livro atual é a fonte
+   * única, e é ele que trava o próximo sorteio até ser concluído.
+   */
+  async function acceptWinner() {
+    const winner = selectedBook.value
+
+    if (!winner || isAccepting.value) {
       return
     }
 
-    monthlyBook.value = {
-      month: getCurrentMonthKey(),
-      book: selectedBook.value,
-      acceptedAt: new Date().toISOString()
-    }
+    isAccepting.value = true
 
-    step.value = 'entry'
-    isWinnerModalOpen.value = false
-    vibrate(30)
-    persist()
+    try {
+      await platformStore.selectCurrentBook(winner.title, '', '')
+
+      // O vencedor virou o livro do clube: sai da lista de candidatos para não
+      // concorrer no próximo sorteio. Os demais continuam na fila.
+      books.value = books.value.filter((book) => book.id !== winner.id)
+      step.value = 'entry'
+      selectedBook.value = null
+      isWinnerModalOpen.value = false
+      wheelRotation.value = 0
+      vibrate(30)
+      persist()
+    } finally {
+      isAccepting.value = false
+    }
   }
 
   function reroll() {
-    if (hasCurrentMonthBook.value) {
+    if (!canRaffle(raffleGate.value)) {
       isWinnerModalOpen.value = false
       return
     }
@@ -178,13 +175,12 @@ export const useRaffleStore = defineStore('raffle', () => {
   return {
     books,
     step,
-    monthlyBook,
     selectedBook,
     wheelRotation,
     isSpinning,
+    isAccepting,
     isWinnerModalOpen,
-    hasCurrentMonthBook,
-    nextRaffleMonthLabel,
+    raffleLock,
     canConfirmBooks,
     canSpin,
     addBook,
@@ -192,7 +188,6 @@ export const useRaffleStore = defineStore('raffle', () => {
     confirmBooks,
     editBooks,
     resetCurrentRaffle,
-    clearMonthlyBook,
     spin,
     closeWinnerModal,
     acceptWinner,

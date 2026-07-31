@@ -7,15 +7,8 @@ export interface Book {
   createdAt: string
 }
 
-export interface MonthlyBook {
-  month: string
-  book: Book
-  acceptedAt: string
-}
-
 export interface PersistedRaffleState {
   books: Book[]
   step: FlowStep
-  monthlyBook: MonthlyBook | null
   wheelRotation: number
 }
