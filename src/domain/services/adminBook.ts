@@ -6,15 +6,27 @@
  * os núcleos e permanece síncrono.
  */
 
+import { generatedChapters, resolveChapterCount, type GeneratedChapter } from '../chapterStructure'
+
 /** Valor que pode vir pronto (mock) ou como promessa (Prisma). */
 export type Awaitable<T> = T | Promise<T>
 
 // --- Selecionar livro atual ------------------------------------------------
 
+/** Mesma mensagem nos dois lados (e na re-checagem dentro da transação). */
+export const CURRENT_BOOK_CONFLICT = 'Já existe um livro atual em andamento.'
+
 export interface SelectBookCommand {
   title: string
   author: string | null
   description: string | null
+  coverUrl: string | null
+  /**
+   * Estrutura pronta do livro. A quantidade informada pelo admin não é
+   * persistida em nenhum campo: ela só decide quantas linhas nascem aqui, e a
+   * contagem de `Chapter` passa a ser a verdade.
+   */
+  chapters: GeneratedChapter[]
   activity: { type: 'BOOK_SELECTED'; message: string }
 }
 
@@ -31,6 +43,8 @@ export function resolveSelectBook(input: {
   rawTitle: unknown
   rawAuthor: unknown
   rawDescription: unknown
+  rawCoverUrl?: unknown
+  rawChapterCount?: unknown
 }): SelectBookDecision {
   const title = typeof input.rawTitle === 'string' ? input.rawTitle.trim() : ''
 
@@ -38,8 +52,15 @@ export function resolveSelectBook(input: {
     return { ok: false, status: 400, error: 'Título do livro é obrigatório.' }
   }
 
+  // Input inválido antes de conflito de estado, como já era com o título.
+  const chapterCount = resolveChapterCount(input.rawChapterCount)
+
+  if (!chapterCount.ok) {
+    return chapterCount
+  }
+
   if (input.hasCurrentBook) {
-    return { ok: false, status: 409, error: 'Já existe um livro atual em andamento.' }
+    return { ok: false, status: 409, error: CURRENT_BOOK_CONFLICT }
   }
 
   return {
@@ -48,6 +69,8 @@ export function resolveSelectBook(input: {
       title,
       author: trimOrNull(input.rawAuthor),
       description: trimOrNull(input.rawDescription),
+      coverUrl: trimOrNull(input.rawCoverUrl),
+      chapters: generatedChapters(chapterCount.count),
       activity: { type: 'BOOK_SELECTED', message: `${title} virou o livro atual do clube.` }
     }
   }
@@ -64,7 +87,13 @@ export type SelectBookResult<TSelected> =
 
 export async function selectBook<TSelected>(
   repo: SelectBookRepository<TSelected>,
-  input: { rawTitle: unknown; rawAuthor: unknown; rawDescription: unknown }
+  input: {
+    rawTitle: unknown
+    rawAuthor: unknown
+    rawDescription: unknown
+    rawCoverUrl?: unknown
+    rawChapterCount?: unknown
+  }
 ): Promise<SelectBookResult<TSelected>> {
   const hasCurrentBook = await repo.hasCurrentBook()
 
@@ -72,7 +101,9 @@ export async function selectBook<TSelected>(
     hasCurrentBook,
     rawTitle: input.rawTitle,
     rawAuthor: input.rawAuthor,
-    rawDescription: input.rawDescription
+    rawDescription: input.rawDescription,
+    rawCoverUrl: input.rawCoverUrl,
+    rawChapterCount: input.rawChapterCount
   })
 
   if (!decision.ok) {

@@ -52,6 +52,8 @@ import {
   chapterCommentNotification,
   chapterFinishedNotification
 } from '../../domain/notifications'
+import { resolveBookSearchQuery, type ExternalBookSource } from '../../domain/bookSearch'
+import { findFixtureBook, searchFixtureBooks } from './bookSearchSim'
 import { simulateLocalPush } from './pushSim'
 import { isAlertActivity, isFeedActivity } from '../../domain/activities'
 
@@ -316,6 +318,10 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
   if (path === '/api/books/current' && m === 'POST') return selectCurrent(body)
   if (path === '/api/admin/current-book/finish' && m === 'POST') return finishCurrentBook()
   if (path === '/api/books/history' && m === 'GET') return getHistory()
+  // Busca externa (homologação: catálogo fixo, sem rede — ver bookSearchSim).
+  if (path === '/api/books/search' && m === 'GET') return searchExternalBooks(query.get('q'))
+  if (path === '/api/books/external' && m === 'GET')
+    return externalBookDetail(query.get('source'), query.get('id'))
   if (path === '/api/books/review' && m === 'POST') return submitReview(body)
   if (seg[0] === 'books' && seg[2] === 'ratings' && m === 'GET') return getRatings(seg[1])
 
@@ -508,6 +514,42 @@ function listAlerts(cursor: string | null, limitRaw: string | null): MockRespons
   })
 }
 
+/**
+ * Busca de livro na homologação. As mensagens de erro e o gate de admin são os
+ * mesmos da rota real (`api/_routes/books/search.ts`), e a validação do termo
+ * vem do domínio — é o que garante que o 400 seja idêntico nos dois lados.
+ */
+function searchExternalBooks(rawTerm: string | null): MockResponse {
+  const current = session()
+  if (!current) return err(401, 'Unauthorized.')
+  if (current.role !== 'ADMIN') return err(403, 'Admin access required.')
+
+  const decision = resolveBookSearchQuery(rawTerm)
+  if (!decision.ok) return err(decision.status, decision.error)
+
+  const results = searchFixtureBooks(decision.term)
+
+  return json(200, { provider: results[0]?.source ?? null, results })
+}
+
+function externalBookDetail(rawSource: string | null, rawId: string | null): MockResponse {
+  const current = session()
+  if (!current) return err(401, 'Unauthorized.')
+  if (current.role !== 'ADMIN') return err(403, 'Admin access required.')
+
+  const source =
+    rawSource === 'google' || rawSource === 'openlibrary' ? (rawSource as ExternalBookSource) : null
+  const id = rawId?.trim() ?? ''
+
+  if (!source || !id) return err(400, 'Informe a fonte e o id do livro.')
+
+  const book = findFixtureBook(source, id)
+
+  if (!book) return err(404, 'Livro não encontrado no catálogo.')
+
+  return json(200, { book })
+}
+
 function selectCurrent(body: Body): MockResponse {
   const current = session()
   if (!current) return err(401, 'Unauthorized.')
@@ -517,7 +559,9 @@ function selectCurrent(body: Body): MockResponse {
     hasCurrentBook: Boolean(getCurrentClubBook()),
     rawTitle: body.title,
     rawAuthor: body.author,
-    rawDescription: body.description
+    rawDescription: body.description,
+    rawCoverUrl: body.coverUrl,
+    rawChapterCount: body.chapterCount
   })
   if (!decision.ok) return err(decision.status, decision.error)
 
@@ -526,7 +570,7 @@ function selectCurrent(body: Body): MockResponse {
     title: decision.command.title,
     author: decision.command.author,
     description: decision.command.description,
-    coverUrl: null
+    coverUrl: decision.command.coverUrl
   }
   getDb().books.push(book)
 
@@ -540,6 +584,16 @@ function selectCurrent(body: Body): MockResponse {
     finishedByUserId: null
   }
   getDb().clubBooks.push(clubBook)
+
+  // Mesmas linhas que o Prisma cria no createMany: o domínio já as resolveu.
+  for (const chapter of decision.command.chapters) {
+    getDb().chapters.push({
+      id: uid(),
+      clubBookId: clubBook.id,
+      number: chapter.number,
+      title: chapter.title
+    })
+  }
 
   addActivity(current.userId, decision.command.activity.type, decision.command.activity.message, {
     bookId: book.id
