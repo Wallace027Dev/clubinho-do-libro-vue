@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import BookCover from '../components/ui/BookCover.vue'
 import SkeletonLoader from '../components/ui/SkeletonLoader.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import { formatRating } from '../utils/format'
@@ -45,20 +46,28 @@ onMounted(async () => {
     />
 
     <template v-else>
-      <div>
-        <p class="section-label">Livro atual</p>
-        <h2 v-if="currentBook">{{ currentBook.book.title }}</h2>
-        <h2 v-else>Nenhum livro em andamento</h2>
+      <div class="home-hero" :class="{ 'home-hero--with-cover': currentBook }">
+        <BookCover
+          v-if="currentBook"
+          :title="currentBook.book.title"
+          :cover-url="currentBook.book.coverUrl"
+        />
 
-        <p v-if="currentBook">
-          <span v-if="currentBook.book.author">De {{ currentBook.book.author }} · </span>
-          Em leitura desde {{ new Date(currentBook.selectedAt).toLocaleDateString('pt-BR') }}.
-          <span v-if="averageLabel"> · Nota do clube {{ averageLabel }}/5</span>
-        </p>
-        <p v-else>Quando o administrador definir o próximo livro, ele aparece aqui.</p>
-        <p v-if="currentBook?.book.description" class="hero-copy">
-          {{ currentBook.book.description }}
-        </p>
+        <div>
+          <p class="section-label">Livro atual</p>
+          <h2 v-if="currentBook">{{ currentBook.book.title }}</h2>
+          <h2 v-else>Nenhum livro em andamento</h2>
+
+          <p v-if="currentBook">
+            <span v-if="currentBook.book.author">De {{ currentBook.book.author }} · </span>
+            Em leitura desde {{ new Date(currentBook.selectedAt).toLocaleDateString('pt-BR') }}.
+            <span v-if="averageLabel"> · Nota do clube {{ averageLabel }}/5</span>
+          </p>
+          <p v-else>Quando o administrador definir o próximo livro, ele aparece aqui.</p>
+          <p v-if="currentBook?.book.description" class="hero-copy">
+            {{ currentBook.book.description }}
+          </p>
+        </div>
       </div>
 
       <template v-if="currentBook">

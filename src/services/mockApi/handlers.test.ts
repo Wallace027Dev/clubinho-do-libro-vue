@@ -148,6 +148,65 @@ describe('autorização — rotas de admin exigem papel ADMIN', () => {
   })
 })
 
+describe('busca externa de livro (catálogo fixo da homologação)', () => {
+  it('exige sessão e exige admin', () => {
+    expect(req('GET', '/api/books/search?q=casmurro').status).toBe(401)
+    expect(req('GET', '/api/books/external?source=google&id=g-duna').status).toBe(401)
+
+    loginMember('joao')
+    expect(req('GET', '/api/books/search?q=casmurro').status).toBe(403)
+    expect(req('GET', '/api/books/external?source=google&id=g-duna').status).toBe(403)
+  })
+
+  it('recusa termo curto com o 400 do domínio', () => {
+    loginAdmin()
+    const res = req('GET', '/api/books/search?q=d')
+    expect(res.status).toBe(400)
+    expect(res.body.error).toContain('pelo menos')
+  })
+
+  it('acha por pedaço do título e por pedaço do autor', () => {
+    loginAdmin()
+
+    const porTitulo = req('GET', '/api/books/search?q=casmurro').body.results
+    expect(porTitulo.map((livro: { title: string }) => livro.title)).toEqual([
+      'Dom Casmurro',
+      'Dom Casmurro: edição comentada'
+    ])
+
+    const porAutor = req('GET', '/api/books/search?q=machado').body.results
+    expect(porAutor).toHaveLength(3)
+
+    // Sem acento e sem caixa também casa.
+    expect(req('GET', '/api/books/search?q=MEMORIAS').body.results).toHaveLength(1)
+  })
+
+  it('devolve lista vazia quando nada casa, sem erro', () => {
+    loginAdmin()
+    const res = req('GET', '/api/books/search?q=zzzznaoexiste')
+    expect(res.status).toBe(200)
+    expect(res.body.results).toEqual([])
+  })
+
+  it('listagem não traz sinopse; o detalhe traz', () => {
+    loginAdmin()
+
+    const daLista = req('GET', '/api/books/search?q=duna').body.results[0]
+    expect(daLista.description).toBeNull()
+    expect(daLista.publisher).toBe('Aleph')
+
+    const doDetalhe = req('GET', '/api/books/external?source=google&id=g-duna').body.book
+    expect(doDetalhe.description).toContain('Arrakis')
+  })
+
+  it('detalhe recusa id desconhecido e fonte inválida', () => {
+    loginAdmin()
+    expect(req('GET', '/api/books/external?source=google&id=nao-existe').status).toBe(404)
+    expect(req('GET', '/api/books/external?source=bing&id=g-duna').status).toBe(400)
+    expect(req('GET', '/api/books/external?source=google').status).toBe(400)
+  })
+})
+
 describe('anti-spoiler — só quem concluiu o capítulo acessa', () => {
   let chapterId: string
   beforeEach(() => {

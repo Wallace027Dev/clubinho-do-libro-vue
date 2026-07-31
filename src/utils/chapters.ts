@@ -17,6 +17,22 @@ export function chapterTagLower(chapter: { number: number; title: string }) {
     : `o capítulo ${chapter.number}`
 }
 
+/**
+ * Título de cabeçalho/linha de lista, sem repetição e sem sobra:
+ * "Prólogo", "Capítulo 3" (capítulo ainda sem título — caso dos gerados junto
+ * com o livro) ou "Capítulo 3 — Rumo a Tarbean".
+ */
+export function chapterHeading(chapter: { number: number; title: string }) {
+  const tag = chapterTag(chapter)
+  const title = chapter.title.trim()
+
+  if (!title || isStandaloneChapterTitle(title)) {
+    return tag
+  }
+
+  return `${tag} — ${title}`
+}
+
 /** Rótulo curto para o heatmap: "P", "E" ou "C3". */
 export function chapterShortTag(chapter: { number: number; title: string }) {
   return isStandaloneChapterTitle(chapter.title)

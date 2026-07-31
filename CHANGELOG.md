@@ -11,6 +11,34 @@ O projeto ainda é um MVP em evolução, então o versionamento vive na faixa
 Formato inspirado em [Keep a Changelog](https://keepachangelog.com/pt-BR/);
 datas em AAAA-MM-DD. Cada versão tem uma tag `vX.Y.Z` no commit correspondente.
 
+## Não lançado
+### Adicionado
+- **Busca de livro no sorteio.** O candidato deixa de ser texto livre: o admin
+  busca por título ou autor (300ms após a pausa da digitação) e escolhe numa
+  lista com capa à esquerda, título em destaque e editora · páginas · autor.
+  Provedores: Google Books (com `GOOGLE_BOOKS_API_KEY`) e Open Library como
+  reserva, com timeout por provedor; em homologação, catálogo fixo sem rede.
+  O cadastro à mão continua disponível para livro fora dos catálogos.
+- **Aceitar o vencedor cria a estrutura do livro.** Numa transação só: cria o
+  livro com **capa, autor e sinopse** vindos da busca, cria os N capítulos
+  (quantidade informada pelo admin, numerados e sem título) e marca como livro
+  atual. `Book.coverUrl` existia no schema e era lido em 5 telas, mas nenhum
+  caminho de escrita o gravava — agora grava.
+
+### Alterado
+- **A roleta libera pela conclusão do livro, não pela virada do mês.** A trava
+  mensal em `localStorage` saiu; o gate agora deriva do livro atual do clube
+  (`src/domain/raffle.ts`), falhando fechado enquanto o estado não carregou.
+- Capítulo sem título aparece como "Capítulo N" (sem traço nem dois-pontos
+  sobrando) e como "Sem título" no painel admin, onde se nomeia.
+
+### Corrigido
+- Foto de perfil agora aparece nos avatares de comentários, resenhas e
+  histórico (a prop `avatar-url` não era passada em três lugares).
+- Contadores do perfil: "Comentários" era sempre 0 (só somava livros
+  finalizados) e "Capítulos lidos" zerava ao arquivar o livro. Agora são
+  vitalícios e vêm do servidor (`GET /api/profile/stats`).
+
 ## [0.10.0] - 2026-07-20
 ### Alterado
 - **Redesign visual completo — tema "Biblioteca acolhedora"** (PR #2): nova

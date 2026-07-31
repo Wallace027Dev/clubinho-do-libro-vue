@@ -24,6 +24,8 @@ import alerts from '../_routes/alerts.js'
 import booksCurrent from '../_routes/books/current.js'
 import booksReview from '../_routes/books/review.js'
 import booksHistory from '../_routes/books/history.js'
+import booksSearch from '../_routes/books/search.js'
+import booksExternal from '../_routes/books/external.js'
 import bookRatings from '../_routes/books/[clubBookId]/ratings.js'
 import profile from '../_routes/profile.js'
 import profilePassword from '../_routes/profile/password.js'
@@ -61,6 +63,8 @@ const routes: Route[] = [
   ['books/current', booksCurrent],
   ['books/review', booksReview],
   ['books/history', booksHistory],
+  ['books/search', booksSearch],
+  ['books/external', booksExternal],
   ['books/[clubBookId]/ratings', bookRatings],
   ['profile', profile],
   ['profile/password', profilePassword],

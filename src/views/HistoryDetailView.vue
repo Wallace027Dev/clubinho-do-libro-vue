@@ -10,7 +10,7 @@ import StarRating from '../components/ui/StarRating.vue'
 import UserAvatar from '../components/ui/UserAvatar.vue'
 import { usePlatformStore } from '../stores/platformStore'
 import type { ChapterCommentReactionType } from '../types/platform'
-import { isStandaloneChapterTitle } from '../utils/chapters'
+import { chapterHeading } from '../utils/chapters'
 import { formatMonthYear, formatRating } from '../utils/format'
 import { reactionEmoji } from '../utils/reactions'
 
@@ -86,7 +86,7 @@ function reactionEntries(reactions: Partial<Record<ChapterCommentReactionType, n
       <div v-for="chapter in book.chapters" :key="chapter.id" class="history-chapter">
         <template v-if="chapter.comments.length">
           <p class="chapter-kicker">
-            {{ isStandaloneChapterTitle(chapter.title) ? chapter.title : `Capítulo ${chapter.number} — ${chapter.title}` }}
+            {{ chapterHeading(chapter) }}
           </p>
           <ol class="comment-list">
             <li v-for="comment in chapter.comments" :key="comment.id">

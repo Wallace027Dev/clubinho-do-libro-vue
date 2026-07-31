@@ -12,6 +12,13 @@ interface SelectBookBody {
   title?: string
   author?: string
   description?: string
+  /** URL de capa vinda da busca externa de livro. */
+  coverUrl?: string
+  /**
+   * Quantos capítulos criar junto com o livro. Não é persistido: só decide
+   * quantas linhas de Chapter nascem na mesma transação.
+   */
+  chapterCount?: number
 }
 
 export default async function handler(req: any, res: any) {
@@ -92,7 +99,9 @@ export default async function handler(req: any, res: any) {
   const result = await selectBook(selectBookRepository(session.userId ?? null), {
     rawTitle: body.title,
     rawAuthor: body.author,
-    rawDescription: body.description
+    rawDescription: body.description,
+    rawCoverUrl: body.coverUrl,
+    rawChapterCount: body.chapterCount
   })
 
   if (!result.ok) {

@@ -96,6 +96,7 @@ npm run check:api    # typecheck das funcoes /api
 | `ADMIN_PASSWORD` | Senha do login administrativo (`/login/admin`). |
 | `SESSION_SECRET` | Segredo para assinar o JWT de sessao (string longa e aleatoria). |
 | `API_PORT` | Porta do dev-server das `/api` (padrao 3001; o Vite faz proxy). |
+| `GOOGLE_BOOKS_API_KEY` | Busca de livro no sorteio. Opcional, mas **recomendada**: sem ela o Google responde 429 e a busca cai no Open Library, que nao pede chave e tem cobertura pior de livro brasileiro (costuma vir sem capa e sem numero de paginas). Habilite a "Books API" em console.cloud.google.com e gere uma API key. Fica so no servidor — nunca com prefixo `VITE_`. |
 
 ## Arquitetura
 
@@ -159,6 +160,9 @@ src/
      `VITE_VAPID_PUBLIC_KEY` (mesma chave publica, exposta ao front no build).
      Sem elas o app funciona normal, so nao envia push. Depois de configurar,
      aplique o schema (passo 3) para criar a tabela `PushSubscription`.
+   - **Busca de livro (recomendado):** `GOOGLE_BOOKS_API_KEY`. Sem ela a busca
+     do sorteio funciona, mas so pelo Open Library — com resultado bem mais
+     pobre para titulo brasileiro.
 3. Aplique o schema no banco de producao usando a URL **direta**, da sua
    maquina:
 
