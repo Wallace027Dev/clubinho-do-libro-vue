@@ -76,13 +76,13 @@ test('admin busca o livro, sorteia e o vencedor vira livro atual com capítulos'
   ])
   await expect(page.locator('.chapter-untitled')).toHaveCount(3)
 
-  // A home mostra o livro do clube com o autor e a sinopse que vieram da busca
-  // (a sinopse só existe na rota de detalhe, então ela prova que o clique a
-  // buscou). A capa gravada não tem onde aparecer ainda nesta tela — ver TODO.
+  // A home mostra capa, autor e sinopse que vieram da busca (a sinopse só existe
+  // na rota de detalhe, então ela prova que o clique a buscou).
   await page.goto('/')
   await expect(page.getByRole('heading', { name: vencedor })).toBeVisible()
   await expect(page.getByText(/^De /)).toBeVisible()
   await expect(page.locator('.hero-copy')).not.toBeEmpty()
+  await expect(page.locator('.home-hero .history-cover img')).toBeVisible()
 })
 
 test('livro fora dos catálogos entra pelo cadastro à mão', async ({ page }) => {

@@ -901,6 +901,17 @@
   align-items: center;
 }
 
+/* Hero da home: capa do livro atual à esquerda quando existe livro. */
+.home-hero {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.home-hero--with-cover {
+  grid-template-columns: 64px 1fr;
+  align-items: start;
+}
+
 /* Capa de livro: cantos de lombada (menores à esquerda). */
 .history-cover {
   width: 64px;
