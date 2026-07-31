@@ -31,9 +31,15 @@ VITE_MOCK_API=true npm run dev:web   # só o front, sem Docker/Postgres
 - **Admin:** acesse `/login/admin` e use a senha **`123456`**.
 - **Membros:** `joao` / `123456` e `maria` / `123456`.
 - **Sem livro** de início — o fluxo é: entrar como admin, **sortear** em
-  `/admin/sorteio` (aceitar o vencedor já define o livro atual), cadastrar os
-  capítulos no painel, e então testar a leitura como `joao`/`maria`. Para sortear
-  de novo, **conclua** o livro atual no painel admin.
+  `/admin/sorteio` (buscar o livro por título/autor, aceitar o vencedor
+  informando quantos capítulos ele tem) e então testar a leitura como
+  `joao`/`maria`. Para sortear de novo, **conclua** o livro atual no painel admin.
+- **A busca de livro em homologação não usa rede.** O mock é síncrono, então ela
+  responde de um **catálogo fixo** de 8 títulos (`src/services/mockApi/bookSearchSim.ts`),
+  escolhidos para exercitar os casos reais: livro completo, livro com três
+  autores, livro sem capa e sem número de páginas, contagem de páginas
+  aproximada e título longo. Busque por "casmurro", "machado", "duna",
+  "ondjaki" ou "cortiço". A chave do Google Books **não** é usada aqui.
 
 ## Persistência e reset
 

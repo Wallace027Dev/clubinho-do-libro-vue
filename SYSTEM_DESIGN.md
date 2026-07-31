@@ -6,11 +6,19 @@ O Clubinho do Libro comeca como um PWA mobile first para sorteio do livro do mes
 
 ## Objetivos do MVP
 
-- Permitir cadastrar uma lista de livros candidatos.
+- Montar a lista de candidatos **buscando o livro por titulo ou autor** em provedor
+  externo (Google Books com chave; Open Library de reserva), com a busca saindo 300ms
+  depois da pausa da digitacao. Cadastro a mao segue disponivel para livro fora dos
+  catalogos.
+- Mostrar cada resultado com capa, titulo e editora/paginas/autor; ao escolher, buscar os
+  dados completos (sinopse no Google; edicao concreta no Open Library).
 - Confirmar a lista antes do sorteio.
 - Sortear um livro usando uma roleta animada.
 - Permitir aceitar o resultado ou sortear novamente.
-- Salvar o livro aceito como livro atual do clube (no servidor, via `/api/books/current`).
+- Salvar o livro aceito como livro atual do clube (no servidor, via `/api/books/current`),
+  **com capa, autor e sinopse**, e criar na mesma transacao os N capitulos que o admin
+  informou (numerados, sem titulo — nomeados depois no painel). A quantidade informada nao
+  e persistida: ela so decide quantas linhas nascem.
 - Bloquear novos sorteios enquanto houver livro atual em andamento; concluir o livro
   atual no painel admin libera o proximo sorteio (sem trava por mes-calendario).
 - Associar uma cor RGB aleatoria a cada livro e usar a mesma cor na lista e na roleta.
