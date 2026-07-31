@@ -71,12 +71,18 @@ export async function seedApp(page: Page, db: unknown = buildSeed()) {
   )
 }
 
-/** Login administrativo pela UI (senha do seed do mock). */
+/**
+ * Login administrativo pela UI (senha do seed do mock).
+ *
+ * Espera o painel de verdade, não a URL: `/\/admin/` também casa com
+ * `/login/admin` e passaria antes do login terminar — aí a navegação seguinte
+ * sai sem sessão e o guard de `requiresAdmin` rebate para a home.
+ */
 export async function loginAsAdmin(page: Page, password = '123456') {
   await page.goto('/login/admin')
   await page.fill('input[type="password"]', password)
   await page.getByRole('button', { name: 'Entrar no admin' }).click()
-  await expect(page).toHaveURL(/\/admin/)
+  await expect(page.getByRole('heading', { name: 'Gerenciar clube' })).toBeVisible()
 }
 
 /** Faz login pela UI e espera a navegação inferior (autenticado) aparecer. */
