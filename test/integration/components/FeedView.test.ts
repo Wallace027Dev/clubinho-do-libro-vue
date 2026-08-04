@@ -6,8 +6,40 @@ import { mountAt } from '../support/mount'
 beforeEach(() => resetMockDb())
 
 /**
- * Sessão de joao + N comentários de OUTRA pessoa (maria) num capítulo que joao
- * concluiu — que é o que o feed passa a mostrar. Aqui só interessa a
+ * Cria um livro ATUAL com os capítulos pedidos. O feed passou a escopar no livro
+ * atual (anti-spoiler por card), então os comentários precisam estar em
+ * capítulos deste livro para aparecer.
+ */
+function seedCurrentBook(chapterIds: string[]) {
+  getDb().books.push({ id: 'bk', title: 'Livro Atual', author: 'Autor', description: null, coverUrl: null })
+  getDb().clubBooks.push({
+    id: 'cb',
+    bookId: 'bk',
+    status: 'CURRENT',
+    selectedAt: '2026-06-01T00:00:00.000Z',
+    finishedAt: null,
+    selectedByUserId: null,
+    finishedByUserId: null
+  })
+  chapterIds.forEach((id, index) => {
+    getDb().chapters.push({ id, clubBookId: 'cb', number: index + 1, title: `Capítulo ${index + 1}` })
+  })
+}
+
+function finishChapter(userId: string, chapterId: string, seq = 1) {
+  getDb().progress.push({
+    id: `p-${chapterId}-${seq}`,
+    chapterId,
+    userId,
+    status: 'FINISHED',
+    startedAt: '2026-07-01T10:00:00.000Z',
+    finishedAt: '2026-07-01T11:00:00.000Z'
+  })
+}
+
+/**
+ * Sessão de joao + N comentários de OUTRA pessoa (maria) num capítulo do livro
+ * atual que joao concluiu — o card fica destravado. Aqui só interessa a
  * paginação/sentinela.
  */
 function seedSessionAndComments(count: number) {
@@ -15,14 +47,8 @@ function seedSessionAndComments(count: number) {
   const maria = getDb().users.find((user) => user.login === 'maria')!
   getDb().session = { userId: joao.id, role: 'MEMBER' }
 
-  getDb().progress.push({
-    id: 'pj',
-    chapterId: 'c1',
-    userId: joao.id,
-    status: 'FINISHED',
-    startedAt: '2026-07-01T10:00:00.000Z',
-    finishedAt: '2026-07-01T11:00:00.000Z'
-  })
+  seedCurrentBook(['c1'])
+  finishChapter(joao.id, 'c1')
 
   const start = Date.parse('2026-07-01T12:00:00.000Z')
   getDb().activities = Array.from({ length: count }, (_, i) => ({
@@ -36,24 +62,20 @@ function seedSessionAndComments(count: number) {
   persist()
 }
 
-/** Comentário real da maria no capítulo que joao concluiu, com reações nele. */
-function seedComentarioComReacoes(tipos: string[]) {
+/** Comentário real da maria num capítulo do livro atual, com reações nele. */
+function seedComentarioComReacoes(tipos: string[], chapterId = 'c1', finished = true) {
   const joao = getDb().users.find((user) => user.login === 'joao')!
   const maria = getDb().users.find((user) => user.login === 'maria')!
   getDb().session = { userId: joao.id, role: 'MEMBER' }
 
-  getDb().progress.push({
-    id: 'pj',
-    chapterId: 'c1',
-    userId: joao.id,
-    status: 'FINISHED',
-    startedAt: '2026-07-01T10:00:00.000Z',
-    finishedAt: '2026-07-01T11:00:00.000Z'
-  })
+  seedCurrentBook([chapterId])
+  if (finished) {
+    finishChapter(joao.id, chapterId)
+  }
 
   getDb().comments.push({
     id: 'cm-maria',
-    chapterId: 'c1',
+    chapterId,
     userId: maria.id,
     body: 'Que capítulo!',
     createdAt: '2026-07-01T12:00:00.000Z',
@@ -73,8 +95,8 @@ function seedComentarioComReacoes(tipos: string[]) {
       id: 'act-cm',
       actorId: maria.id,
       type: 'CHAPTER_COMMENTED',
-      message: 'Maria comentou o capítulo 1.',
-      metadata: { chapterId: 'c1' },
+      message: `Maria comentou o ${chapterId}.`,
+      metadata: { chapterId },
       createdAt: '2026-07-01T12:00:00.000Z'
     }
   ]
@@ -100,6 +122,32 @@ describe('reações no card do feed', () => {
     await vi.waitFor(() => expect(wrapper.findAll('.feed-card')).toHaveLength(1))
 
     expect(wrapper.find('.feed-card-reactions').exists()).toBe(false)
+  })
+})
+
+describe('cadeado no feed (anti-spoiler)', () => {
+  it('capítulo concluído: card destravado, com trecho do texto e clicável', async () => {
+    seedComentarioComReacoes([], 'c1', true)
+
+    const { wrapper } = await mountAt(FeedView, '/feed')
+    await vi.waitFor(() => expect(wrapper.findAll('.feed-card')).toHaveLength(1))
+
+    const card = wrapper.get('.feed-card')
+    expect(card.find('.feed-card-preview').text()).toContain('Que capítulo!')
+    expect(card.find('.feed-lock').exists()).toBe(false)
+    expect(card.classes()).toContain('is-clickable')
+  })
+
+  it('capítulo não concluído: card travado, com cadeado, sem trecho e não clicável', async () => {
+    seedComentarioComReacoes([], 'c1', false)
+
+    const { wrapper } = await mountAt(FeedView, '/feed')
+    await vi.waitFor(() => expect(wrapper.findAll('.feed-card')).toHaveLength(1))
+
+    const card = wrapper.get('.feed-card')
+    expect(card.find('.feed-lock').exists()).toBe(true)
+    expect(card.find('.feed-card-preview').exists()).toBe(false)
+    expect(card.classes()).not.toContain('is-clickable')
   })
 })
 

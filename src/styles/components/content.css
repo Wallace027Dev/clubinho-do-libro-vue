@@ -157,6 +157,62 @@
   outline-offset: 2px;
 }
 
+/* Filtros do feed: busca + capitulo, lado a lado. */
+.feed-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: 18px;
+}
+
+.feed-filters .feed-search {
+  flex: 1 1 12rem;
+  margin-bottom: 0;
+}
+
+.feed-chapter-filter {
+  display: block;
+  flex: 0 1 12rem;
+}
+
+.feed-chapter-filter select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-card-edge);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+/* Trecho do comentario no card destravado: legivel, nao a etiqueta em negrito. */
+.feed-card-preview {
+  color: var(--color-text-muted);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+/* Card travado: cadeado no lugar do texto, sem afordancia de clique. */
+.feed-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.feed-lock svg {
+  flex: 0 0 auto;
+  opacity: 0.8;
+}
+
+.feed-card.is-locked {
+  background: var(--color-paper-deep);
+  border-style: dashed;
+}
+
 /* Lista e detalhe de capitulos (fase 8 etapa 4). */
 .chapter-card-row {
   display: flex;
