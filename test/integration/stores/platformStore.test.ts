@@ -156,6 +156,26 @@ describe('platformStore', () => {
     expect(reloaded[0].reactionTotal).toBe(1)
   })
 
+  it('editar o comentário não cria uma segunda atividade (feed não duplica o card)', async () => {
+    const [chapterId] = await seedBook(1)
+    await useAuthStore().login('joao', '123456')
+    const platform = usePlatformStore()
+    await platform.startChapter(chapterId)
+    await platform.finishChapter(chapterId, { rating: 5 })
+
+    await platform.submitChapterComment(chapterId, 'primeira versão')
+    await platform.submitChapterComment(chapterId, 'versão editada')
+
+    // Uma única atividade de comentário — o mesmo comentário não vira dois cards.
+    const commentActs = getDb().activities.filter((item) => item.type === 'CHAPTER_COMMENTED')
+    expect(commentActs).toHaveLength(1)
+
+    // O comentário continua único, com o texto já editado.
+    const comments = getDb().comments.filter((item) => item.chapterId === chapterId)
+    expect(comments).toHaveLength(1)
+    expect(comments[0].body).toBe('versão editada')
+  })
+
   it('loadBookRatings devolve o heatmap do livro atual', async () => {
     await seedBook(1)
     await useAuthStore().login('joao', '123456')
