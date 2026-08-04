@@ -202,31 +202,4 @@ describe('platformStore', () => {
     await platform.loadAlerts()
     expect(platform.alerts.map((item) => item.id)).toEqual(['fin-maria'])
   })
-
-  it('applyFeedFilter filtra o feed por capítulo e por busca, no servidor', async () => {
-    const maria = getDb().users.find((user) => user.login === 'maria')!
-    await useAuthStore().login('joao', '123456')
-
-    seedCurrentBook(['c1', 'c2'])
-
-    const t = Date.parse('2026-07-01T12:00:00.000Z')
-    const iso = (n: number) => new Date(t - n * 1000).toISOString()
-    getDb().activities = [
-      { id: 'cm-c1', actorId: maria.id, type: 'CHAPTER_COMMENTED', message: 'Maria comentou o capítulo 1', metadata: { chapterId: 'c1' }, createdAt: iso(0) },
-      { id: 'cm-c2', actorId: maria.id, type: 'CHAPTER_COMMENTED', message: 'Maria comentou o capítulo 2', metadata: { chapterId: 'c2' }, createdAt: iso(1) }
-    ]
-    persist()
-
-    const platform = usePlatformStore()
-    await platform.loadHome()
-    expect(platform.clubState.activities.map((item) => item.id)).toEqual(['cm-c1', 'cm-c2'])
-
-    // Filtro por capítulo (só c2).
-    await platform.applyFeedFilter('', 'c2')
-    expect(platform.clubState.activities.map((item) => item.id)).toEqual(['cm-c2'])
-
-    // Busca por texto da mensagem (autor + capítulo).
-    await platform.applyFeedFilter('capítulo 1', null)
-    expect(platform.clubState.activities.map((item) => item.id)).toEqual(['cm-c1'])
-  })
 })

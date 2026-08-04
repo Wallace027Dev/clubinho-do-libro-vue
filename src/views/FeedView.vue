@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Lock, Search } from 'lucide-vue-next'
-import { computed, onMounted, ref, watch } from 'vue'
+import { Lock } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppSpinner from '../components/ui/AppSpinner.vue'
 import ClickableCard from '../components/ui/ClickableCard.vue'
@@ -10,46 +10,20 @@ import SkeletonLoader from '../components/ui/SkeletonLoader.vue'
 import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity, ChapterCommentReactionType } from '../types/platform'
-import { chapterTag, chapterTagFromMeta } from '../utils/chapters'
+import { chapterTagFromMeta } from '../utils/chapters'
 import { reactionEmoji } from '../utils/reactions'
 
 const router = useRouter()
 const platformStore = usePlatformStore()
 const comments = computed(() => platformStore.clubState.activities)
 
-// Capítulos do livro atual, para o filtro por capítulo.
-const chapters = computed(() => platformStore.clubState.currentBook?.chapters ?? [])
-
-// Scroll infinito: carrega os próximos comentários de 30 em 30 (com o filtro ativo).
+// Scroll infinito: carrega os próximos comentários de 30 em 30.
 const sentinel = ref<HTMLElement | null>(null)
 useInfiniteScroll(sentinel, () => platformStore.loadMoreActivities())
 
 // Só a primeira carga (sem nada em memória) mostra skeleton.
 const hasLoaded = ref(false)
 const showSkeleton = computed(() => !comments.value.length && !hasLoaded.value)
-
-const searchTerm = ref('')
-const chapterFilter = ref('')
-
-// A busca e o filtro por capítulo rodam no servidor (cobrem todo o histórico do
-// livro, não só o que já foi paginado). A digitação tem debounce; o select não.
-let searchDebounce: ReturnType<typeof setTimeout> | undefined
-
-function applyFilters() {
-  void platformStore.applyFeedFilter(searchTerm.value.trim(), chapterFilter.value || null)
-}
-
-watch(searchTerm, () => {
-  clearTimeout(searchDebounce)
-  searchDebounce = setTimeout(applyFilters, 300)
-})
-
-watch(chapterFilter, () => {
-  clearTimeout(searchDebounce)
-  applyFilters()
-})
-
-const hasFilter = computed(() => Boolean(searchTerm.value.trim() || chapterFilter.value))
 
 onMounted(async () => {
   try {
@@ -95,26 +69,6 @@ function reactionEntries(activity: Activity) {
     title="Comentários da leitura"
     subtitle="Comentários do livro atual. Os capítulos que você ainda não concluiu ficam com cadeado."
   >
-    <div class="feed-filters">
-      <label class="feed-search">
-        <span class="visually-hidden">Pesquisar comentários</span>
-        <input v-model="searchTerm" type="search" placeholder="Pesquisar..." />
-        <Search class="feed-search-icon" :size="18" aria-hidden="true" />
-      </label>
-
-      <label class="feed-chapter-filter">
-        <span class="visually-hidden">Filtrar por capítulo</span>
-        <select v-model="chapterFilter">
-          <option value="">Todos os capítulos</option>
-          <option v-for="chapter in chapters" :key="chapter.id" :value="chapter.id">
-            {{ chapterTag(chapter) }}
-          </option>
-        </select>
-      </label>
-
-      <AppSpinner v-if="platformStore.isFilteringFeed" size="1.1rem" />
-    </div>
-
     <SkeletonLoader
       v-if="showSkeleton"
       :rows="3"
@@ -152,11 +106,6 @@ function reactionEntries(activity: Activity) {
         </p>
       </ClickableCard>
     </ol>
-
-    <EmptyState
-      v-else-if="hasFilter"
-      message="Nenhum comentário encontrado para esse filtro."
-    />
 
     <EmptyState
       v-else-if="!showSkeleton"
