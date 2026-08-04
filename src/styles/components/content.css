@@ -30,26 +30,6 @@
   margin-bottom: 16px;
 }
 
-.feed-search {
-  position: relative;
-  display: block;
-  /* Respiro entre o campo de busca e o primeiro card. */
-  margin-bottom: 18px;
-}
-
-.feed-search input {
-  padding-right: 48px;
-}
-
-.feed-search-icon {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
-  pointer-events: none;
-  opacity: 0.65;
-}
-
 /* Cards do feed (wireframe 01): tag + data, titulo e autor. */
 .feed-list {
   display: grid;
@@ -155,36 +135,6 @@
 .feed-card.is-clickable:focus-visible {
   outline: 2px solid var(--color-olive-800);
   outline-offset: 2px;
-}
-
-/* Filtros do feed: busca + capitulo, lado a lado. */
-.feed-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: 18px;
-}
-
-.feed-filters .feed-search {
-  flex: 1 1 12rem;
-  margin-bottom: 0;
-}
-
-.feed-chapter-filter {
-  display: block;
-  flex: 0 1 12rem;
-}
-
-.feed-chapter-filter select {
-  width: 100%;
-  min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--color-card-edge);
-  border-radius: var(--radius-md);
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font: inherit;
 }
 
 /* Trecho do comentario no card destravado: legivel, nao a etiqueta em negrito. */

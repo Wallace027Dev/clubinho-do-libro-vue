@@ -76,24 +76,6 @@ export const usePlatformStore = defineStore('platform', () => {
   const activitiesHasMore = ref(false)
   const isLoadingMoreActivities = ref(false)
 
-  // Filtros do feed (aplicados no servidor). Vazio = feed completo do livro atual.
-  const feedQuery = ref('')
-  const feedChapterId = ref<string | null>(null)
-  const isFilteringFeed = ref(false)
-
-  /** Query string do feed, propagando busca/capítulo ativos (e o cursor). */
-  function feedQueryString(cursor: string | null): string {
-    const params = new URLSearchParams()
-    if (cursor) params.set('cursor', cursor)
-    params.set('limit', String(ACTIVITIES_PAGE_SIZE))
-
-    const q = feedQuery.value.trim()
-    if (q) params.set('q', q)
-    if (feedChapterId.value) params.set('chapterId', feedChapterId.value)
-
-    return params.toString()
-  }
-
   // Sininho (modal): alertas de progresso/marcos, separados do feed.
   const alerts = ref<Activity[]>([])
   const alertsHasMore = ref(false)
@@ -107,10 +89,6 @@ export const usePlatformStore = defineStore('platform', () => {
 
   async function loadHome() {
     isLoading.value = true
-    // O primeiro lote vem sem filtro; zera a busca/capítulo para o estado bater
-    // com a lista carregada.
-    feedQuery.value = ''
-    feedChapterId.value = null
 
     try {
       clubState.value = await apiRequest<CurrentBookResponse>('/api/books/current')
@@ -119,24 +97,6 @@ export const usePlatformStore = defineStore('platform', () => {
       activitiesHasMore.value = clubState.value.activities.length >= ACTIVITIES_PAGE_SIZE
     } finally {
       isLoading.value = false
-    }
-  }
-
-  /**
-   * Aplica busca/filtro do feed no servidor: recarrega a 1ª página com os
-   * filtros e substitui a lista. `loadMoreActivities` propaga os mesmos filtros.
-   */
-  async function applyFeedFilter(q: string, chapterId: string | null) {
-    feedQuery.value = q
-    feedChapterId.value = chapterId
-    isFilteringFeed.value = true
-
-    try {
-      const response = await apiRequest<ActivitiesResponse>(`/api/activities?${feedQueryString(null)}`)
-      clubState.value.activities = response.activities
-      activitiesHasMore.value = response.hasMore
-    } finally {
-      isFilteringFeed.value = false
     }
   }
 
@@ -156,7 +116,7 @@ export const usePlatformStore = defineStore('platform', () => {
 
     try {
       const response = await apiRequest<ActivitiesResponse>(
-        `/api/activities?${feedQueryString(last.id)}`
+        `/api/activities?cursor=${encodeURIComponent(last.id)}&limit=${ACTIVITIES_PAGE_SIZE}`
       )
 
       const seen = new Set(clubState.value.activities.map((activity) => activity.id))
@@ -402,10 +362,6 @@ export const usePlatformStore = defineStore('platform', () => {
     isLoading,
     activitiesHasMore,
     isLoadingMoreActivities,
-    feedQuery,
-    feedChapterId,
-    isFilteringFeed,
-    applyFeedFilter,
     alerts,
     alertsHasMore,
     isLoadingMoreAlerts,

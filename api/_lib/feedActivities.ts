@@ -40,14 +40,6 @@ interface ActivityView {
   commentReactionTotal?: number
 }
 
-/** Opções de filtro do feed: busca por texto do card e/ou capítulo específico. */
-export interface CommentFeedOptions {
-  /** Busca sobre a mensagem do card (autor + capítulo). Vazio = sem busca. */
-  q?: string | null
-  /** Restringe a um capítulo do livro atual. */
-  chapterId?: string | null
-}
-
 function chapterIdOf(metadata: Prisma.JsonValue): string | null {
   if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
     return null
@@ -163,8 +155,7 @@ export async function commentFeedPage(
   clubId: string,
   viewerId: string | null,
   cursor: string | null,
-  limit: number,
-  options: CommentFeedOptions = {}
+  limit: number
 ) {
   const bookChapters = await currentBookChapterIds(clubId)
 
@@ -172,19 +163,6 @@ export async function commentFeedPage(
     return { activities: [], hasMore: false }
   }
 
-  // Filtro por capítulo: só vale se o capítulo é do livro atual.
-  const scoped =
-    options.chapterId && bookChapters.includes(options.chapterId)
-      ? [options.chapterId]
-      : options.chapterId
-        ? []
-        : bookChapters
-
-  if (scoped.length === 0) {
-    return { activities: [], hasMore: false }
-  }
-
-  const search = options.q?.trim()
   const finished = new Set(viewerId ? await finishedChapterIds(viewerId) : [])
 
   const page = await query(
@@ -193,11 +171,7 @@ export async function commentFeedPage(
       type: 'CHAPTER_COMMENTED',
       ...(viewerId ? { actorId: { not: viewerId } } : {}),
       // Só comentários dos capítulos do livro atual (travados ou não).
-      OR: scoped.map((chapterId) => ({ metadata: { path: ['chapterId'], equals: chapterId } })),
-      // Busca no servidor sobre a mensagem do card (autor + capítulo). O corpo
-      // do comentário fica de fora de propósito: buscar por ele vazaria o texto
-      // de capítulos travados.
-      ...(search ? { message: { contains: search, mode: 'insensitive' as const } } : {})
+      OR: bookChapters.map((chapterId) => ({ metadata: { path: ['chapterId'], equals: chapterId } }))
     },
     cursor,
     limit

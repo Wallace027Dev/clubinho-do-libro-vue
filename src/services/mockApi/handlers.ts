@@ -307,22 +307,16 @@ function commentBodyOf(chapterId: string | undefined, actorId: string | null): s
 
 /**
  * Feed = comentários de outros nos capítulos do livro atual. O anti-spoiler é
- * por card (`locked`), não some da lista. `q` busca na mensagem (autor +
- * capítulo); `chapterId` restringe a um capítulo do livro atual.
+ * por card (`locked`), não some da lista.
  */
-function commentFeedFor(
-  viewerId: string | null,
-  opts: { q?: string | null; chapterId?: string | null } = {}
-) {
+function commentFeedFor(viewerId: string | null) {
   const bookChapters = currentBookChapterIdSet()
-  const q = opts.q?.trim().toLowerCase()
 
   return sortedActivities(isFeedActivity).filter((activity) => {
     const chapterId = activity.metadata?.chapterId
-    if (activity.actorId === viewerId || !chapterId || !bookChapters.has(chapterId)) return false
-    if (opts.chapterId && chapterId !== opts.chapterId) return false
-    if (q && !activity.message.toLowerCase().includes(q)) return false
-    return true
+    return (
+      activity.actorId !== viewerId && Boolean(chapterId) && bookChapters.has(chapterId as string)
+    )
   })
 }
 
@@ -401,12 +395,7 @@ export function handleMockRequest(method: string, rawPath: string, body: Body): 
 
   // --- Feed paginado --------------------------------------------------------
   if (path === '/api/activities' && m === 'GET') {
-    return listActivities(
-      query.get('cursor'),
-      query.get('limit'),
-      query.get('q'),
-      query.get('chapterId')
-    )
+    return listActivities(query.get('cursor'), query.get('limit'))
   }
 
   // --- Sininho (alertas de progresso/marcos) --------------------------------
@@ -578,12 +567,7 @@ function getCurrent(): MockResponse {
   return json(200, { currentBook, activities: recentActivities(current.userId) })
 }
 
-function listActivities(
-  cursor: string | null,
-  limitRaw: string | null,
-  q: string | null,
-  chapterId: string | null
-): MockResponse {
+function listActivities(cursor: string | null, limitRaw: string | null): MockResponse {
   const current = session()
   if (!current) return err(401, 'Unauthorized.')
 
@@ -591,7 +575,7 @@ function listActivities(
   const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 30
 
   const finished = finishedChapterIdsFor(current.userId)
-  const sorted = commentFeedFor(current.userId, { q, chapterId })
+  const sorted = commentFeedFor(current.userId)
   let start = 0
   if (cursor) {
     const index = sorted.findIndex((activity) => activity.id === cursor)
