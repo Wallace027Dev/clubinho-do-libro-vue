@@ -60,21 +60,31 @@ export function chapterCommentRepository(): ChapterCommentRepository<SerializedC
       const club = await getDefaultClub()
 
       await prisma.$transaction(async (tx) => {
+        const existing = await tx.chapterComment.findUnique({
+          where: { chapterId_userId: { chapterId: command.chapterId, userId: command.userId } },
+          select: { id: true }
+        })
+
         await tx.chapterComment.upsert({
           where: { chapterId_userId: { chapterId: command.chapterId, userId: command.userId } },
           update: { body: command.body },
           create: { chapterId: command.chapterId, userId: command.userId, body: command.body }
         })
 
-        await tx.activity.create({
-          data: {
-            clubId: club.id,
-            actorId: command.userId,
-            type: command.activity.type,
-            message: command.activity.message,
-            metadata: command.activity.metadata as unknown as Prisma.InputJsonObject
-          }
-        })
+        // A atividade do feed nasce só quando o comentário é NOVO. Editar
+        // atualiza o texto (o card do feed lê o corpo atual), mas não cria uma
+        // segunda atividade — senão o mesmo comentário vira dois cards no feed.
+        if (!existing) {
+          await tx.activity.create({
+            data: {
+              clubId: club.id,
+              actorId: command.userId,
+              type: command.activity.type,
+              message: command.activity.message,
+              metadata: command.activity.metadata as unknown as Prisma.InputJsonObject
+            }
+          })
+        }
       })
     },
 
