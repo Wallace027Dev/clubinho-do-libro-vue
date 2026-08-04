@@ -1098,16 +1098,18 @@ function commitMockChapterComment(command: ChapterCommentCommand) {
   if (existing) {
     existing.body = command.body
     existing.updatedAt = nowIso()
-  } else {
-    getDb().comments.push({
-      id: uid(),
-      chapterId: command.chapterId,
-      userId: command.userId,
-      body: command.body,
-      createdAt: nowIso(),
-      updatedAt: nowIso()
-    })
+    // Editar não gera uma segunda atividade (senão o feed duplica o card).
+    return
   }
+
+  getDb().comments.push({
+    id: uid(),
+    chapterId: command.chapterId,
+    userId: command.userId,
+    body: command.body,
+    createdAt: nowIso(),
+    updatedAt: nowIso()
+  })
 
   addActivity(command.userId, command.activity.type, command.activity.message, command.activity.metadata)
 }
