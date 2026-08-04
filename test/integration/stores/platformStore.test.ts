@@ -25,6 +25,34 @@ async function seedBook(chapters = 1): Promise<string[]> {
   return ids
 }
 
+/** Cria um livro ATUAL com os capítulos pedidos direto no "banco" (fixture). */
+function seedCurrentBook(chapterIds: string[]) {
+  getDb().books.push({ id: 'bk', title: 'Livro Atual', author: 'Autor', description: null, coverUrl: null })
+  getDb().clubBooks.push({
+    id: 'cb',
+    bookId: 'bk',
+    status: 'CURRENT',
+    selectedAt: '2026-06-01T00:00:00.000Z',
+    finishedAt: null,
+    selectedByUserId: null,
+    finishedByUserId: null
+  })
+  chapterIds.forEach((id, index) => {
+    getDb().chapters.push({ id, clubBookId: 'cb', number: index + 1, title: `Capítulo ${index + 1}` })
+  })
+}
+
+function finishChapter(userId: string, chapterId: string) {
+  getDb().progress.push({
+    id: `p-${chapterId}`,
+    chapterId,
+    userId,
+    status: 'FINISHED',
+    startedAt: '2026-07-01T10:00:00.000Z',
+    finishedAt: '2026-07-01T11:00:00.000Z'
+  })
+}
+
 describe('platformStore', () => {
   it('selectCurrentBook cria os capítulos e grava a capa numa tacada', async () => {
     const auth = useAuthStore()
@@ -139,20 +167,14 @@ describe('platformStore', () => {
     expect(ratings.chapters).toHaveLength(1)
   })
 
-  it('feed = comentários de outros (capítulos concluídos); sininho = progresso de outros', async () => {
+  it('feed = comentários de outros no livro atual; não concluído vem travado; sininho = progresso de outros', async () => {
     const joao = getDb().users.find((user) => user.login === 'joao')!
     const maria = getDb().users.find((user) => user.login === 'maria')!
     await useAuthStore().login('joao', '123456')
 
-    // joao concluiu o capítulo c1 (não o c2).
-    getDb().progress.push({
-      id: 'p1',
-      chapterId: 'c1',
-      userId: joao.id,
-      status: 'FINISHED',
-      startedAt: '2026-07-01T10:00:00.000Z',
-      finishedAt: '2026-07-01T11:00:00.000Z'
-    })
+    // Livro atual com c1 e c2; joao concluiu só o c1.
+    seedCurrentBook(['c1', 'c2'])
+    finishChapter(joao.id, 'c1')
 
     const t = Date.parse('2026-07-01T12:00:00.000Z')
     const iso = (n: number) => new Date(t - n * 1000).toISOString()
@@ -167,9 +189,14 @@ describe('platformStore', () => {
 
     const platform = usePlatformStore()
 
-    // Feed = comentário de OUTRO, só do capítulo que joao concluiu (c1).
+    // Feed = comentários de OUTROS nos capítulos do livro atual: c1 (destravado)
+    // e c2 (travado, porque joao não concluiu). O próprio comentário de joao sai.
     await platform.loadHome()
-    expect(platform.clubState.activities.map((item) => item.id)).toEqual(['cm-maria-c1'])
+    expect(platform.clubState.activities.map((item) => item.id)).toEqual(['cm-maria-c1', 'cm-maria-c2'])
+
+    const byId = Object.fromEntries(platform.clubState.activities.map((item) => [item.id, item]))
+    expect(byId['cm-maria-c1'].locked).toBe(false)
+    expect(byId['cm-maria-c2'].locked).toBe(true)
 
     // Sininho = progresso de OUTRO (o de joao é excluído).
     await platform.loadAlerts()

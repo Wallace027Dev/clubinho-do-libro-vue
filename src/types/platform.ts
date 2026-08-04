@@ -24,6 +24,12 @@ export interface Activity {
   createdAt: string
   actor?: AuthUser | null
   metadata?: ActivityMetadata | null
+  /** Capítulo do comentário (só em atividade de comentário), para card/filtro. */
+  chapterId?: string | null
+  /** Anti-spoiler do feed: `true` quando o espectador não concluiu o capítulo. */
+  locked?: boolean
+  /** Trecho do comentário no card; só vem destravado (`null` quando travado). */
+  bodyPreview?: string | null
   /** Só em atividade de comentário: reações do comentário, exibidas no card do feed. */
   commentReactions?: Partial<Record<ChapterCommentReactionType, number>>
   commentReactionTotal?: number

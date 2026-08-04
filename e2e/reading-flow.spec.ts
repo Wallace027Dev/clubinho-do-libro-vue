@@ -26,10 +26,11 @@ test('membro inicia, nota, conclui e comenta um capítulo — e vê no feed', as
   await page.getByRole('button', { name: 'Publicar comentário' }).click()
   await expect(page.getByText('Comentário do E2E')).toBeVisible()
 
-  // O feed mostra os comentários de OUTRAS pessoas do capítulo concluído
-  // (o comentário da Maria), não o próprio.
+  // O feed mostra os comentários de OUTRAS pessoas do capítulo concluído: o card
+  // da Maria, agora com um trecho do texto dela (destravado porque joao concluiu
+  // o capítulo), e não o comentário do próprio joao.
   await page.goto('/feed')
-  await expect(page.getByText('Maria comentou o capítulo 1.')).toBeVisible()
+  await expect(page.getByText('Adorei este capítulo!')).toBeVisible()
   await expect(page.getByText('Comentário do E2E')).toHaveCount(0)
 
   // O sininho (modal) mostra o progresso de outros — a conclusão da Maria.

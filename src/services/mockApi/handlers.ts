@@ -52,6 +52,7 @@ import {
   chapterFinishedNotification
 } from '../../domain/notifications'
 import { countReactionTypes } from '../../domain/reactions'
+import { feedCommentView } from '../../domain/feedComment'
 import { resolveBookSearchQuery, type ExternalBookSource } from '../../domain/bookSearch'
 import { findFixtureBook, searchFixtureBooks } from './bookSearchSim'
 import { simulateLocalPush } from './pushSim'
@@ -288,15 +289,57 @@ function finishedChapterIdsFor(userId: string | null): Set<string> {
   )
 }
 
-/** Feed = comentários de outros, só de capítulos que o usuário concluiu. */
-function commentFeedFor(viewerId: string | null) {
-  const finished = finishedChapterIdsFor(viewerId)
-  return sortedActivities(isFeedActivity).filter(
-    (activity) =>
-      activity.actorId !== viewerId &&
-      Boolean(activity.metadata?.chapterId) &&
-      finished.has(activity.metadata!.chapterId as string)
+/** Capítulos do livro atual (escopo do feed). */
+function currentBookChapterIdSet(): Set<string> {
+  const clubBook = getCurrentClubBook()
+  if (!clubBook) return new Set()
+  return new Set(chaptersOf(clubBook.id).map((chapter) => chapter.id))
+}
+
+/** Corpo do comentário do ator naquele capítulo (para o preview), se existir. */
+function commentBodyOf(chapterId: string | undefined, actorId: string | null): string | null {
+  if (!chapterId || !actorId) return null
+  const comment = getDb().comments.find(
+    (item) => item.chapterId === chapterId && item.userId === actorId
   )
+  return comment?.body ?? null
+}
+
+/**
+ * Feed = comentários de outros nos capítulos do livro atual. O anti-spoiler é
+ * por card (`locked`), não some da lista.
+ */
+function commentFeedFor(viewerId: string | null) {
+  const bookChapters = currentBookChapterIdSet()
+
+  return sortedActivities(isFeedActivity).filter((activity) => {
+    const chapterId = activity.metadata?.chapterId
+    return (
+      activity.actorId !== viewerId && Boolean(chapterId) && bookChapters.has(chapterId as string)
+    )
+  })
+}
+
+/** activityView + decisão anti-spoiler do feed (`locked`/`bodyPreview`) + `chapterId`. */
+function feedActivityView(
+  activity: {
+    id: string
+    type: string
+    message: string
+    createdAt: string
+    actorId: string | null
+    metadata: MockActivityMeta | null
+  },
+  finished: ReadonlySet<string>
+) {
+  const chapterId = activity.metadata?.chapterId ?? null
+  const { locked, bodyPreview } = feedCommentView({
+    finishedChapterIds: finished,
+    chapterId,
+    body: commentBodyOf(activity.metadata?.chapterId, activity.actorId)
+  })
+
+  return { ...activityView(activity), chapterId, locked, bodyPreview }
 }
 
 /** Alertas = progresso/marcos (canal alert) de outros usuários. */
@@ -305,7 +348,10 @@ function alertsFor(viewerId: string | null) {
 }
 
 function recentActivities(viewerId: string | null) {
-  return commentFeedFor(viewerId).slice(0, 30).map(activityView)
+  const finished = finishedChapterIdsFor(viewerId)
+  return commentFeedFor(viewerId)
+    .slice(0, 30)
+    .map((activity) => feedActivityView(activity, finished))
 }
 
 function chapterForCurrentPayload(chapter: MockChapter, userId: string | null) {
@@ -528,6 +574,7 @@ function listActivities(cursor: string | null, limitRaw: string | null): MockRes
   const parsedLimit = Number(limitRaw)
   const limit = Number.isInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 30
 
+  const finished = finishedChapterIdsFor(current.userId)
   const sorted = commentFeedFor(current.userId)
   let start = 0
   if (cursor) {
@@ -537,7 +584,7 @@ function listActivities(cursor: string | null, limitRaw: string | null): MockRes
 
   const page = sorted.slice(start, start + limit)
   return json(200, {
-    activities: page.map(activityView),
+    activities: page.map((activity) => feedActivityView(activity, finished)),
     hasMore: start + page.length < sorted.length
   })
 }

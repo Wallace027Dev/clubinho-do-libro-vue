@@ -4,9 +4,10 @@ import { commentFeedPage } from '../_lib/feedActivities.js'
 import { assertMethod, sendJson } from '../_lib/http.js'
 
 /**
- * Feed (descoberta) = comentários de outras pessoas, só de capítulos que o
- * usuário já concluiu (anti-spoiler). Paginado por cursor. O primeiro lote vem
- * em GET /api/books/current; as próximas páginas por aqui.
+ * Feed (descoberta) = comentários de outras pessoas nos capítulos do livro
+ * atual. Anti-spoiler: quem não concluiu o capítulo recebe o card travado (sem
+ * o texto). Paginado por cursor. O primeiro lote vem em GET /api/books/current;
+ * as próximas páginas por aqui.
  */
 const DEFAULT_LIMIT = 30
 const MAX_LIMIT = 50

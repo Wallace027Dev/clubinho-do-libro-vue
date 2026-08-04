@@ -30,26 +30,6 @@
   margin-bottom: 16px;
 }
 
-.feed-search {
-  position: relative;
-  display: block;
-  /* Respiro entre o campo de busca e o primeiro card. */
-  margin-bottom: 18px;
-}
-
-.feed-search input {
-  padding-right: 48px;
-}
-
-.feed-search-icon {
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  transform: translateY(-50%);
-  pointer-events: none;
-  opacity: 0.65;
-}
-
 /* Cards do feed (wireframe 01): tag + data, titulo e autor. */
 .feed-list {
   display: grid;
@@ -155,6 +135,32 @@
 .feed-card.is-clickable:focus-visible {
   outline: 2px solid var(--color-olive-800);
   outline-offset: 2px;
+}
+
+/* Trecho do comentario no card destravado: legivel, nao a etiqueta em negrito. */
+.feed-card-preview {
+  color: var(--color-text-muted);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+/* Card travado: cadeado no lugar do texto, sem afordancia de clique. */
+.feed-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.feed-lock svg {
+  flex: 0 0 auto;
+  opacity: 0.8;
+}
+
+.feed-card.is-locked {
+  background: var(--color-paper-deep);
+  border-style: dashed;
 }
 
 /* Lista e detalhe de capitulos (fase 8 etapa 4). */

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search } from 'lucide-vue-next'
+import { Lock } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppSpinner from '../components/ui/AppSpinner.vue'
@@ -10,6 +10,7 @@ import SkeletonLoader from '../components/ui/SkeletonLoader.vue'
 import { useInfiniteScroll } from '../composables/useInfiniteScroll'
 import { usePlatformStore } from '../stores/platformStore'
 import type { Activity, ChapterCommentReactionType } from '../types/platform'
+import { chapterTagFromMeta } from '../utils/chapters'
 import { reactionEmoji } from '../utils/reactions'
 
 const router = useRouter()
@@ -24,26 +25,6 @@ useInfiniteScroll(sentinel, () => platformStore.loadMoreActivities())
 const hasLoaded = ref(false)
 const showSkeleton = computed(() => !comments.value.length && !hasLoaded.value)
 
-const searchTerm = ref('')
-
-function normalize(text: string) {
-  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-}
-
-const filteredComments = computed(() => {
-  const term = normalize(searchTerm.value.trim())
-  if (!term) {
-    return comments.value
-  }
-
-  return comments.value.filter((activity) => {
-    const haystack = normalize(
-      `${activity.message} ${activity.actor?.displayName ?? ''} ${activity.actor?.login ?? ''}`
-    )
-    return haystack.includes(term)
-  })
-})
-
 onMounted(async () => {
   try {
     await platformStore.loadHome()
@@ -53,6 +34,9 @@ onMounted(async () => {
 })
 
 function openComment(activity: Activity) {
+  if (activity.locked) {
+    return
+  }
   void router.push(`/activity/${activity.id}`)
 }
 
@@ -67,6 +51,10 @@ function actorName(activity: Activity) {
   return activity.actor?.displayName || activity.actor?.login || 'Um membro'
 }
 
+function chapterLabel(activity: Activity) {
+  return chapterTagFromMeta(activity.metadata?.chapterNumber, activity.metadata?.chapterTitle)
+}
+
 /** Só os tipos que têm reação (a contagem já vem sem os zerados). */
 function reactionEntries(activity: Activity) {
   return Object.entries(activity.commentReactions ?? {}) as Array<
@@ -79,14 +67,8 @@ function reactionEntries(activity: Activity) {
   <SectionCard
     label="Feed do clube"
     title="Comentários da leitura"
-    subtitle="Comentários dos capítulos que você já concluiu. Toque para ler e reagir."
+    subtitle="Comentários do livro atual. Os capítulos que você ainda não concluiu ficam com cadeado."
   >
-    <label class="feed-search">
-      <span class="visually-hidden">Pesquisar comentários</span>
-      <input v-model="searchTerm" type="search" placeholder="Pesquisar..." />
-      <Search class="feed-search-icon" :size="18" aria-hidden="true" />
-    </label>
-
     <SkeletonLoader
       v-if="showSkeleton"
       :rows="3"
@@ -96,19 +78,27 @@ function reactionEntries(activity: Activity) {
       label="Carregando o feed do clube"
     />
 
-    <ol v-else-if="filteredComments.length" class="feed-list">
+    <ol v-else-if="comments.length" class="feed-list">
       <ClickableCard
-        v-for="activity in filteredComments"
+        v-for="activity in comments"
         :key="activity.id"
+        :clickable="!activity.locked"
+        :class="{ 'is-locked': activity.locked }"
         :aria-label="`Abrir ${activity.message}`"
         @activate="openComment(activity)"
       >
         <div class="feed-card-top">
-          <span class="feed-tag">Comentário</span>
+          <span class="feed-tag">{{ chapterLabel(activity) }}</span>
           <time class="feed-date" :datetime="activity.createdAt">{{ activityDate(activity) }}</time>
         </div>
-        <strong>{{ activity.message }}</strong>
-        <p>{{ actorName(activity) }}</p>
+        <strong>{{ actorName(activity) }}</strong>
+
+        <p v-if="activity.locked" class="feed-lock">
+          <Lock :size="14" aria-hidden="true" />
+          Termine o capítulo para ler este comentário.
+        </p>
+        <p v-else-if="activity.bodyPreview" class="feed-card-preview">{{ activity.bodyPreview }}</p>
+
         <p v-if="activity.commentReactionTotal" class="feed-card-reactions">
           <span v-for="[type, count] in reactionEntries(activity)" :key="type">
             {{ reactionEmoji(type) }} {{ count }}
@@ -118,13 +108,8 @@ function reactionEntries(activity: Activity) {
     </ol>
 
     <EmptyState
-      v-else-if="comments.length"
-      message="Nenhum comentário combina com a busca."
-    />
-
-    <EmptyState
       v-else-if="!showSkeleton"
-      message="Ainda não há comentários de outras pessoas nos capítulos que você concluiu."
+      message="Ainda não há comentários de outras pessoas neste livro."
     />
 
     <div v-if="platformStore.activitiesHasMore" ref="sentinel" class="list-sentinel">
